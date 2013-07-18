@@ -82,13 +82,16 @@ void CElementProtosToolBar::addManaginAction(QAction *action)
     {
         addAction(action);
     }
-    connect(action, SIGNAL(toggled(bool)), action, SIGNAL(triggered(bool)));
     connect(action, SIGNAL(triggered(bool)), this, SLOT(onManaginActionTriggered(bool)));
 }
 
 void CElementProtosToolBar::onManaginActionTriggered(const bool &checked)
 {
-    if(m_blockOnManaginActionTriggered){m_blockOnManaginActionTriggered = false; return;}
+    if(m_blockOnManaginActionTriggered)
+    {
+        m_blockOnManaginActionTriggered = false;
+        return;
+    }
 
     if(m_elementProtoMng)
     {
@@ -111,11 +114,15 @@ void CElementProtosToolBar::onProtoActionTriggered(const bool &checked)
 
 void CElementProtosToolBar::onProtoSelected(CElementProto *elementProto)
 {
-    if(m_blockOnProtoSelected){m_blockOnProtoSelected = false; return;}
+    if(m_blockOnProtoSelected)
+    {
+        m_blockOnProtoSelected = false;
+        return;
+    }
 
     if(!elementProto)
     {
-        if(m_actionGroup)
+        if(m_actionGroup && !m_defaultAction)
         {
             QAction *checkedAction = m_actionGroup->checkedAction();
             if(checkedAction && m_protoActions.contains(checkedAction))
@@ -126,7 +133,7 @@ void CElementProtosToolBar::onProtoSelected(CElementProto *elementProto)
         if(m_defaultAction)
         {
             m_blockOnManaginActionTriggered = true;
-            m_defaultAction->setChecked(true);
+            m_defaultAction->trigger();
         }
     }
     else

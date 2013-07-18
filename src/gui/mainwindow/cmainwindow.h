@@ -37,6 +37,7 @@ public:
     explicit CMainWindow(QWidget *parent = 0);
 private slots:
     void onCursorTriggered(const bool &checked);
+    void onHandTriggered(const bool &checked);
     void onElementProtoSelected(CElementProto *elementProto);
     void onSchemeEditorMouseReleased(const QPointF &pos);
 

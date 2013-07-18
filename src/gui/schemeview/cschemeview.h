@@ -52,7 +52,7 @@ class CSchemeView : public QGraphicsView
 {
     Q_OBJECT
 public:
-    enum TMouseMode{MoveSelectMode, AddElementMode};
+    enum TMouseMode{MoveSelectMode, MoveSceneMode, AddElementMode};
 private:
     CSchemeView::TMouseMode m_mouseMode;
 protected:

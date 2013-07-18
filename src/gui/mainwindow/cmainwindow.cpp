@@ -40,7 +40,7 @@ void CMainWindow::setupToolBars(void)
     {
         m_tbElementProtos->addManaginAction(m_acCursor);
         m_tbElementProtos->setDefaultAction(m_acCursor);
-        m_acCursor->setChecked(true);
+        m_acCursor->trigger();
     }
     if(m_acHand) m_tbElementProtos->addManaginAction(m_acHand);
     addToolBar(m_tbElementProtos);
@@ -62,10 +62,10 @@ CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
     m_acCursor = new QAction(tr("cursor"), this);
     m_acCursor->setObjectName(QStringLiteral("acCursor"));
     connect(m_acCursor, SIGNAL(triggered(bool)), this, SLOT(onCursorTriggered(bool)));
-    connect(m_acCursor, SIGNAL(toggled(bool)), this, SLOT(onCursorTriggered(bool)));
 
     m_acHand = new QAction(tr("hand"), this);
     m_acHand->setObjectName(QStringLiteral("acHand"));
+    connect(m_acHand, SIGNAL(triggered(bool)), this, SLOT(onHandTriggered(bool)));
 
     m_elementProtoMng = new CElementProtoMng(this);
     m_elementProtoMng->setObjectName(QStringLiteral("elementProtoMng"));
@@ -97,10 +97,14 @@ void CMainWindow::onCursorTriggered(const bool &checked)
     if(checked && m_schemeView) m_schemeView->setMouseMode(CSchemeView::MoveSelectMode);
 }
 
+void CMainWindow::onHandTriggered(const bool &checked)
+{
+    if(checked && m_schemeView) m_schemeView->setMouseMode(CSchemeView::MoveSceneMode);
+}
+
 void CMainWindow::onElementProtoSelected(CElementProto *elementProto)
 {
-    Q_UNUSED(elementProto)
-    if(m_schemeView) m_schemeView->setMouseMode(CSchemeView::AddElementMode);
+    if(m_schemeView && elementProto) m_schemeView->setMouseMode(CSchemeView::AddElementMode);
 }
 
 void CMainWindow::onSchemeEditorMouseReleased(const QPointF &pos)
