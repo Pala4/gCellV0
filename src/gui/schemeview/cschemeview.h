@@ -6,7 +6,9 @@
 #include <QMap>
 #include <QGraphicsItem>
 
-template <typename Type>
+#include "cgrelement.h"
+
+template<typename Type>
 class CItemMover
 {
 private:
@@ -48,6 +50,23 @@ public:
     }
 };
 
+class CSelector
+{
+private:
+    QRectF m_selectorRect;
+    bool m_started;
+public:
+    CSelector(void);
+
+    const QRectF& selectorRect(void) const{return m_selectorRect;}
+    const bool& isStarted(void) const{return m_started;}
+    void start(const QPointF &pos);
+    void move(const QPointF &pos);
+    QRectF release(const QPointF &pos);
+
+    void draw(QPainter *painter);
+};
+
 class CSchemeView : public QGraphicsView
 {
     Q_OBJECT
@@ -55,10 +74,14 @@ public:
     enum TMouseMode{MoveSelectMode, MoveSceneMode, AddElementMode};
 private:
     CSchemeView::TMouseMode m_mouseMode;
+    CItemMover<CGrElement*> m_elementMover;
+    CSelector m_selector;
 protected:
     virtual void contextMenuEvent(QContextMenuEvent *event);
     virtual void mousePressEvent(QMouseEvent *event);
+    virtual void mouseMoveEvent(QMouseEvent *event);
     virtual void mouseReleaseEvent(QMouseEvent *event);
+    virtual void drawForeground(QPainter *painter, const QRectF &rect);
 public:
     explicit CSchemeView(QWidget *parent = 0);
 public slots:

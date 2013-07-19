@@ -50,6 +50,18 @@ void CGrElement::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
 	painter->setRenderHint(QPainter::Antialiasing, true);
 	painter->setRenderHint(QPainter::TextAntialiasing, true);
 
+    QPen pen;
+    pen.setColor(Qt::black);
+    if(isSelected())
+    {
+        pen.setWidthF(2.0);
+    }
+    else
+    {
+        pen.setWidthF(0.0);
+    }
+    painter->setPen(pen);
+
 	painter->drawRect(boundingRect());
 	if(m_element) painter->drawText(boundingRect(), m_element->name());
 
