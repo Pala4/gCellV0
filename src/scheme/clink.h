@@ -9,12 +9,12 @@ class CLink : public CElement
 {
     Q_OBJECT
 private:
-    CPortal *m_firstPortal;
-	CPortal *m_secondPortal;
+	CPortal *m_result;
+	CPortal *m_argument;
 	QPainterPath m_path;
 
     static QPainterPath shapeFromPath(const QPainterPath &path, const QPen &pen);
-    void calc(void);
+	void calcLink(void);
 public:
 	explicit CLink(QGraphicsItem *parent = 0);
 
@@ -22,8 +22,12 @@ public:
 	virtual QRectF boundingRect(void) const;
 	virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
-	void setFirstPortal(CPortal *firstPortal){m_firstPortal = firstPortal; updateGeometry();}
-    void setSecondPortal(CPortal *secondPortal){m_secondPortal = secondPortal; updateGeometry();}
+	CPortal* result(void){return m_result;}
+	CPortal* argument(void){return m_argument;}
+	void setResult(CPortal *result){m_result = result; updateGeometry();}
+	void setArgument(CPortal *argument){m_argument = argument; updateGeometry();}
+
+	virtual void calc(const int &timeFrame);
 public slots:
 	virtual void updateGeometry(void);
 };

@@ -31,6 +31,8 @@ private:
     CEngine *m_engine;
 
     void setupToolBars(void);
+protected:
+    virtual void closeEvent(QCloseEvent *event);
 public:
     explicit CMainWindow(QWidget *parent = 0);
 private slots:
@@ -42,6 +44,8 @@ private slots:
 
 	void newScheme(void);
     void closeScheme(void);
+    void saveConfig(const QString &fileName);
+    void restoreConfig(const QString &fileName);
 };
 
 #endif // CMAINWINDOW_H

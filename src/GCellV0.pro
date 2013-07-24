@@ -27,7 +27,12 @@ SOURCES += main.cpp \
     mainwindow/calgorithmprotostoolbar.cpp \
     algorithms/CSV/CSVIn/ccsvin.cpp \
     scheme/cargument.cpp \
-    scheme/cresult.cpp
+    scheme/cresult.cpp \
+    algorithms/General/Amp/camp.cpp \
+    algorithms/CSV/CSVOut/ccsvout.cpp \
+    scheme/cdatasource.cpp \
+    scheme/cdatatransmitter.cpp \
+    scheme/cdatareceiver.cpp
 
 HEADERS  += \
     mainwindow/cmainwindow.h \
@@ -42,6 +47,11 @@ HEADERS  += \
     scheme/calgorithmprotomng.h \
     mainwindow/calgorithmprotostoolbar.h \
     algorithms/CSV/CSVIn/ccsvin.h \
-    scheme/nombergenerator.h \
     scheme/cargument.h \
-    scheme/cresult.h
+    scheme/cresult.h \
+    algorithms/General/Amp/camp.h \
+    algorithms/CSV/CSVOut/ccsvout.h \
+    scheme/elementlistutil.h \
+    scheme/cdatasource.h \
+    scheme/cdatatransmitter.h \
+    scheme/cdatareceiver.h

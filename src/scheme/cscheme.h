@@ -5,6 +5,7 @@
 
 class QAction;
 
+class CElement;
 class CAlgorithmProto;
 class CAlgorithm;
 class CPortal;
@@ -20,17 +21,17 @@ public:
 
 	QString id(void){return QString("Scheme");}
 
-	template<typename ElementType>
-	QList<ElementType> getElements(void)
-	{
-		QList<ElementType> elementList;
-		foreach(QGraphicsItem *item, items())
-		{
-			ElementType element = dynamic_cast<ElementType>(item);
-			if(element) elementList << element;
-		}
-		return elementList;
-	}
+//	template<typename ElementType>
+//	QList<ElementType> getElements(const QString &typeID = QString())
+//	{
+//		QList<ElementType> elementList;
+//		foreach(QGraphicsItem *item, items())
+//		{
+//			ElementType element = dynamic_cast<ElementType>(item);
+//			if(element && (typeID.isEmpty() || (element->typeID() == typeID))) elementList << element;
+//		}
+//		return elementList;
+//	}
 
 	const QList<QAction*>& actions(void){return m_actions;}
 	void addAction(QAction *action);

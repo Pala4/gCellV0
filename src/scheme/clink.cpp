@@ -28,20 +28,20 @@ QPainterPath CLink::shapeFromPath(const QPainterPath &path, const QPen &pen)
     return p;
 }
 
-void CLink::calc(void)
+void CLink::calcLink(void)
 {
     m_path = QPainterPath();
-    if(!m_firstPortal || !m_secondPortal) return;
-    m_path.moveTo(m_firstPortal->mapToScene(QPointF()));
-    m_path.lineTo(m_secondPortal->mapToScene(QPointF()));
+	if(!m_result || !m_argument) return;
+	m_path.moveTo(m_result->mapToScene(QPointF()));
+	m_path.lineTo(m_argument->mapToScene(QPointF()));
 }
 
 CLink::CLink(QGraphicsItem *parent) : CElement(parent)
 {
     setObjectName(QStringLiteral("CLink"));
 
-	m_firstPortal = 0;
-	m_secondPortal = 0;
+	m_result = 0;
+	m_argument = 0;
 
 	setDefaultName(tr("link"));
 }
@@ -66,9 +66,18 @@ void CLink::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWi
 	painter->restore();
 }
 
+void CLink::calc(const int &timeFrame)
+{
+	if(m_argument)
+	{
+		if(m_result) m_argument->setPortalData(timeFrame, m_result->portalData(timeFrame));
+		m_argument->calc(timeFrame);
+	}
+}
+
 void CLink::updateGeometry(void)
 {
 	prepareGeometryChange();
-	calc();
+	calcLink();
 	update();
 }

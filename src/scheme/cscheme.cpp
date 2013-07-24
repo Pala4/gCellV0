@@ -6,7 +6,7 @@
 #include "calgorithm.h"
 #include "cportal.h"
 #include "clink.h"
-#include "nombergenerator.h"
+#include "elementlistutil.h"
 
 CScheme::CScheme(QObject *parent) : QGraphicsScene(parent)
 {
@@ -20,7 +20,7 @@ CScheme::CScheme(QObject *parent) : QGraphicsScene(parent)
 	m_acDeleteSelected->setObjectName(QStringLiteral("acDeleteSelected"));
 	m_acDeleteSelected->setDisabled(true);
 	connect(m_acDeleteSelected, SIGNAL(triggered()), this, SLOT(deleteSelected()));
-	addAction(m_acDeleteSelected);
+    addAction(m_acDeleteSelected);
 }
 
 void CScheme::addAction(QAction *action)
@@ -48,7 +48,7 @@ void CScheme::addAlgorithm(CAlgorithm *algorithm, const QPointF &pos)
 {
 	if(!algorithm) return;
 
-	algorithm->setNomber(generateNomber<CAlgorithm*, CAlgorithm*>(getElements<CAlgorithm*>()));
+	algorithm->setNomber(generateNomber<CAlgorithm*, CAlgorithm*>(getElements<CAlgorithm*, QGraphicsItem*>(items(), algorithm->typeID())));
 	algorithm->setPos(pos);
 	addItem(algorithm);
 }
@@ -60,9 +60,9 @@ void CScheme::addLink(CPortal *firstPortal, CPortal *secondPortal)
 	CLink *link = new CLink(0);
 	firstPortal->addLink(link);
 	secondPortal->addLink(link);
-	link->setFirstPortal(firstPortal);
-	link->setSecondPortal(secondPortal);
-	link->setNomber(generateNomber<CLink*, CLink*>(getElements<CLink*>()));
+	link->setResult(firstPortal);
+	link->setArgument(secondPortal);
+	link->setNomber(generateNomber<CLink*, CLink*>(getElements<CLink*, QGraphicsItem*>(items())));
 	addItem(link);
 	link->updateGeometry();
 }

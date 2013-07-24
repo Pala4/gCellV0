@@ -17,17 +17,24 @@ private:
 	QList<CPortal*> m_portals;
 	QRectF m_innerBound;
 	QRectF m_boundingRect;
+
 	void calcBounds(void);
 	void placePortals(void);
 protected:
 	void addPortal(CPortal *portal);
 	CArgument* addArgument(const QString &name);
 	CResult* addResult(const QString &name);
+
+	virtual void proced(const int &timeFrame) = 0;
 public:
 	explicit CAlgorithm(QGraphicsItem *parent = 0);
 
 	virtual QRectF boundingRect(void) const{return m_boundingRect;}
 	virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+
+	const QList<CPortal*>& portals(void) const{return m_portals;}
+
+	virtual void calc(const int &timeFrame);
 private slots:
 	void onPortalDestroyed(QObject *objPortal);
 public slots:

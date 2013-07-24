@@ -8,7 +8,7 @@
 #include "cportal.h"
 #include "cargument.h"
 #include "cresult.h"
-#include "nombergenerator.h"
+#include "elementlistutil.h"
 
 void CAlgorithm::calcBounds(void)
 {
@@ -141,6 +141,22 @@ void CAlgorithm::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
 	painter->drawText(boundingRect(), Qt::AlignCenter, name());
 
 	painter->restore();
+}
+
+void CAlgorithm::calc(const int &timeFrame)
+{
+	QList<CArgument*> args = getElements<CArgument*, CPortal*>(portals());
+	foreach(CArgument *arg, args)
+	{
+		if(!arg) continue;
+		if(!arg->isLoopBackPortal() && !arg->isDataReady(timeFrame)) return;
+	}
+	proced(timeFrame);
+	QList<CResult*> ress = getElements<CResult*, CPortal*>(portals());
+	foreach(CResult *res, ress)
+	{
+		if(res) res->calc(timeFrame);
+	}
 }
 
 void CAlgorithm::onPortalDestroyed(QObject *objPortal)

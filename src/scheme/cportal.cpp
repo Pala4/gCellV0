@@ -21,6 +21,9 @@ CPortal::CPortal(QGraphicsItem *parent) : CElement(parent)
 	setObjectName(QStringLiteral("CPortal"));
 
 	m_portalOrientation = CPortal::Left;
+	m_loopBackPortal = false;
+	m_timeFrame = -1;
+	m_data = 0.0;
 
 	setFlag(QGraphicsItem::ItemSendsScenePositionChanges);
 }
@@ -37,11 +40,25 @@ void CPortal::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, Q
 
 	QBrush brush;
 	brush.setStyle(Qt::SolidPattern);
-	brush.setColor(Qt::red);
+	if(isLoopBackPortal())
+	{
+		brush.setColor(Qt::blue);
+	}
+	else
+	{
+		brush.setColor(Qt::red);
+	}
+
 	painter->save();
 	painter->setBrush(brush);
 	painter->drawRect(boundingRect());
 	painter->restore();
+}
+
+qreal CPortal::portalData(const int &timeFrame)
+{
+	if(isLoopBackPortal() || (m_timeFrame == timeFrame)) return m_data;
+	return 0.0;
 }
 
 void CPortal::addLink(CLink *link)

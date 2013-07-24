@@ -4,6 +4,7 @@
 #include <QAction>
 #include <QEvent>
 #include <QMouseEvent>
+#include <QSettings>
 
 #include "calgorithmprotostoolbar.h"
 #include "../scheme/calgorithmproto.h"
@@ -12,6 +13,8 @@
 #include "../scheme/cschemeeditor.h"
 #include "../engine/cengine.h"
 #include "../algorithms/CSV/CSVIn/ccsvin.h"
+#include "../algorithms/General/Amp/camp.h"
+#include "../algorithms/CSV/CSVOut/ccsvout.h"
 
 /*!
  * \class CMainWindow
@@ -42,7 +45,13 @@ void CMainWindow::setupToolBars(void)
     }
 	if(m_acHand) m_tbAlgorithmProtos->addManaginAction(m_acHand);
 	if(m_acLinking) m_tbAlgorithmProtos->addManaginAction(m_acLinking);
-	addToolBar(m_tbAlgorithmProtos);
+    addToolBar(m_tbAlgorithmProtos);
+}
+
+void CMainWindow::closeEvent(QCloseEvent *event)
+{
+    saveConfig("config.ini");
+    QMainWindow::closeEvent(event);
 }
 
 CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
@@ -74,7 +83,9 @@ CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
 	m_algorithmProtoMng = new CAlgorithmProtoMng(this);
 	m_algorithmProtoMng->setObjectName(QStringLiteral("algorithmProtoMng"));
 	m_algorithmProtoMng->addProto(tr("CSV In"), &CCSVIn::staticMetaObject);
-	connect(m_algorithmProtoMng, SIGNAL(algorithmProtoSelected(CAlgorithmProto*)), this, SLOT(onAlgorithmProtoSelected(CAlgorithmProto*)));
+    m_algorithmProtoMng->addProto(tr("Amp"), &CAmp::staticMetaObject);
+    m_algorithmProtoMng->addProto(tr("CSV Out"), &CCSVOut::staticMetaObject);
+    connect(m_algorithmProtoMng, SIGNAL(algorithmProtoSelected(CAlgorithmProto*)), this, SLOT(onAlgorithmProtoSelected(CAlgorithmProto*)));
 
 	m_schemeEditor = new CSchemeEditor(this);
 	m_schemeEditor->setObjectName(QStringLiteral("schemeEditor"));
@@ -89,6 +100,7 @@ CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
 
     setupToolBars();
     newScheme();
+    restoreConfig("config.ini");
 }
 
 void CMainWindow::onCursorTriggered(const bool &checked)
@@ -143,4 +155,22 @@ void CMainWindow::closeScheme(void)
         m_scheme = 0;
         if(m_acCalc) m_acCalc->setEnabled(false);
     }
+}
+
+void CMainWindow::saveConfig(const QString &fileName)
+{
+    if(fileName.isEmpty()) return;
+
+    QSettings cfg(fileName, QSettings::IniFormat);
+    cfg.setValue("MainWindow/geometry", saveGeometry());
+    cfg.setValue("MainWindow/state", saveState());
+}
+
+void CMainWindow::restoreConfig(const QString &fileName)
+{
+    if(fileName.isEmpty()) return;
+
+    QSettings cfg(fileName, QSettings::IniFormat);
+    restoreGeometry(cfg.value("MainWindow/geometry").toByteArray());
+    restoreState(cfg.value("MainWindow/state").toByteArray());
 }

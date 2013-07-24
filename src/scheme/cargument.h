@@ -8,6 +8,8 @@ class CArgument : public CPortal
 	Q_OBJECT
 public:
 	explicit CArgument(QGraphicsItem *parent = 0);
+
+	virtual void calc(const int &timeFrame);
 };
 
 #endif // CARGUMENT_H

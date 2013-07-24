@@ -20,7 +20,8 @@ protected:
 public:
 	explicit CElement(QGraphicsItem *parent = 0);
 
-	QString typeID(void) const{return metaObject()->className();}
+	QString typeID(void){return metaObject()->className();}
+
 	QString id(void);
 	QString name(void) const;
 	void setName(const QString &name);
@@ -31,6 +32,8 @@ public:
 
 	const QList<QAction*>& actions(void) const{return m_actions;}
 	void addAction(QAction *action);
+
+	virtual void calc(const int &timeFrame) = 0;
 public slots:
 	virtual void updateGeometry(void){}
 signals:

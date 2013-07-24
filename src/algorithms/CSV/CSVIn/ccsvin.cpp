@@ -1,21 +1,23 @@
 #include "ccsvin.h"
 
+#include <QDebug>
+
 #include "../../../scheme/cargument.h"
 #include "../../../scheme/cresult.h"
 
-CCSVIn::CCSVIn(QGraphicsItem *parent) : CAlgorithm(parent)
+void CCSVIn::proced(const int &timeFrame)
+{
+	qDebug() << "lb:" << "tf =" << timeFrame << arg1->portalData(timeFrame);
+	res1->setPortalData(timeFrame, arg1->portalData(timeFrame) + 1.0);
+	res2->setPortalData(timeFrame, arg1->portalData(timeFrame) * 2.0);
+}
+
+CCSVIn::CCSVIn(QGraphicsItem *parent) : CDataSource(parent)
 {
     setObjectName(QStringLiteral("CCSVIn"));
 
-	addArgument("X1");
-	addArgument("X2");
-	addArgument("X3");
+	arg1 = addArgument("X1");
 
-	addResult("Y1");
-	addResult("Y2");
-	addResult("Y3");
-	addResult("Y4");
-
-	CArgument *Z = addArgument("Z");
-	Z->setPortalOrientation(CPortal::Top);
+	res1 = addResult("Y1");
+	res2 = addResult("Y2");
 }
