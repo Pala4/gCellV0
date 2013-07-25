@@ -9,7 +9,6 @@
 #include "calgorithm.h"
 
 class CScheme;
-class CAlgorithmProto;
 
 template<typename Type>
 class CItemMover
@@ -76,7 +75,6 @@ class CSchemeEditor : public QGraphicsView
 public:
 	enum TMouseMode{MoveSelectMode, MoveSceneMode, LinkingMode, AddAlgorithmMode};
 private:
-	CAlgorithmProto *m_currentProto;
 	CSchemeEditor::TMouseMode m_mouseMode;
 	CItemMover<CAlgorithm*> m_algorithmMover;
     CSelector m_selector;
@@ -94,10 +92,7 @@ public:
 	explicit CSchemeEditor(QWidget *parent = 0);
 
 	QList<QAction*> schemeEditorActions(void);
-private slots:
-	void onCurrentProtoDestroyed(void){m_currentProto = 0;}
 public slots:
-	void setCurrentProto(CAlgorithmProto *currentProto);
 	void setMouseMode(const CSchemeEditor::TMouseMode &mouseMode){m_mouseMode = mouseMode;}
 	void deleteSelected(void);
 signals:

@@ -4,7 +4,6 @@
 #include <QContextMenuEvent>
 
 #include "cscheme.h"
-#include "calgorithmproto.h"
 #include "cportal.h"
 
 /*!
@@ -124,10 +123,7 @@ void CSchemeEditor::mousePressEvent(QMouseEvent *event)
 		{
 			if(event->buttons() & Qt::LeftButton)
 			{
-				if(m_currentProto && scheme())
-				{
-					scheme()->addAlgorithm(m_currentProto, mapToScene(event->pos()));
-				}
+                if(scheme()) scheme()->createAlgorithm(mapToScene(event->pos()));
 			}
 		}
 		break;
@@ -199,7 +195,6 @@ CSchemeEditor::CSchemeEditor(QWidget *parent) : QGraphicsView(parent)
 {
 	setObjectName(QStringLiteral("CSchemeView"));
 
-	m_currentProto = 0;
 	m_mouseMode = CSchemeEditor::MoveSelectMode;
 	m_firstPortal = 0;
 	m_secondPortal = 0;
@@ -216,21 +211,6 @@ QList<QAction*> CSchemeEditor::schemeEditorActions(void)
 		seActions << scheme()->actions();
 	}
 	return seActions;
-}
-
-void CSchemeEditor::setCurrentProto(CAlgorithmProto *currentProto)
-{
-	if(m_currentProto && (m_currentProto == currentProto)) return;
-
-	if(m_currentProto)
-	{
-		disconnect(m_currentProto, SIGNAL(destroyed()), this, SLOT(onCurrentProtoDestroyed()));
-	}
-	m_currentProto = currentProto;
-	if(m_currentProto)
-	{
-		connect(m_currentProto, SIGNAL(destroyed()), this, SLOT(onCurrentProtoDestroyed()));
-	}
 }
 
 void CSchemeEditor::deleteSelected(void)

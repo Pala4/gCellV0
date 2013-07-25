@@ -123,7 +123,6 @@ void CMainWindow::onAlgorithmProtoSelected(CAlgorithmProto *selectedProto)
 	if(m_schemeEditor)
 	{
 		if(selectedProto) m_schemeEditor->setMouseMode(CSchemeEditor::AddAlgorithmMode);
-		m_schemeEditor->setCurrentProto(selectedProto);
 	}
 }
 
@@ -139,6 +138,7 @@ void CMainWindow::newScheme(void)
 
     m_scheme = new CScheme(this);
     m_scheme->setObjectName(QStringLiteral("scheme"));
+    m_scheme->setAlgorithmProtoMng(m_algorithmProtoMng);
 	if(m_schemeEditor) m_schemeEditor->setScene(m_scheme);
 	if(m_engine)
 	{
