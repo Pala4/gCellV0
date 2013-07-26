@@ -71,7 +71,7 @@ void CAlgorithm::placePortals(void)
 			case CPortal::Left: portal->setPos(dLP); dLP.setY(dLP.y() + 7.0); break;
 			case CPortal::Top: portal->setPos(dTP); dTP.setX(dTP.x() + 7.0); break;
 			case CPortal::Right: portal->setPos(dRP); dRP.setY(dRP.y() + 7.0); break;
-			case CPortal::Bottom: portal->setPos(dBP); dBP.setX(dBP.x() + 7.0);	break;
+			case CPortal::Bottom: portal->setPos(dBP); dBP.setX(dBP.x() + 7.0); break;
 		}
 	}
 }

@@ -3,6 +3,7 @@
 #include <QPainter>
 
 #include "cportal.h"
+#include "cscheme.h"
 
 QPainterPath CLink::shapeFromPath(const QPainterPath &path, const QPen &pen)
 {
@@ -64,6 +65,32 @@ void CLink::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWi
 	painter->save();
     painter->drawPath(m_path);
 	painter->restore();
+}
+
+QString CLink::argumentID(void)
+{
+	if(m_argument) return m_argument->id();
+	return QString();
+}
+
+void CLink::setArgumentID(const QString &argumentID)
+{
+	m_argument = qobject_cast<CPortal*>(scheme()->element(argumentID));
+	if(m_argument) m_argument->addLink(this);
+	updateGeometry();
+}
+
+QString CLink::resultID(void)
+{
+	if(m_result) return m_result->id();
+	return QString();
+}
+
+void CLink::setResultID(const QString &resultID)
+{
+	m_result = qobject_cast<CPortal*>(scheme()->element(resultID));
+	m_result->addLink(this);
+	updateGeometry();
 }
 
 void CLink::calc(const int &timeFrame)

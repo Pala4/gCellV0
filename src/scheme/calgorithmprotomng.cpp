@@ -9,13 +9,19 @@ CAlgorithmProtoMng::CAlgorithmProtoMng(QObject *parent) : QObject(parent)
 	m_selectedAlgorithmProto = 0;
 }
 
+CAlgorithmProto* CAlgorithmProtoMng::algorithmProto(const QString &id)
+{
+	if(!m_algorithmProtos.contains(id)) return 0;
+	return m_algorithmProtos[id];
+}
+
 CAlgorithmProto* CAlgorithmProtoMng::addProto(const QString &name, const QMetaObject *algorithmMO)
 {
-	if(m_algorithmProtos.contains(algorithmMO)) return 0;
+	if(m_algorithmProtos.contains(algorithmMO->className())) return 0;
 	if(!CAlgorithmProto::checkAlgorithmMO(algorithmMO)) return 0;
 
 	CAlgorithmProto *algorithmProto = new CAlgorithmProto(name, algorithmMO, this);
-	m_algorithmProtos[algorithmMO] = algorithmProto;
+	m_algorithmProtos[algorithmMO->className()] = algorithmProto;
 
 	emit algorithmProtoAdded(algorithmProto);
 

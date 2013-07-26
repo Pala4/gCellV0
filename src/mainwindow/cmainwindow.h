@@ -31,6 +31,8 @@ private:
     CEngine *m_engine;
 
     void setupToolBars(void);
+	void writeScheme(CScheme *scheme, const QString &fileName);
+	void readScheme(CScheme *scheme, const QString &fileName);
 protected:
     virtual void closeEvent(QCloseEvent *event);
 public:
@@ -43,7 +45,11 @@ private slots:
     void onSchemeEditorMouseReleased(const QPointF &pos);
 
 	void newScheme(void);
+	void saveScheme(void);
+	void saveSchemeAs(void);
+	void openScheme(void);
     void closeScheme(void);
+
     void saveConfig(const QString &fileName);
     void restoreConfig(const QString &fileName);
 };

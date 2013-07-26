@@ -3,6 +3,7 @@
 #include <QAction>
 
 #include "cscheme.h"
+#include "elementlistutil.h"
 
 CScheme* CElement::scheme(void)
 {
@@ -64,4 +65,9 @@ void CElement::addAction(QAction *action)
 	if(!action || m_actions.contains(action)) return;
 
 	m_actions << action;
+}
+
+QList<CElement*> CElement::childElements(void)
+{
+	return getElements<CElement*, QGraphicsItem*>(childItems());
 }

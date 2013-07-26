@@ -12,11 +12,12 @@ class CAlgorithmProtoMng : public QObject
     Q_OBJECT
 private:
 	CAlgorithmProto *m_selectedAlgorithmProto;
-	QMap<const QMetaObject*, CAlgorithmProto*> m_algorithmProtos;
+	QMap<QString, CAlgorithmProto*> m_algorithmProtos;
 public:
 	explicit CAlgorithmProtoMng(QObject *parent = 0);
 
-	const QMap<const QMetaObject*, CAlgorithmProto*>& algorithmProtos(void) const{return m_algorithmProtos;}
+	const QMap<QString, CAlgorithmProto*>& algorithmProtos(void) const{return m_algorithmProtos;}
+	CAlgorithmProto* algorithmProto(const QString &id);
 	CAlgorithmProto* addProto(const QString &name, const QMetaObject *algorithmMO);
 	CAlgorithmProto* selectedAlgorithmProto(void){return m_selectedAlgorithmProto;}
 public slots:

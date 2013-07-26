@@ -32,6 +32,7 @@ public:
 
 	const QList<QAction*>& actions(void) const{return m_actions;}
 	void addAction(QAction *action);
+	QList<CElement*> childElements(void);
 
 	virtual void calc(const int &timeFrame) = 0;
 public slots:

@@ -5,12 +5,16 @@
 #include <QEvent>
 #include <QMouseEvent>
 #include <QSettings>
+#include <QTextStream>
+#include <QFile>
+#include <QFileDialog>
 
 #include "calgorithmprotostoolbar.h"
 #include "../scheme/calgorithmproto.h"
 #include "../scheme/calgorithmprotomng.h"
 #include "../scheme/cscheme.h"
 #include "../scheme/cschemeeditor.h"
+#include "../scheme/cxmlscheme.h"
 #include "../engine/cengine.h"
 #include "../algorithms/CSV/CSVIn/ccsvin.h"
 #include "../algorithms/General/Amp/camp.h"
@@ -24,6 +28,9 @@ void CMainWindow::setupToolBars(void)
     QToolBar *tbMain = addToolBar("Main");
     tbMain->setObjectName(QStringLiteral("tbMain"));
     tbMain->addAction("New scheme", this, SLOT(newScheme()));
+	tbMain->addAction("Open", this, SLOT(openScheme()));
+	tbMain->addAction("Save schme", this, SLOT(saveScheme()));
+	tbMain->addAction("Save scheme as...", this, SLOT(saveSchemeAs()));
     tbMain->addAction("Close scheme", this, SLOT(closeScheme()));
     if(m_engine)
     {
@@ -45,7 +52,35 @@ void CMainWindow::setupToolBars(void)
     }
 	if(m_acHand) m_tbAlgorithmProtos->addManaginAction(m_acHand);
 	if(m_acLinking) m_tbAlgorithmProtos->addManaginAction(m_acLinking);
-    addToolBar(m_tbAlgorithmProtos);
+	addToolBar(m_tbAlgorithmProtos);
+}
+
+void CMainWindow::writeScheme(CScheme *scheme, const QString &fileName)
+{
+	if(!scheme || fileName.isEmpty()) return;
+
+	QFile fileHandler(fileName);
+	if(!fileHandler.open(QIODevice::WriteOnly)) return;
+	CXMLScheme xmlScheme;
+	QTextStream(&fileHandler) << xmlScheme.schemeToDom(scheme).toString();
+	fileHandler.close();
+}
+
+void CMainWindow::readScheme(CScheme *scheme, const QString &fileName)
+{
+	if(!scheme || fileName.isEmpty()) return;
+
+	QFile fileHandler(fileName);
+	if(!fileHandler.exists()) return;
+
+	QDomDocument domDoc;
+	QString errMsg;
+	int errLine = 0;
+	int errCol = 0;
+	if(!domDoc.setContent(&fileHandler, &errMsg, &errLine, &errCol)) return;
+
+	CXMLScheme xmlScheme;
+	xmlScheme.schemeFromDom(scheme, domDoc);
 }
 
 void CMainWindow::closeEvent(QCloseEvent *event)
@@ -138,6 +173,7 @@ void CMainWindow::newScheme(void)
 
     m_scheme = new CScheme(this);
     m_scheme->setObjectName(QStringLiteral("scheme"));
+	m_scheme->setNewScheme(true);
     m_scheme->setAlgorithmProtoMng(m_algorithmProtoMng);
 	if(m_schemeEditor) m_schemeEditor->setScene(m_scheme);
 	if(m_engine)
@@ -145,6 +181,34 @@ void CMainWindow::newScheme(void)
 		m_engine->setScheme(m_scheme);
 		if(m_acCalc) m_acCalc->setEnabled(true);
 	}
+}
+
+void CMainWindow::saveScheme(void)
+{
+	if(!m_scheme) return;
+	if(m_scheme->isNewScheme())
+	{
+		saveSchemeAs();
+	}
+	else
+	{
+		writeScheme(m_scheme, "scheme.scm");
+	}
+}
+
+void CMainWindow::saveSchemeAs(void)
+{
+	writeScheme(m_scheme, "scheme.scm");
+}
+
+void CMainWindow::openScheme(void)
+{
+	QString fileName = QFileDialog::getOpenFileName(this, "Open");
+	if(!QFile::exists(fileName)) return;
+
+	newScheme();
+	readScheme(m_scheme, fileName);
+	m_scheme->setNewScheme(false);
 }
 
 void CMainWindow::closeScheme(void)

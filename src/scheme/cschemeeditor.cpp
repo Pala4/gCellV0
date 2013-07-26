@@ -175,7 +175,7 @@ void CSchemeEditor::mouseReleaseEvent(QMouseEvent *event)
 	}
 	if(m_firstPortal && m_secondPortal)
 	{
-		if(scheme()) scheme()->addLink(m_firstPortal, m_secondPortal);
+		if(scheme()) scheme()->addLink(m_firstPortal->id(), m_secondPortal->id());
 		m_firstPortal = 0;
 		m_secondPortal = 0;
 	}

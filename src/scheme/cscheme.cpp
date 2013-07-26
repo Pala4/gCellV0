@@ -15,6 +15,8 @@ CScheme::CScheme(QObject *parent) : QGraphicsScene(parent)
 
 	m_acDeleteSelected = 0;
     m_algProtoMng = 0;
+	m_newScheme = false;
+	m_modified = false;
 
 	connect(this, SIGNAL(selectionChanged()), this, SLOT(onSelectionChanged()));
 
@@ -30,7 +32,26 @@ void CScheme::addAction(QAction *action)
 	if(!action) return;
 	if(m_actions.contains(action)) return;
 
-    m_actions << action;
+	m_actions << action;
+}
+
+CElement* CScheme::createElement(const QString &typeID)
+{
+	CElement *element = 0;
+	if(typeID == QStringLiteral("CLink"))
+	{
+		element = new CLink();
+	}
+	else
+	{
+		if(m_algProtoMng)
+		{
+			CAlgorithmProto *algProto = m_algProtoMng->algorithmProto(typeID);
+			if(algProto) element = algProto->createAlgorithm();
+		}
+	}
+	addItem(element);
+	return element;
 }
 
 CElement* CScheme::element(const QString &id)
@@ -40,7 +61,17 @@ CElement* CScheme::element(const QString &id)
     {
         if(element && element->id() == id) return element;
     }
-    return 0;
+	return 0;
+}
+
+QList<CAlgorithm*> CScheme::algorithms(void)
+{
+	return getElements<CAlgorithm*, QGraphicsItem*>(items());
+}
+
+QList<CLink*> CScheme::links(void)
+{
+	return getElements<CLink*, QGraphicsItem*>(items());
 }
 
 void CScheme::onSelectionChanged(void)
@@ -69,6 +100,11 @@ void CScheme::addAlgorithm(CAlgorithm *algorithm, const QPointF &pos)
 	algorithm->setNomber(generateNomber<CAlgorithm*, CAlgorithm*>(getElements<CAlgorithm*, QGraphicsItem*>(items(), algorithm->typeID())));
 	algorithm->setPos(pos);
 	addItem(algorithm);
+}
+
+void CScheme::addLink(const QString &firstPortalID, const QString &secondPortalID)
+{
+	addLink(qobject_cast<CPortal*>(element(firstPortalID)), qobject_cast<CPortal*>(element(secondPortalID)));
 }
 
 void CScheme::addLink(CPortal *firstPortal, CPortal *secondPortal)

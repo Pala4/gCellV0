@@ -8,6 +8,8 @@ class CPortal;
 class CLink : public CElement
 {
     Q_OBJECT
+	Q_PROPERTY(QString argumentID READ argumentID WRITE setArgumentID)
+	Q_PROPERTY(QString resultID READ resultID WRITE setResultID)
 private:
 	CPortal *m_result;
 	CPortal *m_argument;
@@ -21,6 +23,11 @@ public:
 	virtual QPainterPath shape(void) const;
 	virtual QRectF boundingRect(void) const;
 	virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+
+	QString argumentID(void);
+	void setArgumentID(const QString &argumentID);
+	QString resultID(void);
+	void setResultID(const QString &resultID);
 
 	CPortal* result(void){return m_result;}
 	CPortal* argument(void){return m_argument;}

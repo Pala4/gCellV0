@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui xml
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -32,7 +32,8 @@ SOURCES += main.cpp \
     algorithms/CSV/CSVOut/ccsvout.cpp \
     scheme/cdatasource.cpp \
     scheme/cdatatransmitter.cpp \
-    scheme/cdatareceiver.cpp
+    scheme/cdatareceiver.cpp \
+    scheme/cxmlscheme.cpp
 
 HEADERS  += \
     mainwindow/cmainwindow.h \
@@ -54,4 +55,5 @@ HEADERS  += \
     scheme/elementlistutil.h \
     scheme/cdatasource.h \
     scheme/cdatatransmitter.h \
-    scheme/cdatareceiver.h
+    scheme/cdatareceiver.h \
+    scheme/cxmlscheme.h

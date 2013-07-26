@@ -6,9 +6,9 @@ int generateNomber(const QList<ListType> &itemList)
 {
 	if(itemList.isEmpty()) return 0;
 	if(!itemList.at(0)) return 0;
-	if(!dynamic_cast<ItemType>(itemList.at(0))) return 0;
 
-	int maxNomber = dynamic_cast<ItemType>(itemList.at(0))->nomber();
+	int magicMaxNomber = -999;
+	int maxNomber = magicMaxNomber;
 	foreach(ListType item, itemList)
 	{
 		ItemType baseItem = dynamic_cast<ItemType>(item);
@@ -16,6 +16,7 @@ int generateNomber(const QList<ListType> &itemList)
 		if(maxNomber < baseItem->nomber()) maxNomber = baseItem->nomber();
 	}
 
+	if(maxNomber == magicMaxNomber) maxNomber = -1;
 	return ++maxNomber;
 }
 
