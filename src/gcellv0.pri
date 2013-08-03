@@ -3,8 +3,10 @@
 # Project created by QtCreator 2013-07-13T12:02:00
 #
 #-------------------------------------------------
-TEMPLATE = subdirs
+CONFIG(release,debug|release){
+        DEST_DIR = $${PWD}/../gCellV0
+}
 
-CONFIG = ordered
-
-SUBDIRS +=  GCell
+CONFIG(debug,debug|release){
+        DEST_DIR = $${PWD}/../gCellV0_d
+}

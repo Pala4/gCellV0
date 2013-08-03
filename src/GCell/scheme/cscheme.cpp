@@ -1,0 +1,153 @@
+#include "cscheme.h"
+
+#include <QAction>
+
+#include "algorithmproto/calgorithmproto.h"
+#include "algorithmproto/calgorithmprotomng.h"
+#include "algorithm/calgorithm.h"
+#include "portal/cresult.h"
+#include "portal/cargument.h"
+#include "link/clink.h"
+#include "elementlistutil.h"
+
+CScheme::CScheme(QObject *parent) : QGraphicsScene(parent)
+{
+	setObjectName(QStringLiteral("CScheme"));
+
+	m_acDeleteSelected = 0;
+    m_algProtoMng = 0;
+	m_newScheme = false;
+	m_modified = false;
+
+	connect(this, SIGNAL(selectionChanged()), this, SLOT(onSelectionChanged()));
+
+	m_acDeleteSelected = new QAction(tr("Delete selected"), this);
+	m_acDeleteSelected->setObjectName(QStringLiteral("acDeleteSelected"));
+	m_acDeleteSelected->setDisabled(true);
+	connect(m_acDeleteSelected, SIGNAL(triggered()), this, SLOT(deleteSelected()));
+    addAction(m_acDeleteSelected);
+}
+
+void CScheme::addAction(QAction *action)
+{
+	if(!action) return;
+	if(m_actions.contains(action)) return;
+
+	m_actions << action;
+}
+
+CElement* CScheme::createElement(const QString &typeID)
+{
+	CElement *element = 0;
+	if(typeID == QStringLiteral("CLink"))
+	{
+		element = new CLink();
+	}
+	else
+	{
+		if(m_algProtoMng)
+		{
+			CAlgorithmProto *algProto = m_algProtoMng->algorithmProto(typeID);
+			if(algProto) element = algProto->createAlgorithm();
+		}
+	}
+	addItem(element);
+	return element;
+}
+
+CElement* CScheme::element(const QString &id)
+{
+    QList<CElement*> elements = getElements<CElement*, QGraphicsItem*>(items());
+    foreach(CElement *element, elements)
+    {
+        if(element && element->id() == id) return element;
+    }
+	return 0;
+}
+
+QList<CAlgorithm*> CScheme::algorithms(void)
+{
+	return getElements<CAlgorithm*, QGraphicsItem*>(items());
+}
+
+QList<CLink*> CScheme::links(void)
+{
+	return getElements<CLink*, QGraphicsItem*>(items());
+}
+
+void CScheme::onSelectionChanged(void)
+{
+    if(m_acDeleteSelected) m_acDeleteSelected->setDisabled(selectedItems().isEmpty());
+	emit algorithmsSelected(getElements<CAlgorithm*, QGraphicsItem*>(selectedItems()));
+}
+
+void CScheme::createAlgorithm(const QPointF &pos)
+{
+    if(!m_algProtoMng) return;
+    addAlgorithm(m_algProtoMng->selectedAlgorithmProto(), pos);
+}
+
+void CScheme::addAlgorithm(CAlgorithmProto *algorithmProto, const QPointF &pos)
+{
+	if(!algorithmProto) return;
+
+	CAlgorithm *algorithm = algorithmProto->createAlgorithm();
+	addAlgorithm(algorithm, pos);
+}
+
+void CScheme::addAlgorithm(CAlgorithm *algorithm, const QPointF &pos)
+{
+	if(!algorithm) return;
+
+	algorithm->setNomber(generateNomber<CAlgorithm*, CAlgorithm*>(getElements<CAlgorithm*, QGraphicsItem*>(items(), algorithm->typeID())));
+	algorithm->setPos(pos);
+	addItem(algorithm);
+}
+
+void CScheme::addLink(const QString &firstPortalID, const QString &secondPortalID)
+{
+	addLink(qobject_cast<CPortal*>(element(firstPortalID)), qobject_cast<CPortal*>(element(secondPortalID)));
+}
+
+void CScheme::addLink(CPortal *firstPortal, CPortal *secondPortal)
+{
+	if(!firstPortal || !secondPortal) return;
+
+	CResult *result = 0;
+	CArgument *argument = 0;
+	if(qobject_cast<CResult*>(firstPortal))
+	{
+		result = qobject_cast<CResult*>(firstPortal);
+		argument = qobject_cast<CArgument*>(secondPortal);
+	}
+	else if(qobject_cast<CResult*>(secondPortal))
+	{
+		result = qobject_cast<CResult*>(secondPortal);
+		argument = qobject_cast<CArgument*>(firstPortal);
+	}
+	if(!result || !argument) return;
+
+	CLink *link = new CLink(0);
+	link->setResult(result);
+	link->setArgument(argument);
+	link->setNomber(generateNomber<CLink*, CLink*>(getElements<CLink*, QGraphicsItem*>(items())));
+	addItem(link);
+	link->updateGeometry();
+}
+
+void CScheme::deleteSelected(void)
+{
+	QList<QGraphicsItem*> selItems = selectedItems();
+	foreach(QGraphicsItem *selItem, selItems)
+	{
+		CElement *element = dynamic_cast<CElement*>(selItem);
+		if(element)
+		{
+			element->deleteLater();
+		}
+		else
+		{
+			delete selItem;
+		}
+	}
+}
