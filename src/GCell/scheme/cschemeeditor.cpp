@@ -375,6 +375,8 @@ void CSchemeEditor::pasteSelected(void)
 
 void CSchemeEditor::cutSelected(void)
 {
+    copySelected();
+    deleteSelected();
 }
 
 void CSchemeEditor::deleteSelected(void)
