@@ -42,12 +42,12 @@ SOURCES += \
     scheme/portal/cresult.cpp \
     scheme/portal/cportal.cpp \
     scheme/portal/cargument.cpp \
-    scheme/cxmlscheme.cpp \
     scheme/cschemeeditor.cpp \
     scheme/cscheme.cpp \
     scheme/celement.cpp \
     main.cpp \
-    mainwindow/cdatawindow.cpp
+    mainwindow/cdatawindow.cpp \
+    algorithms/General/Sum/csum.cpp
 
 HEADERS += \
     mainwindow/cmainwindow.h \
@@ -69,8 +69,8 @@ HEADERS += \
     scheme/portal/cportal.h \
     scheme/portal/cargument.h \
     scheme/elementlistutil.h \
-    scheme/cxmlscheme.h \
     scheme/cschemeeditor.h \
     scheme/cscheme.h \
     scheme/celement.h \
-    mainwindow/cdatawindow.h
+    mainwindow/cdatawindow.h \
+    algorithms/General/Sum/csum.h

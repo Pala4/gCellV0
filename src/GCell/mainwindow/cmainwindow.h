@@ -52,7 +52,7 @@ private slots:
 
 	void newScheme(void);
 	void saveScheme(void);
-	void saveSchemeAs(void);
+    bool saveSchemeAs(void);
 	void openScheme(void);
     void closeScheme(void);
 

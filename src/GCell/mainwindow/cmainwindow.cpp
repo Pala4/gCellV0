@@ -15,10 +15,10 @@
 #include "../scheme/algorithmproto/calgorithmprotomng.h"
 #include "../scheme/cscheme.h"
 #include "../scheme/cschemeeditor.h"
-#include "../scheme/cxmlscheme.h"
 #include "../engine/cengine.h"
 #include "../algorithms/CSV/CSVIn/ccsvin.h"
 #include "../algorithms/General/Amp/camp.h"
+#include "../algorithms/General/Sum/csum.h"
 #include "../algorithms/CSV/CSVOut/ccsvout.h"
 
 /*!
@@ -63,7 +63,6 @@ void CMainWindow::writeScheme(CScheme *scheme, const QString &fileName)
 
 	QFile fileHandler(fileName);
 	if(!fileHandler.open(QIODevice::WriteOnly)) return;
-//	CXMLScheme xmlScheme;
 	QTextStream(&fileHandler) << scheme->toXMLDom(scheme->elements()).toString(); /*xmlScheme.schemeToDom(scheme).toString();*/
 	fileHandler.close();
 }
@@ -81,9 +80,7 @@ void CMainWindow::readScheme(CScheme *scheme, const QString &fileName)
 	int errCol = 0;
 	if(!domDoc.setContent(&fileHandler, &errMsg, &errLine, &errCol)) return;
 
-//	CXMLScheme xmlScheme;
 	scheme->addElements(scheme->fromXMLDom(domDoc));
-//	xmlScheme.schemeFromDom(scheme, domDoc);
 }
 
 void CMainWindow::closeEvent(QCloseEvent *event)
@@ -126,6 +123,7 @@ CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
 	m_algorithmProtoMng->setObjectName(QStringLiteral("algorithmProtoMng"));
 	m_algorithmProtoMng->addProto(tr("CSV In"), &CCSVIn::staticMetaObject);
     m_algorithmProtoMng->addProto(tr("Amp"), &CAmp::staticMetaObject);
+    m_algorithmProtoMng->addProto(tr("Sum"), &CSum::staticMetaObject);
     m_algorithmProtoMng->addProto(tr("CSV Out"), &CCSVOut::staticMetaObject);
     connect(m_algorithmProtoMng, SIGNAL(algorithmProtoSelected(CAlgorithmProto*)), this, SLOT(onAlgorithmProtoSelected(CAlgorithmProto*)));
 
@@ -205,17 +203,21 @@ void CMainWindow::saveScheme(void)
 	if(!m_scheme) return;
 	if(m_scheme->isNewScheme())
 	{
-		saveSchemeAs();
+        if(saveSchemeAs()) m_scheme->setNewScheme(false);
 	}
 	else
 	{
-		writeScheme(m_scheme, "scheme.scm");
+        writeScheme(m_scheme, "scheme.scm");//m_scheme->fileName()
 	}
 }
 
-void CMainWindow::saveSchemeAs(void)
+bool CMainWindow::saveSchemeAs(void)
 {
-	writeScheme(m_scheme, "scheme.scm");
+    QString fileName = QFileDialog::getSaveFileName(this, "Save as...");
+    if(fileName.isEmpty()) return false;
+
+    writeScheme(m_scheme, fileName);
+    return true;
 }
 
 void CMainWindow::openScheme(void)

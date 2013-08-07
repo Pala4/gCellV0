@@ -5,7 +5,7 @@
 
 void CAmp::proced(const int &timeFrame)
 {
-	res->addBufferData(timeFrame, arg->bufferData(timeFrame)*2.0);
+    res->addBufferData(timeFrame, arg->bufferData(timeFrame)*0.01);
 }
 
 CAmp::CAmp(QGraphicsItem *parent) : CDataTransmitter(parent)
