@@ -5,6 +5,7 @@
 
 #include <QMap>
 #include <QGraphicsItem>
+#include <QClipboard>
 
 #include "algorithm/calgorithm.h"
 
@@ -75,6 +76,10 @@ class CSchemeEditor : public QGraphicsView
 public:
 	enum TMouseMode{MoveSelectMode, MoveSceneMode, LinkingMode, AddAlgorithmMode};
 private:
+	QAction *m_acCopy;
+	QAction *m_acPaste;
+	QAction *m_acCut;
+	QAction *m_acDelete;
 	CSchemeEditor::TMouseMode m_mouseMode;
 	CItemMover<CAlgorithm*> m_algorithmMover;
     CSelector m_selector;
@@ -91,9 +96,18 @@ protected:
 public:
 	explicit CSchemeEditor(QWidget *parent = 0);
 
+	void setScheme(CScheme *a_scheme);
+
 	QList<QAction*> schemeEditorActions(void);
+private slots:
+	void onSelectionChanged(void);
+	void onClipBoardChanged(const QClipboard::Mode &mode);
 public slots:
 	void setMouseMode(const CSchemeEditor::TMouseMode &mouseMode){m_mouseMode = mouseMode;}
+
+	void copySelected(void);
+	void pasteSelected(void);
+	void cutSelected(void);
 	void deleteSelected(void);
 signals:
     void mouseReleased(QPointF pos);

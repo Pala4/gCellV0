@@ -82,12 +82,6 @@ CPortal::CPortal(QGraphicsItem *parent) : CElement(parent)
 	m_acRightOrient = 0;
 	m_acBottomOrient = 0;
 
-	if(deleteAction())
-	{
-		deleteAction()->setEnabled(false);
-		deleteAction()->setVisible(false);
-	}
-
 	m_orientActionsMapper = new QSignalMapper(this);
 	m_orientActionsMapper->setObjectName(QStringLiteral("orientActionsMapper"));
 	connect(m_orientActionsMapper, SIGNAL(mapped(int)), this, SLOT(setPortalOrientation(int)));

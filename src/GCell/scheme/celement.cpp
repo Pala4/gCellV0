@@ -17,10 +17,6 @@ CElement::CElement(QGraphicsItem *parent) : QGraphicsObject(parent)
 	m_defaultName = tr("element");
 	m_nomber = 0;
 
-	m_acDelete = new QAction("Delete", this);
-	connect(m_acDelete, SIGNAL(triggered()), this, SLOT(deleteLater()));
-	addAction(m_acDelete);
-
 	connect(this, SIGNAL(nameChanged(QString)), this, SLOT(updateGeometry()));
 }
 
@@ -35,16 +31,10 @@ QString CElement::id(void)
 	}
 	else
 	{
-		if(scheme()) schemeID = scheme()->id() + ":";
+//		if(scheme()) schemeID = scheme()->id() + ":";
 	}
 
 	return QString("%1%2%3:%4").arg(schemeID).arg(parentID).arg(typeID()).arg(nomber());
-}
-
-QString CElement::name(void) const
-{
-	if(m_name.isEmpty()) return QString("%1_%2").arg(m_defaultName).arg(m_nomber);
-	return m_name;
 }
 
 void CElement::setName(const QString &name)
@@ -60,11 +50,26 @@ void CElement::setDefaultName(const QString &defaultName)
 	if(m_name.isEmpty()) emit nameChanged(m_defaultName);
 }
 
+QString CElement::caption(void) const
+{
+	if(name().isEmpty()) return QString("%1_%2").arg(defaultName()).arg(nomber());
+	return name();
+}
+
 void CElement::addAction(QAction *action)
 {
 	if(!action || m_actions.contains(action)) return;
 
 	m_actions << action;
+}
+
+CElement* CElement::childElement(const QString &id)
+{
+	foreach(CElement *chel, childElements())
+	{
+		if(chel->id() == id) return chel;
+	}
+	return 0;
 }
 
 QList<CElement*> CElement::childElements(void)

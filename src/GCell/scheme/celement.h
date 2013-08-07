@@ -10,11 +10,11 @@ class CScheme;
 class CElement : public QGraphicsObject
 {
     Q_OBJECT
+	Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
 private:
 	QString m_name;
 	QString m_defaultName;
 	int m_nomber;
-	QAction *m_acDelete;
 	QList<QAction*> m_actions;
 protected:
 	CScheme* scheme(void);
@@ -24,17 +24,23 @@ public:
 	QString typeID(void){return metaObject()->className();}
 
 	QString id(void);
-	QString name(void) const;
+	const QString& name(void) const{return m_name;}
 	void setName(const QString &name);
 	const QString& defaultName(void) const{return m_defaultName;}
 	void setDefaultName(const QString &defaultName);
 	const int& nomber(void) const{return m_nomber;}
 	void setNomber(const int &nomber){m_nomber = nomber;}
 
-	QAction* deleteAction(void){return m_acDelete;}
+	QString caption(void) const;
+
 	const QList<QAction*>& actions(void) const{return m_actions;}
 	void addAction(QAction *action);
+
+	virtual CElement* createElement(const QString &typeID){Q_UNUSED(typeID) return 0;}
+	CElement* childElement(const QString &id);
 	QList<CElement*> childElements(void);
+
+	virtual bool reIndexing(const QList<CElement*> &elements){Q_UNUSED(elements) return true;}
 
 	virtual void calc(const int &timeFrame) = 0;
 public slots:

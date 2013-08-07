@@ -112,26 +112,40 @@ void CLink::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWi
 	painter->restore();
 }
 
-QString CLink::argumentID(void)
-{
-	if(m_argument) return m_argument->id();
-	return QString();
-}
-
-void CLink::setArgumentID(const QString &argumentID)
-{
-	setArgument(qobject_cast<CArgument*>(scheme()->element(argumentID)));
-}
-
 QString CLink::resultID(void)
 {
 	if(m_result) return m_result->id();
-	return QString();
+	return m_resultID;
 }
 
 void CLink::setResultID(const QString &resultID)
 {
-	setResult(qobject_cast<CResult*>(scheme()->element(resultID)));
+	if(scheme())
+	{
+		setResult(qobject_cast<CResult*>(scheme()->element(resultID)));
+	}
+	else
+	{
+		m_resultID = resultID;
+	}
+}
+
+QString CLink::argumentID(void)
+{
+	if(m_argument) return m_argument->id();
+	return m_argumentID;
+}
+
+void CLink::setArgumentID(const QString &argumentID)
+{
+	if(scheme())
+	{
+		setArgument(qobject_cast<CArgument*>(scheme()->element(argumentID)));
+	}
+	else
+	{
+		m_argumentID = argumentID;
+	}
 }
 
 void CLink::setResult(CResult *result)
@@ -170,6 +184,29 @@ void CLink::setArgument(CArgument *argument)
 		if(m_result) m_argument->setBuffer(m_result->buffer());
 	}
 	updateGeometry();
+}
+
+bool CLink::reIndexing(const QList<CElement*> &elements)
+{
+	if(!m_result || !m_argument)
+	{
+		foreach(CElement *element, elements)
+		{
+			if(m_result && m_argument) return true;
+			if(!element) continue;
+			if(!m_result && (element->id() == m_resultID))
+			{
+				setResult(qobject_cast<CResult*>(element));
+			}
+			if(!m_argument && (element->id() == m_argumentID))
+			{
+				setArgument(qobject_cast<CArgument*>(element));
+			}
+			reIndexing(element->childElements());
+		}
+	}
+	updateGeometry();
+	return (m_result && m_argument);
 }
 
 void CLink::calc(const int &timeFrame)

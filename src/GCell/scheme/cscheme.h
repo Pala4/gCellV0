@@ -3,7 +3,7 @@
 
 #include <QGraphicsScene>
 
-class QAction;
+#include <QtXml/QDomDocument>
 
 class CElement;
 class CAlgorithmProto;
@@ -18,9 +18,12 @@ class CScheme : public QGraphicsScene
 private:
 	bool m_newScheme;
 	bool m_modified;
-	QAction *m_acDeleteSelected;
-	QList<QAction*> m_actions;
     CAlgorithmProtoMng *m_algProtoMng;
+
+	QDomElement variantToDomElement(QDomDocument domDoc, const QString &name, const QVariant &value);
+	QVariant domElementToVariant(const QDomElement &domElement);
+	void writeElementToXML(QDomDocument &doc, QDomElement &domElParent, CElement *element);
+	CElement* readElementFromXML(const QDomDocument &domDoc, const QDomElement &domElElement, CElement *parentElement = 0);
 public:
     explicit CScheme(QObject *parent = 0);
 
@@ -30,16 +33,21 @@ public:
 	const bool& isModified(void) const{return m_modified;}
 	void setModified(const bool &modified){m_modified = modified;}
 
-	const QList<QAction*>& actions(void){return m_actions;}
-	void addAction(QAction *action);
     void setAlgorithmProtoMng(CAlgorithmProtoMng *algorithmProtoMng){m_algProtoMng = algorithmProtoMng;}
 	CElement* createElement(const QString &typeID);
+	QList<CElement*> elements(const QString &typeID = QString());
+	QList<CElement*> selectedElements(void);
 	CElement* element(const QString &id);
 	QList<CAlgorithm*> algorithms(void);
 	QList<CLink*> links(void);
+
+	bool checkXMLSchemeFormat(const QDomDocument &domDoc);
+	QDomDocument toXMLDom(const QList<CElement*> &elements);
+	QList<CElement*> fromXMLDom(const QDomDocument &domDoc);
 private slots:
 	void onSelectionChanged(void);
 public slots:
+	void addElements(const QList<CElement*> &els);
     void createAlgorithm(const QPointF &pos);
 	void addAlgorithm(CAlgorithmProto *algorithmProto, const QPointF &pos);
 	void addAlgorithm(CAlgorithm *algorithm, const QPointF &pos);

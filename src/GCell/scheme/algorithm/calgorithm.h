@@ -38,6 +38,8 @@ public:
 	QList<CArgument*> arguments(void);
 	QList<CResult*> results(void);
 
+	virtual CElement* createElement(const QString &typeID);
+
 	virtual void calc(const int &timeFrame);
 private slots:
 	void onPortalDestroyed(QObject *objPortal);

@@ -15,8 +15,8 @@ void CAlgorithm::calcBounds(void)
 	prepareGeometryChange();
 	QFont f("Corier", 8, QFont::Bold);
 	QFontMetricsF fm(f);
-	m_innerBound.setWidth(fm.boundingRect(name()).width());
-	m_innerBound.setHeight(fm.boundingRect(name()).height());
+	m_innerBound.setWidth(fm.boundingRect(caption()).width());
+	m_innerBound.setHeight(fm.boundingRect(caption()).height());
 	m_boundingRect = m_innerBound;
 	if(m_portals.isEmpty())
 	{
@@ -158,7 +158,7 @@ void CAlgorithm::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
 	painter->setRenderHint(QPainter::TextAntialiasing, true);
 	painter->setPen(pen);
 	painter->drawRect(boundingRect());
-	painter->drawText(boundingRect(), Qt::AlignCenter, name());
+	painter->drawText(boundingRect(), Qt::AlignCenter, caption());
 	painter->restore();
 }
 
@@ -170,6 +170,20 @@ QList<CArgument*> CAlgorithm::arguments(void)
 QList<CResult*> CAlgorithm::results(void)
 {
 	return getElements<CResult*, CPortal*>(portals());
+}
+
+CElement* CAlgorithm::createElement(const QString &typeID)
+{
+	if(typeID == CResult::staticMetaObject.className())
+	{
+		return addResult(QString());
+	}
+	else if(typeID == CArgument::staticMetaObject.className())
+	{
+		return addArgument(QString());
+	}
+
+	return 0;
 }
 
 void CAlgorithm::calc(const int &timeFrame)

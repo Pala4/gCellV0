@@ -2,6 +2,8 @@
 
 #include <QMenu>
 #include <QContextMenuEvent>
+#include <QApplication>
+#include <QMimeData>
 
 #include "cscheme.h"
 #include "portal/cportal.h"
@@ -70,18 +72,29 @@ void CSchemeEditor::contextMenuEvent(QContextMenuEvent *event)
 	if(element)
 	{
 		menu.addActions(element->actions());
+		if(!element->actions().isEmpty()) menu.addSeparator();
 	}
-	else
-	{
-		menu.addActions(schemeEditorActions());
-	}
+
+	menu.addActions(actions());
 
 	menu.exec(event->globalPos());
 }
 
 void CSchemeEditor::mousePressEvent(QMouseEvent *event)
 {
-	if(!(event->buttons() & Qt::RightButton)) QGraphicsView::mousePressEvent(event);
+	if((event->buttons() & Qt::RightButton))
+	{
+		if(itemAt(event->pos()))
+		{
+			if(scheme()) scheme()->clearSelection();
+			itemAt(event->pos())->setSelected(true);
+		}
+		return;
+	}
+	else
+	{
+		QGraphicsView::mousePressEvent(event);
+	}
 
 	switch((int)m_mouseMode)
 	{
@@ -219,22 +232,149 @@ CSchemeEditor::CSchemeEditor(QWidget *parent) : QGraphicsView(parent)
 {
 	setObjectName(QStringLiteral("CSchemeView"));
 
+	m_acCopy = 0;
+	m_acPaste = 0;
+	m_acCut = 0;
+	m_acDelete = 0;
 	m_mouseMode = CSchemeEditor::MoveSelectMode;
 	m_firstPortal = 0;
 	m_secondPortal = 0;
+
+	m_acCopy = new QAction(tr("Copy"), this);
+	m_acCopy->setObjectName(QStringLiteral("acCopy"));
+	m_acCopy->setShortcut(QKeySequence::Copy);
+	m_acCopy->setShortcutContext(Qt::WidgetShortcut);
+	m_acCopy->setEnabled(false);
+	m_acCopy->setVisible(false);
+	connect(m_acCopy, SIGNAL(triggered()), this, SLOT(copySelected()));
+	addAction(m_acCopy);
+
+	m_acPaste = new QAction(tr("Paste"), this);
+	m_acPaste->setObjectName(QStringLiteral("acPaste"));
+	m_acPaste->setShortcut(QKeySequence::Paste);
+	m_acPaste->setShortcutContext(Qt::WidgetShortcut);
+	m_acPaste->setEnabled(false);
+	m_acPaste->setVisible(false);
+	connect(m_acPaste, SIGNAL(triggered()), this, SLOT(pasteSelected()));
+	addAction(m_acPaste);
+
+	m_acCut = new QAction(tr("Cut"), this);
+	m_acCut->setObjectName(QStringLiteral("acCut"));
+	m_acCut->setShortcut(QKeySequence::Cut);
+	m_acCut->setShortcutContext(Qt::WidgetShortcut);
+	m_acCut->setEnabled(false);
+	m_acCut->setVisible(false);
+	connect(m_acCut, SIGNAL(triggered()), this, SLOT(cutSelected()));
+	addAction(m_acCut);
+
+	m_acDelete = new QAction(tr("Delete"), this);
+	m_acDelete->setObjectName(QStringLiteral("acDelete"));
+	m_acDelete->setShortcut(QKeySequence::Delete);
+	m_acDelete->setShortcutContext(Qt::WidgetShortcut);
+	m_acDelete->setEnabled(false);
+	m_acDelete->setVisible(false);
+	connect(m_acDelete, SIGNAL(triggered()), this, SLOT(deleteSelected()));
+	addAction(m_acDelete);
+
+	QClipboard *clpb = QApplication::clipboard();
+	connect(clpb, SIGNAL(changed(QClipboard::Mode)), this, SLOT(onClipBoardChanged(QClipboard::Mode)));
 }
 
-QList<QAction*> CSchemeEditor::schemeEditorActions(void)
+void CSchemeEditor::setScheme(CScheme *a_scheme)
 {
-	QList<QAction*> seActions = actions();
-	if(scheme() && !scheme()->actions().isEmpty())
+	if(scheme() && (scheme() == a_scheme)) return;
+	if(scheme())
 	{
-		QAction *sep = new QAction("-", this);
-		sep->setSeparator(true);
-		seActions << sep;
-		seActions << scheme()->actions();
+		disconnect(scheme(), SIGNAL(selectionChanged()), this, SLOT(onSelectionChanged()));
 	}
-	return seActions;
+	setScene(a_scheme);
+	if(scheme())
+	{
+		connect(scheme(), SIGNAL(selectionChanged()), this, SLOT(onSelectionChanged()));
+	}
+}
+
+void CSchemeEditor::onSelectionChanged(void)
+{
+	bool hasSelected = scheme() && !scheme()->selectedItems().isEmpty();
+	if(m_acCopy)
+	{
+		m_acCopy->setEnabled(hasSelected);
+		m_acCopy->setVisible(hasSelected);
+	}
+	if(m_acCut)
+	{
+		m_acCut->setEnabled(hasSelected);
+		m_acCut->setVisible(hasSelected);
+	}
+	if(m_acDelete)
+	{
+		m_acDelete->setEnabled(hasSelected);
+		m_acDelete->setVisible(hasSelected);
+	}
+}
+
+void CSchemeEditor::onClipBoardChanged(const QClipboard::Mode &mode)
+{
+	Q_UNUSED(mode)
+
+	QClipboard *clpb = QApplication::clipboard();
+	if(clpb->mimeData()->hasHtml())
+	{
+		QDomDocument domDoc;
+		QString errMsg;
+		int errLine = 0;
+		int errCol = 0;
+		if(domDoc.setContent(clpb->mimeData()->html(), &errMsg, &errLine, &errCol))
+		{
+			if(scheme() && scheme()->checkXMLSchemeFormat(domDoc))
+			{
+				if(m_acPaste)
+				{
+					m_acPaste->setEnabled(true);
+					m_acPaste->setVisible(true);
+				}
+			}
+		}
+	}
+}
+
+void CSchemeEditor::copySelected(void)
+{
+	if(scheme())
+	{
+		QDomDocument domDoc = scheme()->toXMLDom(scheme()->selectedElements());
+		QMimeData *mimeData = new QMimeData();
+		mimeData->setHtml(domDoc.toString());
+		QClipboard *clpb = QApplication::clipboard();
+		clpb->setMimeData(mimeData);
+	}
+}
+
+void CSchemeEditor::pasteSelected(void)
+{
+	QClipboard *clpb = QApplication::clipboard();
+	if(clpb->mimeData()->hasHtml())
+	{
+		QDomDocument domDoc;
+		QString errMsg;
+		int errLine = 0;
+		int errCol = 0;
+		if(domDoc.setContent(clpb->mimeData()->html(), &errMsg, &errLine, &errCol))
+		{
+			if(scheme())
+			{
+				QList<CElement*> elements = scheme()->fromXMLDom(domDoc);
+				scheme()->clearSelection();
+				scheme()->addElements(elements);
+				foreach(CElement *element, elements) element->setSelected(true);
+			}
+		}
+	}
+}
+
+void CSchemeEditor::cutSelected(void)
+{
 }
 
 void CSchemeEditor::deleteSelected(void)

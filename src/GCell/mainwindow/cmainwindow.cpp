@@ -63,8 +63,8 @@ void CMainWindow::writeScheme(CScheme *scheme, const QString &fileName)
 
 	QFile fileHandler(fileName);
 	if(!fileHandler.open(QIODevice::WriteOnly)) return;
-	CXMLScheme xmlScheme;
-	QTextStream(&fileHandler) << xmlScheme.schemeToDom(scheme).toString();
+//	CXMLScheme xmlScheme;
+	QTextStream(&fileHandler) << scheme->toXMLDom(scheme->elements()).toString(); /*xmlScheme.schemeToDom(scheme).toString();*/
 	fileHandler.close();
 }
 
@@ -81,8 +81,9 @@ void CMainWindow::readScheme(CScheme *scheme, const QString &fileName)
 	int errCol = 0;
 	if(!domDoc.setContent(&fileHandler, &errMsg, &errLine, &errCol)) return;
 
-	CXMLScheme xmlScheme;
-	xmlScheme.schemeFromDom(scheme, domDoc);
+//	CXMLScheme xmlScheme;
+	scheme->addElements(scheme->fromXMLDom(domDoc));
+//	xmlScheme.schemeFromDom(scheme, domDoc);
 }
 
 void CMainWindow::closeEvent(QCloseEvent *event)
@@ -132,6 +133,7 @@ CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
 	m_schemeEditor->setObjectName(QStringLiteral("schemeEditor"));
 	m_schemeEditor->addAction(m_acCursor);
 	m_schemeEditor->addAction(m_acHand);
+	m_schemeEditor->addAction(m_acLinking);
 	m_schemeEditor->setSceneRect(0.0, 0.0, 1000.0, 1000.0);
 	connect(m_schemeEditor, SIGNAL(mouseReleased(QPointF)), this, SLOT(onSchemeEditorMouseReleased(QPointF)));
 	setCentralWidget(m_schemeEditor);
@@ -186,7 +188,7 @@ void CMainWindow::newScheme(void)
     m_scheme->setObjectName(QStringLiteral("scheme"));
 	m_scheme->setNewScheme(true);
     m_scheme->setAlgorithmProtoMng(m_algorithmProtoMng);
-	if(m_schemeEditor) m_schemeEditor->setScene(m_scheme);
+	if(m_schemeEditor) m_schemeEditor->setScheme(m_scheme);
 	if(m_engine)
 	{
 		m_engine->setScheme(m_scheme);
