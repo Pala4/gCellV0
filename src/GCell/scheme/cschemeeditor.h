@@ -10,6 +10,7 @@
 #include "algorithm/calgorithm.h"
 
 class CScheme;
+class CElementOptionsWgt;
 
 template<typename Type>
 class CItemMover
@@ -76,6 +77,8 @@ class CSchemeEditor : public QGraphicsView
 public:
 	enum TMouseMode{MoveSelectMode, MoveSceneMode, LinkingMode, AddAlgorithmMode};
 private:
+	QAction *m_acElementOptions;
+	QAction *m_acElementActionsSeparator;
 	QAction *m_acCopy;
 	QAction *m_acPaste;
 	QAction *m_acCut;
@@ -83,6 +86,7 @@ private:
 	CSchemeEditor::TMouseMode m_mouseMode;
 	CItemMover<CAlgorithm*> m_algorithmMover;
     CSelector m_selector;
+	CElementOptionsWgt *m_elementOptionsWgt;
 	CPortal *m_firstPortal;
 	CPortal *m_secondPortal;
 
@@ -105,6 +109,7 @@ private slots:
 public slots:
 	void setMouseMode(const CSchemeEditor::TMouseMode &mouseMode){m_mouseMode = mouseMode;}
 
+	void showOptions(void);
 	void copySelected(void);
 	void pasteSelected(void);
 	void cutSelected(void);

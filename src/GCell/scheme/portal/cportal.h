@@ -75,6 +75,8 @@ public:
 	void addBufferData(const int &timeFrame, const qreal &data);
 	qreal bufferData(const int &timeFrame);
 	bool isBufferDataReady(const int &timeFrame);
+
+    virtual void beforeCalc(void);
 private slots:
 	void setPortalOrientation(const int &portalOrientation);
 public slots:

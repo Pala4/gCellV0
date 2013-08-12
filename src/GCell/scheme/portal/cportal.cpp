@@ -240,7 +240,13 @@ qreal CPortal::bufferData(const int &timeFrame)
 bool CPortal::isBufferDataReady(const int &timeFrame)
 {
 	if(!m_dataBuffer) return false;
-	return m_dataBuffer->isDataReady(timeFrame);
+    return m_dataBuffer->isDataReady(timeFrame);
+}
+
+void CPortal::beforeCalc(void)
+{
+    if(!m_dataBufferIsReference && m_dataBuffer) m_dataBuffer->clear();
+    if(isLoopBackPortal()) setLoopBackPortal(false);
 }
 
 void CPortal::setPortalOrientation(const int &portalOrientation)

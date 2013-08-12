@@ -4,6 +4,7 @@
 
 #include "cscheme.h"
 #include "elementlistutil.h"
+#include "celementoptionswgt.h"
 
 CScheme* CElement::scheme(void)
 {
@@ -75,4 +76,17 @@ CElement* CElement::childElement(const QString &id)
 QList<CElement*> CElement::childElements(void)
 {
 	return getElements<CElement*, QGraphicsItem*>(childItems());
+}
+
+CElementOptionsWgt* CElement::optionsWidget(QWidget *parentWidget)
+{
+	return new CElementOptionsWgt(this, parentWidget);
+}
+
+void CElement::acceptOptions(CElementOptionsWgt *optWgt)
+{
+	if(optWgt)
+	{
+		setName(optWgt->elementCaption());
+	}
 }

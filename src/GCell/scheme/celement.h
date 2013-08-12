@@ -6,6 +6,7 @@
 class QAction;
 
 class CScheme;
+class CElementOptionsWgt;
 
 class CElement : public QGraphicsObject
 {
@@ -40,9 +41,13 @@ public:
 	CElement* childElement(const QString &id);
 	QList<CElement*> childElements(void);
 
-	virtual bool reIndexing(const QList<CElement*> &elements){Q_UNUSED(elements) return true;}
+	virtual CElementOptionsWgt* optionsWidget(QWidget *parentWidget);
+	virtual void acceptOptions(CElementOptionsWgt *optWgt);
 
+	virtual bool reIndexing(const QList<CElement*> &elements){Q_UNUSED(elements) return true;}
+    virtual void beforeCalc(void){}
 	virtual void calc(const int &timeFrame) = 0;
+    virtual void afterCalc(void){}
 public slots:
 	virtual void updateGeometry(void){}
 signals:

@@ -95,12 +95,27 @@ void CAlgorithm::placePortals(void)
 void CAlgorithm::addPortal(CPortal *portal)
 {
 	if(!portal) return;
-	if(m_portals.contains(portal)) return;
+    if(m_portals.contains(portal->id())) return;
+    if(m_portals.values().contains(portal)) return;
 
-	m_portals << portal;
+    m_portals[portal->id()] = portal;
 	connect(portal, SIGNAL(destroyed(QObject*)), this, SLOT(onPortalDestroyed(QObject*)));
 	connect(portal, SIGNAL(geometryChanged()), this, SLOT(updateGeometry()));
-	updateGeometry();
+    updateGeometry();
+
+	emit portalAdded(portal);
+}
+
+void CAlgorithm::removePortal(const QString &id)
+{
+    if(id.isEmpty()) return;
+    if(!m_portals.contains(id)) return;
+
+    CPortal *portal = m_portals[id];
+	if(portal)
+	{
+		portal->deleteLater();
+	}
 }
 
 CArgument* CAlgorithm::addArgument(const QString &name)
@@ -108,7 +123,7 @@ CArgument* CAlgorithm::addArgument(const QString &name)
 	CArgument *arg = new CArgument(this);
 	arg->setPortalOrientation(CPortal::Left);
 	arg->setName(name);
-	arg->setNomber(generateNomber<CPortal*, CArgument*>(m_portals));
+    arg->setNomber(generateNomber<CPortal*, CArgument*>(m_portals.values()));
 	addPortal(arg);
 
 	return arg;
@@ -119,11 +134,20 @@ CResult* CAlgorithm::addResult(const QString &name)
 	CResult *res = new CResult(this);
 	res->setPortalOrientation(CPortal::Right);
 	res->setName(name);
-	res->setNomber(generateNomber<CPortal*, CResult*>(m_portals));
+    res->setNomber(generateNomber<CPortal*, CResult*>(m_portals.values()));
 	res->createBuffer();
 	addPortal(res);
 
 	return res;
+}
+
+void CAlgorithm::clearResults(void)
+{
+    QList<CResult*> ress = getElements<CResult*, CPortal*>(m_portals.values());
+	foreach(CResult *res, ress)
+	{
+		if(res) res->deleteLater();
+	}
 }
 
 CAlgorithm::CAlgorithm(QGraphicsItem *parent) : CElement(parent)
@@ -159,7 +183,15 @@ void CAlgorithm::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
 	painter->setPen(pen);
 	painter->drawRect(boundingRect());
 	painter->drawText(boundingRect(), Qt::AlignCenter, caption());
-	painter->restore();
+    painter->restore();
+}
+
+CResult* CAlgorithm::result(const QString &id)
+{
+    if(id.isEmpty()) return 0;
+    if(!m_portals.contains(id)) return 0;
+
+    return qobject_cast<CResult*>(m_portals[id]);
 }
 
 QList<CArgument*> CAlgorithm::arguments(void)
@@ -204,8 +236,8 @@ void CAlgorithm::calc(const int &timeFrame)
 
 void CAlgorithm::onPortalDestroyed(QObject *objPortal)
 {
-	if(!m_portals.contains((CPortal*)objPortal)) return;
-	m_portals.removeOne((CPortal*)objPortal);
+    if(!m_portals.values().contains((CPortal*)objPortal)) return;
+    m_portals.remove(m_portals.key((CPortal*)objPortal));
 	updateGeometry();
 }
 

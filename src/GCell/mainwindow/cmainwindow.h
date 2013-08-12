@@ -50,6 +50,7 @@ private slots:
 
 	void showData(void);
 
+	void updateTitle(void);
 	void newScheme(void);
 	void saveScheme(void);
     bool saveSchemeAs(void);

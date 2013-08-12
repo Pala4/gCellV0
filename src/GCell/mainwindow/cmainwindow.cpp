@@ -1,5 +1,6 @@
 #include "cmainwindow.h"
 
+#include <QApplication>
 #include <QToolBar>
 #include <QAction>
 #include <QEvent>
@@ -138,6 +139,7 @@ CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
 
     m_engine = new CEngine(this);
     m_engine->setObjectName(QStringLiteral("engine"));
+	connect(m_engine, SIGNAL(calcStopped()), m_dataWindow, SLOT(flushBuffers()));
 
     setupToolBars();
     newScheme();
@@ -175,7 +177,17 @@ void CMainWindow::onSchemeEditorMouseReleased(const QPointF &pos)
 
 void CMainWindow::showData(void)
 {
-	if(m_dataWindow) m_dataWindow->show();
+	if(m_dataWindow)
+	{
+		m_dataWindow->show();
+	}
+}
+
+void CMainWindow::updateTitle(void)
+{
+	QString newTitle = QApplication::applicationName();
+	if(m_scheme) newTitle += " [" + m_scheme->fileName() + "]";
+	setWindowTitle(newTitle);
 }
 
 void CMainWindow::newScheme(void)
@@ -186,6 +198,7 @@ void CMainWindow::newScheme(void)
     m_scheme->setObjectName(QStringLiteral("scheme"));
 	m_scheme->setNewScheme(true);
     m_scheme->setAlgorithmProtoMng(m_algorithmProtoMng);
+	connect(m_scheme, SIGNAL(fileNameChanged(QString)), this, SLOT(updateTitle()));
 	if(m_schemeEditor) m_schemeEditor->setScheme(m_scheme);
 	if(m_engine)
 	{
@@ -195,7 +208,9 @@ void CMainWindow::newScheme(void)
 	if(m_dataWindow)
 	{
 		connect(m_scheme, SIGNAL(algorithmsSelected(QList<CAlgorithm*>)), m_dataWindow, SLOT(setAlgorithms(QList<CAlgorithm*>)));
+		m_dataWindow->setAlgorithms(m_scheme->selectedAlgorithms());
 	}
+	updateTitle();
 }
 
 void CMainWindow::saveScheme(void)
@@ -207,16 +222,18 @@ void CMainWindow::saveScheme(void)
 	}
 	else
 	{
-        writeScheme(m_scheme, "scheme.scm");//m_scheme->fileName()
+		writeScheme(m_scheme, m_scheme->fileName());
 	}
 }
 
 bool CMainWindow::saveSchemeAs(void)
 {
-    QString fileName = QFileDialog::getSaveFileName(this, "Save as...");
+	if(!m_scheme) return false;
+	QString fileName = QFileDialog::getSaveFileName(this, "Save as...", m_scheme->fileName());
     if(fileName.isEmpty()) return false;
 
-    writeScheme(m_scheme, fileName);
+	m_scheme->setFileName(fileName);
+	writeScheme(m_scheme, m_scheme->fileName());
     return true;
 }
 
@@ -226,8 +243,12 @@ void CMainWindow::openScheme(void)
 	if(!QFile::exists(fileName)) return;
 
 	newScheme();
-	readScheme(m_scheme, fileName);
-	m_scheme->setNewScheme(false);
+	if(m_scheme)
+	{
+		readScheme(m_scheme, fileName);
+		m_scheme->setFileName(fileName);
+		m_scheme->setNewScheme(false);
+	}
 }
 
 void CMainWindow::closeScheme(void)
@@ -238,6 +259,7 @@ void CMainWindow::closeScheme(void)
         m_scheme = 0;
         if(m_acCalc) m_acCalc->setEnabled(false);
     }
+	updateTitle();
 }
 
 void CMainWindow::saveConfig(const QString &fileName)

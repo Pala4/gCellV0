@@ -9,14 +9,15 @@
 #include "portal/cargument.h"
 #include "link/clink.h"
 #include "elementlistutil.h"
+#include "varutil.h"
 
 QDomElement CScheme::variantToDomElement(QDomDocument domDoc, const QString &name, const QVariant &value)
 {
 	if(name.isEmpty()) return QDomElement();
-	if(!value.isValid() || !value.canConvert(QVariant::String)) return QDomElement();
+    if(!value.canConvert(QVariant::String)) return QDomElement();
 
 	QDomElement domElement = domDoc.createElement(name);
-	QDomText domText = domDoc.createTextNode(value.toString());
+    QDomText domText = domDoc.createTextNode(variantToString(value));
 	domElement.appendChild(domText);
 
 	return domElement;
@@ -25,7 +26,7 @@ QDomElement CScheme::variantToDomElement(QDomDocument domDoc, const QString &nam
 QVariant CScheme::domElementToVariant(const QDomElement &domElement)
 {
 	if(domElement.isNull()) return QVariant();
-	return QVariant(domElement.text());
+    return QVariant(stringToVariant(domElement.text()));
 }
 
 void CScheme::writeElementToXML(QDomDocument &doc, QDomElement &domElParent, CElement *element)
@@ -116,11 +117,19 @@ CScheme::CScheme(QObject *parent) : QGraphicsScene(parent)
 {
 	setObjectName(QStringLiteral("CScheme"));
 
-    m_algProtoMng = 0;
 	m_newScheme = false;
 	m_modified = false;
+	m_fileName = QStringLiteral("scheme.scm");
+	m_algProtoMng = 0;
 
 	connect(this, SIGNAL(selectionChanged()), this, SLOT(onSelectionChanged()));
+}
+
+void CScheme::setFileName(const QString &fileName)
+{
+	if(m_fileName == fileName) return;
+	m_fileName = fileName;
+	emit fileNameChanged(m_fileName);
 }
 
 CElement* CScheme::createElement(const QString &typeID)
@@ -149,6 +158,11 @@ QList<CElement*> CScheme::elements(const QString &typeID)
 QList<CElement*> CScheme::selectedElements(void)
 {
 	return getElements<CElement*, QGraphicsItem*>(selectedItems());
+}
+
+QList<CAlgorithm *> CScheme::selectedAlgorithms(void)
+{
+	return getElements<CAlgorithm*, QGraphicsItem*>(selectedItems());
 }
 
 CElement* CScheme::element(const QString &id)
@@ -325,6 +339,7 @@ void CScheme::addLink(CPortal *firstPortal, CPortal *secondPortal)
 void CScheme::deleteSelected(void)
 {
 	QList<CElement*> selElements = selectedElements();
+    clearSelection();
 	foreach(CElement *selElement, selElements)
 	{
 		selElement->deleteLater();

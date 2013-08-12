@@ -57,6 +57,8 @@ private slots:
     void onSchemeDestroyed(void);
 public slots:
     void calc(void);
+signals:
+	void calcStopped(void);
 };
 
 #endif // CENGINE_H

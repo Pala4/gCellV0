@@ -47,7 +47,10 @@ SOURCES += \
     scheme/celement.cpp \
     main.cpp \
     mainwindow/cdatawindow.cpp \
-    algorithms/General/Sum/csum.cpp
+    algorithms/General/Sum/csum.cpp \
+    scheme/celementoptionswgt.cpp \
+    algorithms/CSV/CSVIn/ccsvinoptionshit.cpp \
+    scheme/varutil.cpp
 
 HEADERS += \
     mainwindow/cmainwindow.h \
@@ -73,4 +76,7 @@ HEADERS += \
     scheme/cscheme.h \
     scheme/celement.h \
     mainwindow/cdatawindow.h \
-    algorithms/General/Sum/csum.h
+    algorithms/General/Sum/csum.h \
+    scheme/celementoptionswgt.h \
+    algorithms/CSV/CSVIn/ccsvinoptionshit.h \
+    scheme/varutil.h

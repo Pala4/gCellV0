@@ -144,6 +144,10 @@ void CEngine::calc(void)
 {
 	if(!m_scheme) return;
 
+    foreach(CElement *element, m_scheme->elements())
+    {
+        element->beforeCalc();
+    }
 	traceScheme();
 	for(int timeFrame = 0; timeFrame < 100; ++timeFrame)
 	{
@@ -155,4 +159,9 @@ void CEngine::calc(void)
 		for(int ci = 0; ci < 1000000; ++ci);
 	}
 	m_traceData.release();
+    foreach(CElement *element, m_scheme->elements())
+    {
+        element->afterCalc();
+    }
+	emit calcStopped();
 }

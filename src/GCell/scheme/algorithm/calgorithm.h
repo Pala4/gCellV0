@@ -14,7 +14,7 @@ class CAlgorithm : public CElement
 {
 	Q_OBJECT
 private:
-	QList<CPortal*> m_portals;
+    QMap<QString, CPortal*> m_portals;
 	QRectF m_innerBound;
 	QRectF m_boundingRect;
 	qreal m_portalSpace;
@@ -24,8 +24,10 @@ private:
 	void placePortals(void);
 protected:
 	void addPortal(CPortal *portal);
-	CArgument* addArgument(const QString &name);
+    void removePortal(const QString &id);
+    CArgument* addArgument(const QString &name);
 	CResult* addResult(const QString &name);
+	void clearResults(void);
 
 	virtual void proced(const int &timeFrame) = 0;
 public:
@@ -34,7 +36,8 @@ public:
 	virtual QRectF boundingRect(void) const{return m_boundingRect;}
 	virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
-	const QList<CPortal*>& portals(void) const{return m_portals;}
+    CResult* result(const QString &id);
+    QList<CPortal*> portals(void) const{return m_portals.values();}
 	QList<CArgument*> arguments(void);
 	QList<CResult*> results(void);
 
@@ -45,6 +48,8 @@ private slots:
 	void onPortalDestroyed(QObject *objPortal);
 public slots:
 	virtual void updateGeometry(void);
+signals:
+	void portalAdded(CPortal *portal);
 };
 
 #endif // CALGORITHM_H

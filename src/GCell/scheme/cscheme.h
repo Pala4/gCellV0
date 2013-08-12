@@ -18,6 +18,8 @@ class CScheme : public QGraphicsScene
 private:
 	bool m_newScheme;
 	bool m_modified;
+	QString m_fileName;
+
     CAlgorithmProtoMng *m_algProtoMng;
 
 	QDomElement variantToDomElement(QDomDocument domDoc, const QString &name, const QVariant &value);
@@ -32,11 +34,14 @@ public:
 	void setNewScheme(const bool &newScheme){m_newScheme = newScheme;}
 	const bool& isModified(void) const{return m_modified;}
 	void setModified(const bool &modified){m_modified = modified;}
+	const QString& fileName(void) const{return m_fileName;}
+	void setFileName(const QString &fileName);
 
     void setAlgorithmProtoMng(CAlgorithmProtoMng *algorithmProtoMng){m_algProtoMng = algorithmProtoMng;}
 	CElement* createElement(const QString &typeID);
 	QList<CElement*> elements(const QString &typeID = QString());
 	QList<CElement*> selectedElements(void);
+	QList<CAlgorithm*> selectedAlgorithms(void);
 	CElement* element(const QString &id);
 	QList<CAlgorithm*> algorithms(void);
 	QList<CLink*> links(void);
@@ -55,6 +60,7 @@ public slots:
 	void addLink(CPortal *firstPortal, CPortal *secondPortal);
 	void deleteSelected(void);
 signals:
+	void fileNameChanged(QString fileName);
 	void algorithmsSelected(QList<CAlgorithm*> algorithms);
 };
 

@@ -4,8 +4,10 @@
 #include <QContextMenuEvent>
 #include <QApplication>
 #include <QMimeData>
+#include <QLineEdit>
 
 #include "cscheme.h"
+#include "celementoptionswgt.h"
 #include "portal/cportal.h"
 
 /*!
@@ -71,12 +73,13 @@ void CSchemeEditor::contextMenuEvent(QContextMenuEvent *event)
 	}
 	if(element)
 	{
-		menu.addActions(element->actions());
-		if(!element->actions().isEmpty()) menu.addSeparator();
+		if(!element->actions().isEmpty())
+		{
+			menu.addActions(element->actions());
+			menu.addSeparator();
+		}
 	}
-
 	menu.addActions(actions());
-
 	menu.exec(event->globalPos());
 }
 
@@ -232,13 +235,29 @@ CSchemeEditor::CSchemeEditor(QWidget *parent) : QGraphicsView(parent)
 {
 	setObjectName(QStringLiteral("CSchemeView"));
 
+	m_acElementOptions = 0;
 	m_acCopy = 0;
 	m_acPaste = 0;
 	m_acCut = 0;
 	m_acDelete = 0;
 	m_mouseMode = CSchemeEditor::MoveSelectMode;
+	m_elementOptionsWgt = 0;
 	m_firstPortal = 0;
 	m_secondPortal = 0;
+
+	m_acElementOptions = new QAction(tr("Element options..."), this);
+	m_acElementOptions->setObjectName(QStringLiteral("acElementOptions"));
+	m_acElementOptions->setEnabled(false);
+	m_acElementOptions->setVisible(false);
+	connect(m_acElementOptions, SIGNAL(triggered()), this, SLOT(showOptions()));
+	addAction(m_acElementOptions);
+
+	m_acElementActionsSeparator = new QAction(this);
+	m_acElementActionsSeparator->setObjectName("acElementActionsSeparator");
+	m_acElementActionsSeparator->setSeparator(true);
+	m_acElementActionsSeparator->setEnabled(false);
+	m_acElementActionsSeparator->setVisible(false);
+	addAction(m_acElementActionsSeparator);
 
 	m_acCopy = new QAction(tr("Copy"), this);
 	m_acCopy->setObjectName(QStringLiteral("acCopy"));
@@ -296,7 +315,14 @@ void CSchemeEditor::setScheme(CScheme *a_scheme)
 
 void CSchemeEditor::onSelectionChanged(void)
 {
-	bool hasSelected = scheme() && !scheme()->selectedItems().isEmpty();
+	bool hasSelected = (scheme() && !scheme()->selectedItems().isEmpty());
+	bool ownSelect = (scheme() && scheme()->selectedItems().count() == 1);
+	if(m_acElementOptions)
+	{
+		m_acElementOptions->setEnabled(ownSelect);
+		m_acElementOptions->setVisible(ownSelect);
+		if(m_acElementActionsSeparator) m_acElementActionsSeparator->setVisible(ownSelect);
+	}
 	if(m_acCopy)
 	{
 		m_acCopy->setEnabled(hasSelected);
@@ -334,6 +360,27 @@ void CSchemeEditor::onClipBoardChanged(const QClipboard::Mode &mode)
 					m_acPaste->setEnabled(true);
 					m_acPaste->setVisible(true);
 				}
+			}
+		}
+	}
+}
+
+void CSchemeEditor::showOptions(void)
+{
+	if((scheme() && scheme()->selectedItems().count() == 1))
+	{
+		CElement *element = dynamic_cast<CElement*>(scheme()->selectedItems().at(0));
+		if(element)
+		{
+			CElementOptionsWgt *optWgt = element->optionsWidget(this);
+			if(optWgt)
+			{
+				int result = optWgt->exec();
+				if(result == QDialog::Accepted)
+				{
+					element->acceptOptions(optWgt);
+				}
+				optWgt->deleteLater();
 			}
 		}
 	}
