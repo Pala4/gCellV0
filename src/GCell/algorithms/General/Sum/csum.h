@@ -7,10 +7,10 @@ class CSum : public CDataTransmitter
 {
     Q_OBJECT
 private:
-    CArgument *m_arg1;
-    CArgument *m_arg2;
-    CArgument *m_arg3;
-    CResult *m_resSum;
+    CArgument *m_inArg;
+    CArgument *m_x1Arg;
+    CArgument *m_x2Arg;
+    CResult *m_sumRes;
 protected:
     virtual void proced(const int &timeFrame);
 public:

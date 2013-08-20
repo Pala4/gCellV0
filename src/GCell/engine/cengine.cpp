@@ -156,7 +156,7 @@ void CEngine::calc(void)
 			if(!ds) continue;
 			ds->calc(timeFrame);
 		}
-		for(int ci = 0; ci < 1000000; ++ci);
+//		for(int ci = 0; ci < 1000000; ++ci);
 	}
 	m_traceData.release();
     foreach(CElement *element, m_scheme->elements())

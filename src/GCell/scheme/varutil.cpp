@@ -1,6 +1,7 @@
 #include "varutil.h"
 
 #include <QRect>
+#include <QColor>
 #include <QDataStream>
 #include <QStringList>
 
@@ -39,6 +40,20 @@ QString variantToString(const QVariant &v)
             result = QLatin1String("@Invalid()");
             break;
 
+		case QVariant::Color:
+		{
+			QColor color = qvariant_cast<QColor>(v);
+			result += QLatin1String("@Color(");
+			result += QString::number(color.red());
+			result += QLatin1Char(' ');
+			result += QString::number(color.green());
+			result += QLatin1Char(' ');
+			result += QString::number(color.blue());
+			result += QLatin1Char(' ');
+			result += QString::number(color.alpha());
+			result += QLatin1Char(')');
+			break;
+		}
         case QVariant::ByteArray: {
             QByteArray a = v.toByteArray();
             result = QLatin1String("@ByteArray(");
@@ -119,8 +134,14 @@ QString variantToString(const QVariant &v)
 QVariant stringToVariant(const QString &s)
 {
     if (s.startsWith(QLatin1Char('@'))) {
-        if (s.endsWith(QLatin1Char(')'))) {
-            if (s.startsWith(QLatin1String("@ByteArray("))) {
+		if(s.endsWith(QLatin1Char(')')))
+		{
+			if(s.startsWith("@Color("))
+			{
+				QStringList args = splitArgs(s, 6);
+				if(args.size() == 4) return QVariant(QColor(args[0].toInt(), args[1].toInt(), args[2].toInt(), args[3].toInt()));
+			}
+			else if(s.startsWith(QLatin1String("@ByteArray("))) {
                 return QVariant(s.toLatin1().mid(11, s.size() - 12));
             } else if (s.startsWith(QLatin1String("@Variant("))) {
 #ifndef QT_NO_DATASTREAM

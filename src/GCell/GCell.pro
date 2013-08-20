@@ -37,7 +37,6 @@ SOURCES += \
     scheme/algorithmproto/calgorithmprotomng.cpp \
     scheme/algorithmproto/calgorithmproto.cpp \
     scheme/databuffer/cdatabuffer.cpp \
-    scheme/databuffer/cabstractdatabuffer.cpp \
     scheme/link/clink.cpp \
     scheme/portal/cresult.cpp \
     scheme/portal/cportal.cpp \
@@ -46,11 +45,15 @@ SOURCES += \
     scheme/cscheme.cpp \
     scheme/celement.cpp \
     main.cpp \
-    mainwindow/cdatawindow.cpp \
     algorithms/General/Sum/csum.cpp \
     scheme/celementoptionswgt.cpp \
     algorithms/CSV/CSVIn/ccsvinoptionshit.cpp \
-    scheme/varutil.cpp
+    scheme/varutil.cpp \
+    mainwindow/datawindow/cdatawindow.cpp \
+    mainwindow/datawindow/cdatatable.cpp \
+    mainwindow/datawindow/cdataplot.cpp \
+    algorithms/TAC/StepExaction/cstepexcitation.cpp \
+    algorithms/TAC/TransLink/ctranslink.cpp
 
 HEADERS += \
     mainwindow/cmainwindow.h \
@@ -66,7 +69,6 @@ HEADERS += \
     scheme/algorithmproto/calgorithmprotomng.h \
     scheme/algorithmproto/calgorithmproto.h \
     scheme/databuffer/cdatabuffer.h \
-    scheme/databuffer/cabstractdatabuffer.h \
     scheme/link/clink.h \
     scheme/portal/cresult.h \
     scheme/portal/cportal.h \
@@ -75,8 +77,12 @@ HEADERS += \
     scheme/cschemeeditor.h \
     scheme/cscheme.h \
     scheme/celement.h \
-    mainwindow/cdatawindow.h \
     algorithms/General/Sum/csum.h \
     scheme/celementoptionswgt.h \
     algorithms/CSV/CSVIn/ccsvinoptionshit.h \
-    scheme/varutil.h
+    scheme/varutil.h \
+    mainwindow/datawindow/cdatawindow.h \
+    mainwindow/datawindow/cdatatable.h \
+    mainwindow/datawindow/cdataplot.h \
+    algorithms/TAC/StepExaction/cstepexcitation.h \
+    algorithms/TAC/TransLink/ctranslink.h

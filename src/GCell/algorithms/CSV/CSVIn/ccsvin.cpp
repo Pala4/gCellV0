@@ -25,7 +25,7 @@ void CCSVIn::proced(const int &timeFrame)
         QString portalID = m_resultDataMapping.values().at(ci);
         qreal data = row.at(dataIndex);
         CResult *res = result(portalID);
-        if(res) res->addBufferData(timeFrame, data);
+		if(res) res->appendBufferData(timeFrame, data);
     }
 }
 
@@ -97,7 +97,15 @@ void CCSVIn::acceptOptions(CElementOptionsWgt *optWgt)
 
         for(int ci = 0; ci < dataIndexes.count(); ++ci)
         {
-            if(!m_resultDataMapping.contains(dataIndexes.keys().at(ci))) m_resultDataMapping[dataIndexes.keys().at(ci)] = addResult(dataIndexes.values().at(ci))->id();
+			if(!m_resultDataMapping.contains(dataIndexes.keys().at(ci)))
+			{
+				m_resultDataMapping[dataIndexes.keys().at(ci)] = addResult(dataIndexes.values().at(ci))->id();
+			}
+			else
+			{
+				CResult *res = result(m_resultDataMapping[dataIndexes.keys().at(ci)]);
+				if(res) res->setName(dataIndexes.values().at(ci));
+			}
         }
     }
 }

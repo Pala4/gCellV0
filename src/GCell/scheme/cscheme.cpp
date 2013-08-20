@@ -37,7 +37,6 @@ void CScheme::writeElementToXML(QDomDocument &doc, QDomElement &domElParent, CEl
 	QDomElement domElElement = doc.createElement("element");
 	domElElement.setAttribute("typeID", element->typeID());
 	domElElement.setAttribute("id", element->id());
-	domElElement.setAttribute("nomber", QString("%1").arg(element->nomber()));
 
 	QString nodeType;
 	nodeType = !element->parentItem() ? "rootNode" : "subNode";
@@ -70,7 +69,6 @@ CElement* CScheme::readElementFromXML(const QDomDocument &domDoc, const QDomElem
 
 	QString typeID = domElElement.attribute("typeID");
 	QString id = domElElement.attribute("id");
-	QString strNomber = domElElement.attribute("nomber");
 	QString nodeType = domElElement.attribute("nodeType");
 	if(nodeType.isEmpty() || id.isEmpty() || typeID.isEmpty()) return 0;
 
@@ -78,7 +76,6 @@ CElement* CScheme::readElementFromXML(const QDomDocument &domDoc, const QDomElem
 	if(nodeType == "rootNode")
 	{
 		el = createElement(typeID);
-		el->setNomber(strNomber.toInt());
 	}
 	else if((nodeType == "subNode") && parentElement)
 	{

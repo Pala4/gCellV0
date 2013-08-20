@@ -6,9 +6,52 @@
 #include <QMimeData>
 #include <QLineEdit>
 
+#include <qmath.h>
+
 #include "cscheme.h"
 #include "celementoptionswgt.h"
 #include "portal/cportal.h"
+
+/*!
+ * \class CGreed
+ */
+CGreed::CGreed(const QColor &color, const QColor &bkGndColor, const int &step)
+{
+	m_color = color;
+	m_bkGndColor = bkGndColor;
+	m_step = step;
+}
+
+QBrush CGreed::bkGndBrush(void)
+{
+	QPen pen;
+	pen.setWidth(0);
+	pen.setColor(m_color);
+
+	QPixmap pixmap(m_step, m_step);
+	pixmap.fill(m_bkGndColor);
+
+	QPainter bkGndPainter(&pixmap);
+	bkGndPainter.setPen(pen);
+	bkGndPainter.drawPoint(0.0, 0.0);
+
+	return QBrush(pixmap);
+}
+
+QPointF CGreed::align(const QPointF &pos)
+{
+	if(m_step == 0) return pos;
+
+	qreal numStepsX = pos.x()/qreal(m_step);
+	qreal modNumStepsX = qFabs(numStepsX - (int)numStepsX);
+	qreal alX = (modNumStepsX > 0.5) ? (qreal)qCeil(numStepsX)*m_step : (qreal)qFloor(numStepsX)*m_step;
+
+	qreal numStepsY = pos.y()/qreal(m_step);
+	qreal modNumStepsY = qFabs(numStepsY - (int)numStepsY);
+	qreal alY = (modNumStepsY > 0.5) ? (qreal)qCeil(numStepsY)*m_step : (qreal)qFloor(numStepsY)*m_step;
+
+	return QPointF(alX, alY);
+}
 
 /*!
  * \class CSelector
@@ -159,7 +202,7 @@ void CSchemeEditor::mousePressEvent(QMouseEvent *event)
 		{
 			if(event->buttons() & Qt::LeftButton)
 			{
-                if(scheme()) scheme()->createAlgorithm(mapToScene(event->pos()));
+				if(scheme()) scheme()->createAlgorithm(m_greed.align(mapToScene(event->pos())));
 			}
 		}
 		break;
@@ -295,8 +338,12 @@ CSchemeEditor::CSchemeEditor(QWidget *parent) : QGraphicsView(parent)
 	connect(m_acDelete, SIGNAL(triggered()), this, SLOT(deleteSelected()));
 	addAction(m_acDelete);
 
+	m_algorithmMover.setGreed(&m_greed);
+
 	QClipboard *clpb = QApplication::clipboard();
 	connect(clpb, SIGNAL(changed(QClipboard::Mode)), this, SLOT(onClipBoardChanged(QClipboard::Mode)));
+
+	setBackgroundBrush(m_greed.bkGndBrush());
 }
 
 void CSchemeEditor::setScheme(CScheme *a_scheme)
@@ -311,6 +358,7 @@ void CSchemeEditor::setScheme(CScheme *a_scheme)
 	{
 		connect(scheme(), SIGNAL(selectionChanged()), this, SLOT(onSelectionChanged()));
 	}
+	centerOn(0.0, 0.0);
 }
 
 void CSchemeEditor::onSelectionChanged(void)

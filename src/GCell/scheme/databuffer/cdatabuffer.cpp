@@ -1,39 +1,81 @@
 #include "cdatabuffer.h"
 
-bool CDataBuffer::writeData(const int &timeFrame, const qreal &data)
-{
-	if(m_datas.contains(timeFrame)) return false;
-	m_datas[timeFrame] = data;
-	return true;
-}
-
-qreal CDataBuffer::readData(const int &timeFrame)
-{
-	if(!m_datas.contains(timeFrame)) return 0.0;
-	return m_datas[timeFrame];
-}
-
-void CDataBuffer::clearData(void)
-{
-	m_datas.clear();
-}
-
-bool CDataBuffer::containsData(const int &timeFrame)
-{
-	return m_datas.contains(timeFrame);
-}
-
-CDataBuffer::CDataBuffer(QObject *parent) : CAbstractDataBuffer(parent)
+CDataBuffer::CDataBuffer(QObject *parent) : QObject(parent)
 {
 	setObjectName(QStringLiteral("CDataBuffer"));
 }
 
-int CDataBuffer::count(void)
+stData CDataBuffer::data(const int &index) const
 {
-	return m_datas.count();
+	if(m_data.count() <= index) return stData();
+	return m_data.at(index);
 }
 
-bool CDataBuffer::isEmpty(void)
+stData CDataBuffer::last(void) const
 {
-	return m_datas.isEmpty();
+	if(m_data.isEmpty()) return stData();
+	return m_data.last();
+}
+
+void CDataBuffer::appendData(const stData &data)
+{
+	if(m_data.contains(data)) return;
+	m_data.append(data);
+	emit dataAppended(data);
+}
+
+void CDataBuffer::appendData(const qreal &timeFrame, const qreal &data)
+{
+	appendData(stData(timeFrame, data));
+}
+
+QVector<qreal> CDataBuffer::timeFrames(const qreal &value) const
+{
+	QVector<qreal> resTFs;
+	foreach(stData data, m_data)
+	{
+		if(data.value == value) resTFs << data.timeFrame;
+	}
+	return resTFs;
+}
+
+QVector<qreal> CDataBuffer::values(const qreal &timeFrame) const
+{
+	QVector<qreal> resVals;
+	foreach(stData data, m_data)
+	{
+		if(data.timeFrame == timeFrame) resVals << data.value;
+	}
+	return resVals;
+}
+
+bool CDataBuffer::contains(const int &index) const
+{
+	if(index < 0 || index >= m_data.count()) return false;
+	return true;
+}
+
+bool CDataBuffer::containsTimeFrame(const qreal &timeFrame)
+{
+	foreach(stData data, m_data)
+	{
+		if(data.timeFrame == timeFrame) return true;
+	}
+	return false;
+}
+
+bool CDataBuffer::containsValue(const qreal &value)
+{
+	foreach(stData data, m_data)
+	{
+		if(data.value == value) return true;
+	}
+	return false;
+}
+
+void CDataBuffer::clear(void)
+{
+	if(m_data.isEmpty()) return;
+	m_data.clear();
+	emit cleared();
 }

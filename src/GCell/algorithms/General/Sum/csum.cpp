@@ -5,25 +5,25 @@
 
 void CSum::proced(const int &timeFrame)
 {
-    m_resSum->addBufferData(timeFrame, m_arg1->bufferData(timeFrame) - m_arg2->bufferData(timeFrame) - m_arg3->bufferData(timeFrame));
+	m_sumRes->appendBufferData(timeFrame, m_inArg->bufferData(timeFrame).value - m_x1Arg->bufferData(timeFrame).value - m_x2Arg->bufferData(timeFrame).value);
 }
 
 CSum::CSum(QGraphicsItem *parent) : CDataTransmitter(parent)
 {
     setObjectName(QStringLiteral("CSum"));
 
-    m_arg1 = 0;
-    m_arg2 = 0;
-    m_arg3 = 0;
-    m_resSum = 0;
+	m_inArg = 0;
+	m_x1Arg = 0;
+	m_x2Arg = 0;
+	m_sumRes = 0;
 
-    m_arg1 = addArgument("X1");
+	m_inArg = addArgument("In");
 
-    m_arg2 = addArgument("X2");
-    m_arg2->setPortalOrientation(CPortal::Top);
+	m_x1Arg = addArgument("X1");
+	m_x1Arg->setPortalOrientation(CPortal::Top);
 
-    m_arg3 = addArgument("X2");
-    m_arg3->setPortalOrientation(CPortal::Bottom);
+	m_x2Arg = addArgument("X2");
+	m_x2Arg->setPortalOrientation(CPortal::Bottom);
 
-    m_resSum = addResult("Sum");
+	m_sumRes = addResult("Sum");
 }

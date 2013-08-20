@@ -22,12 +22,13 @@ private:
 
     static QPainterPath shapeFromPath(const QPainterPath &path, const QPen &pen);
 	void calcLink(void);
+protected:
+	virtual QRectF calcBounds(void);
 public:
 	explicit CLink(QGraphicsItem *parent = 0);
 	virtual ~CLink(void);
 
 	virtual QPainterPath shape(void) const;
-	virtual QRectF boundingRect(void) const;
 	virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
 	QString resultID(void);
@@ -44,6 +45,7 @@ public:
 
 	virtual void calc(const int &timeFrame);
 private slots:
+	void onResultDataColorChanged(const QColor &dataColor);
 	void onResultDestroyed(QObject *objResult);
 	void onArgumentDestroyed(QObject *objArgument);
 public slots:

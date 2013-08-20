@@ -4,8 +4,8 @@
 #include <QDebug>
 void CCSVOut::proced(const int &timeFrame)
 {
-	qreal d = arg->bufferData(timeFrame);
-	qDebug() << name() << d;
+	stData d = arg->bufferData(timeFrame);
+	qDebug() << name() << d.value;
 }
 
 CCSVOut::CCSVOut(QGraphicsItem *parent) : CDataReceiver(parent)

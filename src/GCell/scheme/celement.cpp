@@ -1,6 +1,7 @@
 #include "celement.h"
 
 #include <QAction>
+#include <QPainter>
 
 #include "cscheme.h"
 #include "elementlistutil.h"
@@ -19,6 +20,13 @@ CElement::CElement(QGraphicsItem *parent) : QGraphicsObject(parent)
 	m_nomber = 0;
 
 	connect(this, SIGNAL(nameChanged(QString)), this, SLOT(updateGeometry()));
+}
+
+void CElement::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+{
+	Q_UNUSED(option)
+	Q_UNUSED(widget)
+	painter->setFont(captionFont());
 }
 
 QString CElement::id(void)
@@ -49,6 +57,13 @@ void CElement::setDefaultName(const QString &defaultName)
 {
 	m_defaultName = defaultName;
 	if(m_name.isEmpty()) emit nameChanged(m_defaultName);
+}
+
+void CElement::setCaptionFont(const QFont &captionFont)
+{
+	if(m_captionFont == captionFont) return;
+	m_captionFont = captionFont;
+	updateGeometry();
 }
 
 QString CElement::caption(void) const

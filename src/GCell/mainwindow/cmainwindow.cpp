@@ -11,15 +11,17 @@
 #include <QFileDialog>
 
 #include "calgorithmprotostoolbar.h"
-#include "cdatawindow.h"
+#include "datawindow/cdatawindow.h"
 #include "../scheme/algorithmproto/calgorithmproto.h"
 #include "../scheme/algorithmproto/calgorithmprotomng.h"
 #include "../scheme/cscheme.h"
 #include "../scheme/cschemeeditor.h"
 #include "../engine/cengine.h"
 #include "../algorithms/CSV/CSVIn/ccsvin.h"
+#include "../algorithms/TAC/StepExaction/cstepexcitation.h"
 #include "../algorithms/General/Amp/camp.h"
 #include "../algorithms/General/Sum/csum.h"
+#include "../algorithms/TAC/TransLink/ctranslink.h"
 #include "../algorithms/CSV/CSVOut/ccsvout.h"
 
 /*!
@@ -123,9 +125,11 @@ CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
 	m_algorithmProtoMng = new CAlgorithmProtoMng(this);
 	m_algorithmProtoMng->setObjectName(QStringLiteral("algorithmProtoMng"));
 	m_algorithmProtoMng->addProto(tr("CSV In"), &CCSVIn::staticMetaObject);
-    m_algorithmProtoMng->addProto(tr("Amp"), &CAmp::staticMetaObject);
+	m_algorithmProtoMng->addProto(tr("A(t)"), &CStepExcitation::staticMetaObject);
+	m_algorithmProtoMng->addProto(tr("Amp"), &CAmp::staticMetaObject);
     m_algorithmProtoMng->addProto(tr("Sum"), &CSum::staticMetaObject);
-    m_algorithmProtoMng->addProto(tr("CSV Out"), &CCSVOut::staticMetaObject);
+	m_algorithmProtoMng->addProto(tr("TL"), &CTransLink::staticMetaObject);
+	m_algorithmProtoMng->addProto(tr("CSV Out"), &CCSVOut::staticMetaObject);
     connect(m_algorithmProtoMng, SIGNAL(algorithmProtoSelected(CAlgorithmProto*)), this, SLOT(onAlgorithmProtoSelected(CAlgorithmProto*)));
 
 	m_schemeEditor = new CSchemeEditor(this);

@@ -4,30 +4,34 @@
 #include <QGraphicsItem>
 
 #include "../celement.h"
+#include "../databuffer/cdatabuffer.h"
 
 class QSignalMapper;
 
 class CLink;
-class CAbstractDataBuffer;
 
 class CPortal : public CElement
 {
 	Q_OBJECT
 	Q_PROPERTY(int portalOrientation READ portalOrientation WRITE setPortalOrientation)
+	Q_PROPERTY(QColor dataColor READ dataColor WRITE setDataColor NOTIFY dataColorChanged)
 public:
 	enum TPortalOrientation{Left, Top, Right, Bottom};
 private:
 	CPortal::TPortalOrientation m_portalOrientation;
+	QColor m_dataColor;
+
 	QPainterPath m_portalForm;
+	QRectF m_captionRect;
 	QPointF m_linkPos;
 	qreal m_size;
+
 	bool m_hovered;
 	bool m_checked;
-
 	bool m_loopBackPortal;
 
 	bool m_dataBufferIsReference;
-	CAbstractDataBuffer *m_dataBuffer;
+	CDataBuffer *m_dataBuffer;
 	QList<CLink*> m_links;
 
 	QSignalMapper *m_orientActionsMapper;
@@ -37,7 +41,7 @@ private:
 	QAction *m_acBottomOrient;
 
 	static QPainterPath shapeFromPath(const QPainterPath &path, const QPen &pen);
-	virtual QPainterPath calcPortalForm(void) = 0;
+	virtual QPainterPath calcPortalForm(void){return QPainterPath();}
 	void updateLinks(void);
 protected:
 	const qreal& size(void) const{return m_size;}
@@ -46,15 +50,17 @@ protected:
 	virtual void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
 	virtual void hoverMoveEvent(QGraphicsSceneHoverEvent *event);
 	virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent *event);
+	QRectF calcBounds(void);
 public:
 	explicit CPortal(QGraphicsItem *parent = 0);
 
 	virtual QPainterPath shape(void) const;
-	virtual QRectF boundingRect(void) const;
 	virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
 	const CPortal::TPortalOrientation& portalOrientation(void) const{return m_portalOrientation;}
 	void setPortalOrientation(const CPortal::TPortalOrientation &portalOrientation);
+	const QColor& dataColor(void) const{return m_dataColor;}
+	void setDataColor(const QColor &dataColor);
 
 	const bool& isChecked(void) const{return m_checked;}
 	void setChecked(const bool &cheked);
@@ -67,14 +73,15 @@ public:
 	const QList<CLink*>& links(void) const{return m_links;}
 	void addLink(CLink *link);
 	void removeLink(CLink *link);
+	bool isUsed(void) const{return !links().isEmpty();}
 
-	virtual CAbstractDataBuffer* createBuffer(void);
-	void setBuffer(CAbstractDataBuffer *dataBuffer);
+	virtual CDataBuffer* createBuffer(void);
+	void setBuffer(CDataBuffer *dataBuffer);
 	void clearBuffer(void);
-	CAbstractDataBuffer* buffer(void){return m_dataBuffer;}
-	void addBufferData(const int &timeFrame, const qreal &data);
-	qreal bufferData(const int &timeFrame);
-	bool isBufferDataReady(const int &timeFrame);
+	CDataBuffer* buffer(void){return m_dataBuffer;}
+	void appendBufferData(const qreal &timeFrame, const qreal &data);
+	stData bufferData(const int &index);
+	bool isBufferDataReady(const int &index);
 
     virtual void beforeCalc(void);
 private slots:
@@ -82,6 +89,7 @@ private slots:
 public slots:
 	virtual void updateGeometry(void);
 signals:
+	void dataColorChanged(QColor dataColor);
 	void geometryChanged(void);
 };
 

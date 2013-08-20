@@ -15,12 +15,10 @@ class CAlgorithm : public CElement
 	Q_OBJECT
 private:
     QMap<QString, CPortal*> m_portals;
-	QRectF m_innerBound;
-	QRectF m_boundingRect;
 	qreal m_portalSpace;
 	qreal m_portalMargin;
 
-	void calcBounds(void);
+	virtual QRectF calcBounds(void);
 	void placePortals(void);
 protected:
 	void addPortal(CPortal *portal);
@@ -33,11 +31,12 @@ protected:
 public:
 	explicit CAlgorithm(QGraphicsItem *parent = 0);
 
-	virtual QRectF boundingRect(void) const{return m_boundingRect;}
 	virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
     CResult* result(const QString &id);
     QList<CPortal*> portals(void) const{return m_portals.values();}
+	QList<CPortal*> argPortals(void);
+	QList<CPortal*> resPortals(void);
 	QList<CArgument*> arguments(void);
 	QList<CResult*> results(void);
 

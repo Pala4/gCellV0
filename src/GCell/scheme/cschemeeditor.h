@@ -12,13 +12,31 @@
 class CScheme;
 class CElementOptionsWgt;
 
+class CGreed
+{
+private:
+	QColor m_color;
+	QColor m_bkGndColor;
+	int m_step;
+public:
+	CGreed(void) : m_color(Qt::black), m_bkGndColor(Qt::white), m_step(8){}
+	CGreed(const QColor &color, const QColor &bkGndColor, const int &step);
+
+	QBrush bkGndBrush(void);
+	QPointF align(const QPointF &pos);
+};
+
 template<typename Type>
 class CItemMover
 {
 private:
+	CGreed *m_greed;
     QMap<QGraphicsItem*, QPointF> m_elementOffsets;
 public:
-    CItemMover(void){}
+	CItemMover(CGreed *greed = 0){m_greed = greed;}
+
+	CGreed* greed(void) const{return m_greed;}
+	void setGreed(CGreed *greed){m_greed = greed;}
 
     bool haveMoved(void){return !m_elementOffsets.isEmpty();}
 
@@ -44,14 +62,21 @@ public:
             if(!item) continue;
             QPointF dp = m_elementOffsets.values().at(ci);
 
-            item->setPos(mousePos - dp);
+			QPointF newPos = mousePos - dp;
+			if(m_greed) newPos = m_greed->align(newPos);
+
+			item->setPos(newPos);
         }
     }
-    void release(const QPointF &mousePos = QPointF())
+	void release(const QPointF &mousePos)
     {
-        Q_UNUSED(mousePos)
-        m_elementOffsets.clear();
+		move(mousePos);
+		release();
     }
+	void release(void)
+	{
+		m_elementOffsets.clear();
+	}
 };
 
 class CSelector
@@ -84,6 +109,7 @@ private:
 	QAction *m_acCut;
 	QAction *m_acDelete;
 	CSchemeEditor::TMouseMode m_mouseMode;
+	CGreed m_greed;
 	CItemMover<CAlgorithm*> m_algorithmMover;
     CSelector m_selector;
 	CElementOptionsWgt *m_elementOptionsWgt;

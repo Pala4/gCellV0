@@ -1,6 +1,5 @@
 #include "calgorithm.h"
 
-#include <QFont>
 #include <QFontMetrics>
 #include <QPainter>
 
@@ -10,18 +9,20 @@
 #include "../portal/cresult.h"
 #include "../elementlistutil.h"
 
-void CAlgorithm::calcBounds(void)
+QRectF CAlgorithm::calcBounds(void)
 {
 	prepareGeometryChange();
-	QFont f("Corier", 8, QFont::Bold);
-	QFontMetricsF fm(f);
-	m_innerBound.setWidth(fm.boundingRect(caption()).width());
-	m_innerBound.setHeight(fm.boundingRect(caption()).height());
-	m_boundingRect = m_innerBound;
+	QFontMetricsF fm(captionFont());
+	QRectF innerBound;
+	innerBound.setWidth(fm.boundingRect(caption()).adjusted(-2.0, -2.0, 2.0, 2.0).width());
+	innerBound.setHeight(fm.boundingRect(caption()).adjusted(-2.0, -2.0, 2.0, 2.0).height());
+
+	QRectF boundRect;
+	boundRect = innerBound;
 	if(m_portals.isEmpty())
 	{
 		update();
-		return;
+		return boundRect;
 	}
 
 	qreal LPHeight = 0.0, TPWidth = 0.0, RPHeight = 0.0, BPWidth = 0.0;
@@ -37,10 +38,10 @@ void CAlgorithm::calcBounds(void)
 		}
 	}
 
-	m_boundingRect.setWidth(qMax(qMax(TPWidth, BPWidth)/* - m_portalSpace*/, m_boundingRect.width()));
-	m_boundingRect.setHeight(qMax(qMax(LPHeight, RPHeight)/* - m_portalSpace*/, m_boundingRect.height()));
+	boundRect.setWidth(qMax(qMax(TPWidth, BPWidth), boundRect.width()));
+	boundRect.setHeight(qMax(qMax(LPHeight, RPHeight), boundRect.height()));
 
-	update();
+	return boundRect;
 }
 
 void CAlgorithm::placePortals(void)
@@ -58,10 +59,12 @@ void CAlgorithm::placePortals(void)
 		}
 	}
 
-	QPointF dLP(0.0, (m_boundingRect.height() - LPHeight + m_portalSpace)/2.0);
-	QPointF dTP((m_boundingRect.width() - TPWidth + m_portalSpace)/2.0, 0.0);
-	QPointF dRP(m_boundingRect.width() + m_portalMargin, (m_boundingRect.height() - RPHeight + m_portalSpace)/2.0);
-	QPointF dBP((m_boundingRect.width() - BPWidth + m_portalSpace)/2.0, m_boundingRect.height() + m_portalMargin);
+	QRectF boundRect = boundingRect();
+
+	QPointF dLP(0.0, (boundRect.height() - LPHeight + m_portalSpace)/2.0);
+	QPointF dTP((boundRect.width() - TPWidth + m_portalSpace)/2.0, 0.0);
+	QPointF dRP(boundRect.width() + m_portalMargin, (boundRect.height() - RPHeight + m_portalSpace)/2.0);
+	QPointF dBP((boundRect.width() - BPWidth + m_portalSpace)/2.0, boundRect.height() + m_portalMargin);
 
 	foreach(CPortal *portal, m_portals)
 	{
@@ -133,6 +136,7 @@ CResult* CAlgorithm::addResult(const QString &name)
 {
 	CResult *res = new CResult(this);
 	res->setPortalOrientation(CPortal::Right);
+	res->setDataColor(QColor(qRound(qrand()*255.0/RAND_MAX), qRound(qrand()*255.0/RAND_MAX), qRound(qrand()*255.0/RAND_MAX), 180));
 	res->setName(name);
     res->setNomber(generateNomber<CPortal*, CResult*>(m_portals.values()));
 	res->createBuffer();
@@ -163,8 +167,7 @@ CAlgorithm::CAlgorithm(QGraphicsItem *parent) : CElement(parent)
 
 void CAlgorithm::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
-	Q_UNUSED(option)
-	Q_UNUSED(widget)
+	CElement::paint(painter, option, widget);
 
 	QPen pen;
 	pen.setColor(Qt::black);
@@ -191,7 +194,17 @@ CResult* CAlgorithm::result(const QString &id)
     if(id.isEmpty()) return 0;
     if(!m_portals.contains(id)) return 0;
 
-    return qobject_cast<CResult*>(m_portals[id]);
+	return qobject_cast<CResult*>(m_portals[id]);
+}
+
+QList<CPortal*> CAlgorithm::argPortals(void)
+{
+	return getElements<CPortal*, CPortal*>(portals(), CArgument::staticMetaObject.className());
+}
+
+QList<CPortal*> CAlgorithm::resPortals(void)
+{
+	return getElements<CPortal*, CPortal*>(portals(), CResult::staticMetaObject.className());
 }
 
 QList<CArgument*> CAlgorithm::arguments(void)
@@ -224,6 +237,7 @@ void CAlgorithm::calc(const int &timeFrame)
 	foreach(CArgument *arg, args)
 	{
 		if(!arg) continue;
+		if(!arg->isUsed()) continue;
 		if(!arg->isLoopBackPortal() && !arg->isBufferDataReady(timeFrame)) return;
 	}
 	proced(timeFrame);
@@ -243,6 +257,6 @@ void CAlgorithm::onPortalDestroyed(QObject *objPortal)
 
 void CAlgorithm::updateGeometry(void)
 {
-	calcBounds();
+	CElement::updateGeometry();
 	placePortals();
 }

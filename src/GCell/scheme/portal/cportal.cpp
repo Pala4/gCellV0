@@ -65,11 +65,68 @@ void CPortal::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
 	update();
 }
 
+QRectF CPortal::calcBounds(void)
+{
+	QRectF boundRect = shape().controlPointRect();
+	QRectF portalFormRect = boundRect;
+
+	QFontMetricsF fm(captionFont());
+	m_captionRect = boundRect;
+	m_captionRect.setWidth(fm.boundingRect(caption()).width() + 2.0);
+	m_captionRect.setHeight(fm.boundingRect(caption()).height() + 2.0);
+
+	qreal maxWidth = qMax(boundRect.width(), m_captionRect.width());
+	qreal maxHeight = qMax(boundRect.height(), m_captionRect.height());
+
+	switch ((int)portalOrientation())
+	{
+		case CPortal::Left:
+		case CPortal::Right:
+			boundRect.setWidth(boundRect.width() + m_captionRect.width() + 2.0);
+			boundRect.setHeight(maxHeight);
+			m_captionRect.setHeight(maxHeight);
+		break;
+		case CPortal::Top:
+		case CPortal::Bottom:
+			boundRect.setHeight(boundRect.height() + m_captionRect.height() + 2.0);
+			boundRect.setWidth(maxWidth);
+			m_captionRect.setWidth(maxWidth);
+		break;
+	}
+
+	qreal offsetX = 0.0;
+	qreal offsetY = 0.0;
+	switch ((int)portalOrientation())
+	{
+		case CPortal::Left:
+			offsetX = m_captionRect.width() + 2.0;
+			offsetY = qAbs(boundRect.height() - portalFormRect.height())/2.0;
+		break;
+		case CPortal::Right:
+			offsetY = qAbs(boundRect.height() - portalFormRect.height())/2.0;
+			m_captionRect.moveLeft(portalFormRect.width() + 2.0);
+		break;
+		case CPortal::Top:
+			offsetX = qAbs(boundRect.width() - portalFormRect.width())/2.0;
+			offsetY = m_captionRect.height() + 2.0;
+		break;
+		case CPortal::Bottom:
+			offsetX = qAbs(boundRect.width() - portalFormRect.width())/2.0;
+			m_captionRect.moveTop(portalFormRect.height() + 2.0);
+		break;
+	}
+	m_portalForm.translate(offsetX, offsetY);
+	setLinkPos(QPointF(linkPos().x() + offsetX, linkPos().y() + offsetY));
+
+	return boundRect;
+}
+
 CPortal::CPortal(QGraphicsItem *parent) : CElement(parent)
 {
 	setObjectName(QStringLiteral("CPortal"));
 
 	m_portalOrientation = CPortal::Left;
+	m_dataColor = QColor(255, 255, 255, 0);
 	m_size = 7.0;
 	m_hovered = false;
 	m_checked = false;
@@ -122,6 +179,8 @@ CPortal::CPortal(QGraphicsItem *parent) : CElement(parent)
 	addAction(m_acBottomOrient);
 	acgrOrient->addAction(m_acBottomOrient);
 
+	setCaptionFont(QFont("Corier", 7, QFont::Bold));
+
 	setFlag(QGraphicsItem::ItemSendsScenePositionChanges);
 	setAcceptHoverEvents(true);
 }
@@ -131,15 +190,9 @@ QPainterPath CPortal::shape(void) const
 	return shapeFromPath(m_portalForm, QPen());
 }
 
-QRectF CPortal::boundingRect(void) const
-{
-	return shape().controlPointRect();
-}
-
 void CPortal::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
-	Q_UNUSED(option)
-	Q_UNUSED(widget)
+	CElement::paint(painter, option, widget);
 
 	QBrush brush;
 	brush.setStyle(Qt::SolidPattern);
@@ -153,11 +206,18 @@ void CPortal::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, Q
 	}
 	else if(isLoopBackPortal())
 	{
-		brush.setColor(QColor(0, 0, 255, 190));
+		brush.setColor(QColor(0, 0, 0, 255));
 	}
 	else
 	{
-		brush.setColor(QColor(255, 0, 0, 190));
+		if(dataColor().isValid())
+		{
+			brush.setColor(dataColor());
+		}
+		else
+		{
+			brush.setColor(QColor(255, 255, 255, 0));
+		}
 	}
 	QPen pen;
 	pen.setStyle(Qt::SolidLine);
@@ -165,6 +225,10 @@ void CPortal::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, Q
 
 	painter->save();
 	painter->setRenderHint(QPainter::Antialiasing);
+
+//	painter->drawRect(boundingRect());
+	painter->drawText(m_captionRect, Qt::AlignCenter, caption());
+
 	painter->setBrush(brush);
 	painter->setPen(pen);
 	painter->drawPath(m_portalForm);
@@ -182,6 +246,14 @@ void CPortal::setPortalOrientation(const CPortal::TPortalOrientation &portalOrie
 		case CPortal::Bottom: if(m_acBottomOrient) m_acBottomOrient->setChecked(true); break;
 	}
 	updateGeometry();
+}
+
+void CPortal::setDataColor(const QColor &dataColor)
+{
+	if(m_dataColor == dataColor) return;
+	m_dataColor = dataColor;
+	update();
+	emit dataColorChanged(m_dataColor);
 }
 
 void CPortal::setChecked(const bool &cheked)
@@ -205,7 +277,7 @@ void CPortal::removeLink(CLink *link)
 	m_links.removeOne(link);
 }
 
-CAbstractDataBuffer* CPortal::createBuffer(void)
+CDataBuffer* CPortal::createBuffer(void)
 {
 	m_dataBufferIsReference = false;
 	m_dataBuffer = new CDataBuffer(this);
@@ -213,7 +285,7 @@ CAbstractDataBuffer* CPortal::createBuffer(void)
 	return m_dataBuffer;
 }
 
-void CPortal::setBuffer(CAbstractDataBuffer *dataBuffer)
+void CPortal::setBuffer(CDataBuffer *dataBuffer)
 {
 	if(!m_dataBufferIsReference && m_dataBuffer) return;
 	m_dataBufferIsReference = true;
@@ -226,26 +298,30 @@ void CPortal::clearBuffer(void)
 	m_dataBuffer->clear();
 }
 
-void CPortal::addBufferData(const int &timeFrame, const qreal &data)
+void CPortal::appendBufferData(const qreal &timeFrame, const qreal &data)
 {
-	if(m_dataBuffer) m_dataBuffer->addData(timeFrame, data);
+	if(m_dataBuffer && !m_dataBufferIsReference) m_dataBuffer->appendData(timeFrame, data);
 }
 
-qreal CPortal::bufferData(const int &timeFrame)
+stData CPortal::bufferData(const int &index)
 {
-	if(!m_dataBuffer) return 0.0;
-	return m_dataBuffer->data(timeFrame);
+	if(!m_dataBuffer) return stData();
+	if(isLoopBackPortal())
+	{
+		return m_dataBuffer->last();
+	}
+	return m_dataBuffer->data(index);
 }
 
-bool CPortal::isBufferDataReady(const int &timeFrame)
+bool CPortal::isBufferDataReady(const int &index)
 {
 	if(!m_dataBuffer) return false;
-    return m_dataBuffer->isDataReady(timeFrame);
+	return m_dataBuffer->contains(index);
 }
 
 void CPortal::beforeCalc(void)
 {
-    if(!m_dataBufferIsReference && m_dataBuffer) m_dataBuffer->clear();
+	clearBuffer();
     if(isLoopBackPortal()) setLoopBackPortal(false);
 }
 
@@ -258,6 +334,7 @@ void CPortal::updateGeometry(void)
 {
 	prepareGeometryChange();
 	m_portalForm = calcPortalForm();
+	CElement::updateGeometry();
 	emit geometryChanged();
 	update();
 }

@@ -61,6 +61,11 @@ void CLink::calcLink(void)
 	m_path.lineTo(p3);
 }
 
+QRectF CLink::calcBounds(void)
+{
+	return shape().controlPointRect();
+}
+
 CLink::CLink(QGraphicsItem *parent) : CElement(parent)
 {
     setObjectName(QStringLiteral("CLink"));
@@ -80,6 +85,7 @@ CLink::~CLink(void)
 	if(m_argument)
 	{
 		m_argument->setBuffer(0);
+		m_argument->setDataColor(QColor(255, 255, 255, 0));
 		m_argument->removeLink(this);
 	}
 }
@@ -89,21 +95,16 @@ QPainterPath CLink::shape(void) const
     return shapeFromPath(m_path, QPen());
 }
 
-QRectF CLink::boundingRect(void) const
-{
-    return shape().controlPointRect();
-}
-
 void CLink::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
-	Q_UNUSED(option)
-	Q_UNUSED(widget)
+	CElement::paint(painter, option, widget);
 
 	QPen pen;
 	if(isSelected())
 	{
 		pen.setWidthF(2.0);
 	}
+	if(m_result) pen.setColor(m_result->dataColor());
 
 	painter->save();
 	painter->setPen(pen);
@@ -153,16 +154,26 @@ void CLink::setResult(CResult *result)
 	if(m_result && (m_result == result)) return;
 	if(m_result)
 	{
+		disconnect(m_result, SIGNAL(dataColorChanged(QColor)), this, SLOT(onResultDataColorChanged(QColor)));
 		disconnect(m_result, SIGNAL(destroyed(QObject*)), this, SLOT(onResultDestroyed(QObject*)));
 		m_result->removeLink(this);
-		if(m_argument) m_argument->setBuffer(0);
+		if(m_argument)
+		{
+			m_argument->setBuffer(0);
+			m_argument->setDataColor(QColor());
+		}
 	}
 	m_result = result;
 	if(m_result)
 	{
+		connect(m_result, SIGNAL(dataColorChanged(QColor)), this, SLOT(onResultDataColorChanged(QColor)));
 		connect(m_result, SIGNAL(destroyed(QObject*)), this, SLOT(onResultDestroyed(QObject*)));
 		m_result->addLink(this);
-		if(m_argument) m_argument->setBuffer(result->buffer());
+		if(m_argument)
+		{
+			m_argument->setBuffer(result->buffer());
+			m_argument->setDataColor(result->dataColor());
+		}
 	}
 	updateGeometry();
 }
@@ -174,14 +185,22 @@ void CLink::setArgument(CArgument *argument)
 	{
 		disconnect(m_argument, SIGNAL(destroyed(QObject*)), this, SLOT(onArgumentDestroyed(QObject*)));
 		m_argument->removeLink(this);
-		if(m_argument) m_argument->setBuffer(0);
+		if(m_argument)
+		{
+			m_argument->setBuffer(0);
+			m_argument->setDataColor(QColor());
+		}
 	}
 	m_argument = argument;
 	if(m_argument)
 	{
 		connect(m_argument, SIGNAL(destroyed(QObject*)), this, SLOT(onArgumentDestroyed(QObject*)));
 		m_argument->addLink(this);
-		if(m_result) m_argument->setBuffer(m_result->buffer());
+		if(m_result)
+		{
+			m_argument->setBuffer(m_result->buffer());
+			m_argument->setDataColor(m_result->dataColor());
+		}
 	}
 	updateGeometry();
 }
@@ -214,6 +233,12 @@ void CLink::calc(const int &timeFrame)
 	if(m_argument) m_argument->calc(timeFrame);
 }
 
+void CLink::onResultDataColorChanged(const QColor &dataColor)
+{
+	if(m_argument) m_argument->setDataColor(dataColor);
+	update();
+}
+
 void CLink::onResultDestroyed(QObject *objResult)
 {
 	if(m_result == (CResult*)objResult) m_result = 0;
@@ -230,5 +255,6 @@ void CLink::updateGeometry(void)
 {
 	prepareGeometryChange();
 	calcLink();
+	CElement::updateGeometry();
 	update();
 }
