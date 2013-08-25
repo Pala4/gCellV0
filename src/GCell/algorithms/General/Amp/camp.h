@@ -17,7 +17,7 @@ private:
 
 	QDoubleSpinBox *m_gainSpinBox;
 protected:
-	virtual void proced(const int &timeFrame);
+	virtual void proced(const stTimeLine &timeLine);
 public:
     Q_INVOKABLE explicit CAmp(QGraphicsItem *parent = 0);
 

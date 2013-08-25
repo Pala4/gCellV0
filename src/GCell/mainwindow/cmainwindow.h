@@ -48,6 +48,7 @@ private slots:
 	void onAlgorithmProtoSelected(CAlgorithmProto *selectedProto);
     void onSchemeEditorMouseReleased(const QPointF &pos);
 
+	void showOptions(void);
 	void showData(void);
 
 	void updateTitle(void);

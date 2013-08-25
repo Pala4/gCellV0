@@ -43,7 +43,7 @@ public:
 
 	virtual bool reIndexing(const QList<CElement*> &elements);
 
-	virtual void calc(const int &timeFrame);
+	virtual void calc(const stTimeLine &timeLine);
 private slots:
 	void onResultDataColorChanged(const QColor &dataColor);
 	void onResultDestroyed(QObject *objResult);

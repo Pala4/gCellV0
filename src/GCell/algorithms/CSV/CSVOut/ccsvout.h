@@ -9,7 +9,7 @@ class CCSVOut : public CDataReceiver
 private:
 	CArgument *arg;
 protected:
-	virtual void proced(const int &timeFrame);
+	virtual void proced(const stTimeLine &timeLine);
 public:
     Q_INVOKABLE explicit CCSVOut(QGraphicsItem *parent = 0);
 };

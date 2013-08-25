@@ -13,10 +13,10 @@
 /*!
  * \class CCSVIn
  */
-void CCSVIn::proced(const int &timeFrame)
+void CCSVIn::proced(const stTimeLine &timeLine)
 {
-    if(timeFrame >= m_csvData.count()) return;
-    QList<qreal> row = m_csvData.at(timeFrame);
+	if(timeLine.timeFrame.timeFrameIndex >= (quint64)m_csvData.count()) return;
+	QList<qreal> row = m_csvData.at(timeLine.timeFrame.timeFrameIndex);
     for(int ci = 0; ci < m_resultDataMapping.count(); ++ci)
     {
         int dataIndex = m_resultDataMapping.keys().at(ci);
@@ -25,7 +25,7 @@ void CCSVIn::proced(const int &timeFrame)
         QString portalID = m_resultDataMapping.values().at(ci);
         qreal data = row.at(dataIndex);
         CResult *res = result(portalID);
-		if(res) res->appendBufferData(timeFrame, data);
+		if(res) res->appendBuffer(timeLine.timeFrame, data);
     }
 }
 
@@ -33,7 +33,7 @@ CCSVIn::CCSVIn(QGraphicsItem *parent) : CDataSource(parent)
 {
     setObjectName(QStringLiteral("CCSVIn"));
 
-    m_optShit = 0;
+	m_optShit = 0;
 }
 
 QByteArray CCSVIn::resultDataMapping(void)
@@ -173,7 +173,7 @@ void CCSVIn::beforeCalc(void)
             if(!row.isEmpty()) m_csvData << row;
         }
     }
-    file.close();
+    file.close();	
 }
 
 void CCSVIn::afterCalc(void)

@@ -16,7 +16,7 @@ private:
 	CCSVInOptionShit *m_optShit;
     QMap<int, QString> m_resultDataMapping;
 protected:
-	virtual void proced(const int &timeFrame);
+	virtual void proced(const stTimeLine &timeLine);
 public:
 	Q_INVOKABLE explicit CCSVIn(QGraphicsItem *parent = 0);
 

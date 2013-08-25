@@ -79,11 +79,17 @@ public:
 	void setBuffer(CDataBuffer *dataBuffer);
 	void clearBuffer(void);
 	CDataBuffer* buffer(void){return m_dataBuffer;}
-	void appendBufferData(const qreal &timeFrame, const qreal &data);
-	stData bufferData(const int &index);
-	bool isBufferDataReady(const int &index);
 
-    virtual void beforeCalc(void);
+	void appendBuffer(const stTimeFrame &timeFrame, const qreal &value);
+	stData bufferData(const int &index);
+	bool isBufferDataExist(const stTimeFrame &frame);
+
+	void operator << (const stData &data)
+	{
+		appendBuffer(data.timeFrame, data.value);
+	}
+
+	virtual void beforeCalc(const qreal &startTime, const qreal &timeStep, const qreal &endTime);
 private slots:
 	void setPortalOrientation(const int &portalOrientation);
 public slots:

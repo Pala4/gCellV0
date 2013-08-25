@@ -31,7 +31,7 @@ size_t CCurveData::size(void) const
 QPointF CCurveData::sample(size_t index) const
 {
 	if(!m_buffer) return QwtArraySeriesData::sample(index);
-	return QPointF(m_buffer->data(index).timeFrame, m_buffer->data(index).value);
+	return QPointF(m_buffer->data(index).timeFrame.time, m_buffer->data(index).value);
 }
 
 void CCurveData::setBuffer(CDataBuffer *buffer)
@@ -92,7 +92,7 @@ CDataPlot::CDataPlot(QWidget *parent) : QwtPlot(parent)
 	m_grid = new QwtPlotGrid();
 	m_grid->attach(this);
 
-	setCanvasBackground(QColor(150, 150, 150, 128));
+	setCanvasBackground(QColor(150, 150, 150));
 	insertLegend(new QwtLegend());
 }
 
@@ -102,12 +102,12 @@ void CDataPlot::addPortal(CPortal *portal)
 	if(!portal->buffer()) return;
 	if(m_portalCurveMap.contains(portal)) return;
 
-	connect(portal->buffer(), SIGNAL(dataAppended(stData)), this, SLOT(onBufferDataAppended(stData)));
+	connect(portal->buffer(), SIGNAL(dataAppended(stTimeFrame,stData)), this, SLOT(onBufferDataAppended(stTimeFrame,stData)));
 	connect(portal->buffer(), SIGNAL(cleared()), this, SLOT(onBufferCleared()));
 	connect(portal, SIGNAL(destroyed(QObject*)), this, SLOT(onPortalDestroyed(QObject*)));
 
 	CCurve *curve = new CCurve(portal, portal->caption());
-	curve->setPen(portal->dataColor(), 2);
+	curve->setPen(portal->dataColor(), 3);
 	curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
 	curve->attach(this);
 	m_portalCurveMap[portal] = curve;
@@ -132,7 +132,7 @@ void CDataPlot::clearPortals(void)
 		{
 			if(m_portalCurveMap.keys().at(ci)->buffer())
 			{
-				disconnect(m_portalCurveMap.keys().at(ci)->buffer(), SIGNAL(dataAppended(stData)), this, SLOT(onBufferDataAppended(stData)));
+				disconnect(m_portalCurveMap.keys().at(ci)->buffer(), SIGNAL(dataAppended(stTimeFrame,stData)), this, SLOT(onBufferDataAppended(stTimeFrame,stData)));
 				disconnect(m_portalCurveMap.keys().at(ci)->buffer(), SIGNAL(cleared()), this, SLOT(onBufferCleared()));
 			}
 			disconnect(m_portalCurveMap.keys().at(ci), SIGNAL(destroyed(QObject*)), this, SLOT(onPortalDestroyed(QObject*)));
@@ -146,8 +146,9 @@ void CDataPlot::clearPortals(void)
 	m_portalCurveMap.clear();
 }
 
-void CDataPlot::onBufferDataAppended(const stData &data)
+void CDataPlot::onBufferDataAppended(const stTimeFrame &timeFrame, const stData &data)
 {
+	Q_UNUSED(timeFrame)
 	Q_UNUSED(data)
 
 	if(m_skipUpdatesCounter >= m_skipUpdatesInterval)

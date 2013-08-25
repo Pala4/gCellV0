@@ -3,6 +3,8 @@
 
 #include <QObject>
 
+#include "../scheme/timeframe.h"
+
 class CScheme;
 class CAlgorithm;
 class CDataSource;
@@ -10,6 +12,7 @@ class CPortal;
 class CResult;
 class CArgument;
 class CLink;
+class CTimeFrameGenerator;
 
 class CTraceData
 {
@@ -40,6 +43,7 @@ class CEngine : public QObject
 {
     Q_OBJECT
 private:
+	CTimeFrameGenerator *m_framer;
 	CTraceData m_traceData;
     CScheme *m_scheme;
 
@@ -51,9 +55,11 @@ private:
 public:
     explicit CEngine(QObject *parent = 0);
 
+	CTimeFrameGenerator* framer(void){return m_framer;}
     CScheme* scheme(void){return m_scheme;}
     void setScheme(CScheme *scheme);
 private slots:
+	void onNewTimeFrame(const stTimeLine &timeLine);
     void onSchemeDestroyed(void);
 public slots:
     void calc(void);

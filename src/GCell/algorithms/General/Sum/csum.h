@@ -12,7 +12,7 @@ private:
     CArgument *m_x2Arg;
     CResult *m_sumRes;
 protected:
-    virtual void proced(const int &timeFrame);
+	virtual void proced(const stTimeLine &timeLine);
 public:
     Q_INVOKABLE explicit CSum(QGraphicsItem *parent = 0);
 };

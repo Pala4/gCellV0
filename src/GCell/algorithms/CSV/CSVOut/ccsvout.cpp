@@ -1,11 +1,10 @@
 #include "ccsvout.h"
 
 #include "../../../scheme/portal/cargument.h"
-#include <QDebug>
-void CCSVOut::proced(const int &timeFrame)
+
+void CCSVOut::proced(const stTimeLine &timeLine)
 {
-	stData d = arg->bufferData(timeFrame);
-	qDebug() << name() << d.value;
+	Q_UNUSED(timeLine)
 }
 
 CCSVOut::CCSVOut(QGraphicsItem *parent) : CDataReceiver(parent)

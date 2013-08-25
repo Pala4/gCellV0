@@ -1,5 +1,8 @@
 #include "cengine.h"
 
+#include <qmath.h>
+
+#include "ctimeframegenerator.h"
 #include "../scheme/cscheme.h"
 #include "../scheme/algorithm/calgorithm.h"
 #include "../scheme/algorithm/cdatasource.h"
@@ -115,7 +118,12 @@ CEngine::CEngine(QObject *parent) : QObject(parent)
 {
     setObjectName(QStringLiteral("CEngine"));
 
+	m_framer = 0;
     m_scheme = 0;
+
+	m_framer = new CTimeFrameGenerator(0.0, 0.01, 10.0, this);
+	m_framer->setObjectName(QStringLiteral("framer"));
+	connect(m_framer, SIGNAL(newTimeFrame(stTimeLine)), this, SLOT(onNewTimeFrame(stTimeLine)));
 }
 
 void CEngine::setScheme(CScheme *scheme)
@@ -132,7 +140,15 @@ void CEngine::setScheme(CScheme *scheme)
     if(m_scheme)
     {
         connect(m_scheme, SIGNAL(destroyed()), this, SLOT(onSchemeDestroyed()));
-    }
+	}
+}
+
+void CEngine::onNewTimeFrame(const stTimeLine &timeLine)
+{
+	foreach(CDataSource *ds, m_traceData.dataSources())
+	{
+		if(ds) ds->calc(timeLine);
+	}
 }
 
 void CEngine::onSchemeDestroyed(void)
@@ -143,21 +159,16 @@ void CEngine::onSchemeDestroyed(void)
 void CEngine::calc(void)
 {
 	if(!m_scheme) return;
+	if(!m_framer) return;
 
     foreach(CElement *element, m_scheme->elements())
     {
-        element->beforeCalc();
+		element->beforeCalc(m_framer->startTime(), m_framer->timeStep(), m_framer->endTime());
     }
 	traceScheme();
-	for(int timeFrame = 0; timeFrame < 100; ++timeFrame)
-	{
-		foreach(CDataSource *ds, m_traceData.dataSources())
-		{
-			if(!ds) continue;
-			ds->calc(timeFrame);
-		}
-//		for(int ci = 0; ci < 1000000; ++ci);
-	}
+
+	m_framer->start();
+
 	m_traceData.release();
     foreach(CElement *element, m_scheme->elements())
     {

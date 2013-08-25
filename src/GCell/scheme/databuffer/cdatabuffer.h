@@ -6,13 +6,15 @@
 #include <QVector>
 #include <QPointF>
 
+#include "../timeframe.h"
+
 struct stData
 {
-	qreal timeFrame;
+	stTimeFrame timeFrame;
 	qreal value;
 
-	stData(void){timeFrame = 0.0; value = 0.0;}
-	stData(const qreal &a_timeFrame, const qreal &a_value){timeFrame = a_timeFrame, value = a_value;}
+	stData(void){value = 0.0;}
+	stData(const stTimeFrame &a_frame, const qreal &a_value){timeFrame = a_frame, value = a_value;}
 
 	bool operator ==(const stData &other) const
 	{
@@ -31,18 +33,17 @@ public:
 	const QVector<stData>& data(void) const{return m_data;}
 	stData data(const int &index) const;
 	stData last(void) const;
-	void appendData(const stData &data);
-	void appendData(const qreal &timeFrame, const qreal &data);
-	QVector<qreal> timeFrames(const qreal &value) const;
-	QVector<qreal> values(const qreal &timeFrame) const;
+	void append(const stTimeFrame &timeFrame, const qreal &value);
+	QVector<stTimeFrame> frames(const qreal &value) const;
+	QVector<qreal> values(const stTimeFrame &frame) const;
 	int count(void) const{return m_data.count();}
 	bool isEmpty(void) const{return m_data.isEmpty();}
 	bool contains(const int &index) const;
-	bool containsTimeFrame(const qreal &timeFrame);
+	bool containsFrame(const stTimeFrame &frame);
 	bool containsValue(const qreal &value);
 	void clear(void);
 signals:
-	void dataAppended(stData data);
+	void dataAppended(stTimeFrame timeFrame, stData data);
 	void cleared(void);
 };
 

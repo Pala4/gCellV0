@@ -53,7 +53,11 @@ SOURCES += \
     mainwindow/datawindow/cdatatable.cpp \
     mainwindow/datawindow/cdataplot.cpp \
     algorithms/TAC/StepExaction/cstepexcitation.cpp \
-    algorithms/TAC/TransLink/ctranslink.cpp
+    algorithms/TAC/TransLink/ctranslink.cpp \
+    algorithms/TAC/TransLink/ctlabstractalgorithm.cpp \
+    algorithms/TAC/TransLink/cdiscretdiffmethod.cpp \
+    engine/ctimeframegenerator.cpp \
+    mainwindow/coptionswindow.cpp
 
 HEADERS += \
     mainwindow/cmainwindow.h \
@@ -85,4 +89,9 @@ HEADERS += \
     mainwindow/datawindow/cdatatable.h \
     mainwindow/datawindow/cdataplot.h \
     algorithms/TAC/StepExaction/cstepexcitation.h \
-    algorithms/TAC/TransLink/ctranslink.h
+    algorithms/TAC/TransLink/ctranslink.h \
+    algorithms/TAC/TransLink/ctlabstractalgorithm.h \
+    algorithms/TAC/TransLink/cdiscretdiffmethod.h \
+    scheme/timeframe.h \
+    engine/ctimeframegenerator.h \
+    mainwindow/coptionswindow.h

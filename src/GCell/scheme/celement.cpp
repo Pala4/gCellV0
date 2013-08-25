@@ -105,3 +105,10 @@ void CElement::acceptOptions(CElementOptionsWgt *optWgt)
 		setName(optWgt->elementCaption());
 	}
 }
+
+void CElement::beforeCalc(const qreal &startTime, const qreal &timeStep, const qreal &endTime)
+{
+	Q_UNUSED(startTime)
+	Q_UNUSED(timeStep)
+	Q_UNUSED(endTime)
+}

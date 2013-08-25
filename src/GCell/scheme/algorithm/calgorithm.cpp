@@ -231,20 +231,20 @@ CElement* CAlgorithm::createElement(const QString &typeID)
 	return 0;
 }
 
-void CAlgorithm::calc(const int &timeFrame)
+void CAlgorithm::calc(const stTimeLine &timeLine)
 {
 	QList<CArgument*> args = getElements<CArgument*, CPortal*>(portals());
 	foreach(CArgument *arg, args)
 	{
 		if(!arg) continue;
 		if(!arg->isUsed()) continue;
-		if(!arg->isLoopBackPortal() && !arg->isBufferDataReady(timeFrame)) return;
+		if(!arg->isLoopBackPortal() && !arg->isBufferDataExist(timeLine.timeFrame)) return;
 	}
-	proced(timeFrame);
+	proced(timeLine);
 	QList<CResult*> ress = getElements<CResult*, CPortal*>(portals());
 	foreach(CResult *res, ress)
 	{
-		if(res) res->calc(timeFrame);
+		if(res) res->calc(timeLine);
 	}
 }
 

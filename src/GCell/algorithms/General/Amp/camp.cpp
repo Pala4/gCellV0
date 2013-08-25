@@ -7,9 +7,9 @@
 #include "../../../scheme/portal/cargument.h"
 #include "../../../scheme/portal/cresult.h"
 
-void CAmp::proced(const int &timeFrame)
+void CAmp::proced(const stTimeLine &timeLine)
 {
-	m_res->appendBufferData(timeFrame, m_arg->bufferData(timeFrame).value*m_gain);
+	m_res->appendBuffer(timeLine.timeFrame, m_arg->bufferData(timeLine.timeFrame.timeFrameIndex).value*m_gain);
 }
 
 CAmp::CAmp(QGraphicsItem *parent) : CDataTransmitter(parent)

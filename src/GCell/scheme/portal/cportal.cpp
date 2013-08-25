@@ -126,7 +126,7 @@ CPortal::CPortal(QGraphicsItem *parent) : CElement(parent)
 	setObjectName(QStringLiteral("CPortal"));
 
 	m_portalOrientation = CPortal::Left;
-	m_dataColor = QColor(255, 255, 255, 0);
+	m_dataColor = QColor(255, 255, 255);
 	m_size = 7.0;
 	m_hovered = false;
 	m_checked = false;
@@ -298,9 +298,9 @@ void CPortal::clearBuffer(void)
 	m_dataBuffer->clear();
 }
 
-void CPortal::appendBufferData(const qreal &timeFrame, const qreal &data)
+void CPortal::appendBuffer(const stTimeFrame &timeFrame, const qreal &value)
 {
-	if(m_dataBuffer && !m_dataBufferIsReference) m_dataBuffer->appendData(timeFrame, data);
+	if(m_dataBuffer && !m_dataBufferIsReference) m_dataBuffer->append(timeFrame, value);
 }
 
 stData CPortal::bufferData(const int &index)
@@ -313,14 +313,18 @@ stData CPortal::bufferData(const int &index)
 	return m_dataBuffer->data(index);
 }
 
-bool CPortal::isBufferDataReady(const int &index)
+bool CPortal::isBufferDataExist(const stTimeFrame &frame)
 {
 	if(!m_dataBuffer) return false;
-	return m_dataBuffer->contains(index);
+	return m_dataBuffer->containsFrame(frame);
 }
 
-void CPortal::beforeCalc(void)
+void CPortal::beforeCalc(const qreal &startTime, const qreal &timeStep, const qreal &endTime)
 {
+	Q_UNUSED(startTime)
+	Q_UNUSED(timeStep)
+	Q_UNUSED(endTime)
+
 	clearBuffer();
     if(isLoopBackPortal()) setLoopBackPortal(false);
 }

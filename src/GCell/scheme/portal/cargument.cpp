@@ -50,9 +50,9 @@ CArgument::CArgument(QGraphicsItem *parent) : CPortal(parent)
 	setDefaultName(tr("argument"));
 }
 
-void CArgument::calc(const int &timeFrame)
+void CArgument::calc(const stTimeLine &timeLine)
 {
 	if(isLoopBackPortal()) return;
 	CAlgorithm *alg = dynamic_cast<CAlgorithm*>(parentItem());
-	if(alg) alg->calc(timeFrame);
+	if(alg) alg->calc(timeLine);
 }

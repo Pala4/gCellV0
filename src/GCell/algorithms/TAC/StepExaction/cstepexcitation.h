@@ -11,7 +11,7 @@ class CStepExcitation : public CDataSource
 private:
 	CResult *m_step;
 protected:
-	virtual void proced(const int &timeFrame);
+	virtual void proced(const stTimeLine &timeLine);
 public:
 	Q_INVOKABLE explicit CStepExcitation(QGraphicsItem *parent = 0);
 };

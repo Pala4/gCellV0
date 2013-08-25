@@ -1,5 +1,7 @@
 #include "cdatatable.h"
 
+#include <qmath.h>
+
 #include "../../scheme/algorithm/calgorithm.h"
 #include "../../scheme/portal/cportal.h"
 #include "../../scheme/portal/cargument.h"
@@ -36,7 +38,7 @@ void CDataTable::addPortal(CPortal *portal)
 	if(m_portals.contains(portal)) return;
 
 	m_portals << portal;
-	connect(portal->buffer(), SIGNAL(dataAppended(stData)), this, SLOT(onBufferDataAppended(stData)));
+	connect(portal->buffer(), SIGNAL(dataAppended(stTimeFrame,stData)), this, SLOT(onBufferDataAppended(stTimeFrame,stData)));
 	connect(portal->buffer(), SIGNAL(cleared()), this, SLOT(refresh()));
 	connect(portal, SIGNAL(destroyed(QObject*)), this, SLOT(onPortalDestroyed(QObject*)));
 }
@@ -57,7 +59,7 @@ void CDataTable::clearPortals(void)
 		if(!portal) continue;
 		if(portal->buffer())
 		{
-			disconnect(portal->buffer(), SIGNAL(dataAppended(stData)), this, SLOT(onBufferDataAppended(stData)));
+			disconnect(portal->buffer(), SIGNAL(dataAppended(stTimeFrame,stData)), this, SLOT(onBufferDataAppended(stTimeFrame,stData)));
 			disconnect(portal->buffer(), SIGNAL(cleared()), this, SLOT(refresh()));
 		}
 		disconnect(portal, SIGNAL(destroyed(QObject*)), this, SLOT(onPortalDestroyed(QObject*)));
@@ -75,7 +77,7 @@ int CDataTable::rowCount(const QModelIndex &parent) const
 int CDataTable::columnCount(const QModelIndex &parent) const
 {
 	Q_UNUSED(parent)
-	return m_portals.count();
+	return m_portals.count()*2;
 }
 
 QVariant CDataTable::headerData(int section, Qt::Orientation orientation, int role) const
@@ -85,10 +87,19 @@ QVariant CDataTable::headerData(int section, Qt::Orientation orientation, int ro
 		case Qt::DisplayRole:
 		{
 			if(orientation == Qt::Horizontal)
-			{
-				if(section < 0 || m_portals.count() <= section) break;
-				if(!m_portals.at(section)) break;
-				return QVariant(m_portals.at(section)->caption());
+			{				
+				int sec = qFloor((qreal)section/2.0);
+				if(sec < 0 || m_portals.count() <= sec) break;
+				if(!(section%2))//even
+				{
+					if(!m_portals.at(sec)) break;
+					return QVariant(m_portals.at(sec)->caption() + tr(":Time"));
+				}
+				else//odd
+				{
+					if(!m_portals.at(sec)) break;
+					return QVariant(m_portals.at(sec)->caption() + tr(":Values"));
+				}
 			}
 		}
 	}
@@ -99,23 +110,36 @@ QVariant CDataTable::headerData(int section, Qt::Orientation orientation, int ro
 QVariant CDataTable::data(const QModelIndex &index, int role) const
 {
 	if(!index.isValid()) return QVariant();
-	if(index.column() < 0 || index.column() >= m_portals.count()) return QVariant();
 
-	CDataBuffer *buf = m_portals.at(index.column())->buffer();
+	int col = qFloor((qreal)index.column()/2.0);
+	if(col < 0 || col >= m_portals.count()) return QVariant();
+
+	CDataBuffer *buf = m_portals.at(col)->buffer();
 	if(!buf) return QVariant();
 	if(index.row() >= buf->count()) return QVariant();
 
 	switch(role)
 	{
-		case Qt::DisplayRole: return QVariant(buf->data(index.row()).value);
-		case Qt::TextColorRole: return QVariant(m_portals.at(index.column())->dataColor());
+		case Qt::DisplayRole:
+		{
+			if(!(index.column()&1))//even
+			{
+				return QVariant(buf->data(index.row()).timeFrame.time);
+			}
+			else//odd
+			{
+				return QVariant(buf->data(index.row()).value);
+			}
+		}
+		case Qt::TextColorRole: return QVariant(m_portals.at(col)->dataColor());
 	}
 
 	return QVariant();
 }
 
-void CDataTable::onBufferDataAppended(const stData &data)
+void CDataTable::onBufferDataAppended(const stTimeFrame &timeFrame, const stData &data)
 {
+	Q_UNUSED(timeFrame)
 	Q_UNUSED(data)
 
 	if(m_skipUpdatesCounter >= m_skipUpdatesInterval)

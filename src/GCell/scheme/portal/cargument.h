@@ -11,7 +11,7 @@ protected:
 public:
 	explicit CArgument(QGraphicsItem *parent = 0);
 
-	virtual void calc(const int &timeFrame);
+	virtual void calc(const stTimeLine &timeLine);
 };
 
 #endif // CARGUMENT_H

@@ -29,7 +29,7 @@ public:
 	virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
 	virtual QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
 private slots:
-	void onBufferDataAppended(const stData &data);
+	void onBufferDataAppended(const stTimeFrame &timeFrame, const stData &data);
 	void onPortalDestroyed(QObject *objPortal);
 public slots:
 	void refresh(void);

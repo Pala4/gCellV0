@@ -228,9 +228,9 @@ bool CLink::reIndexing(const QList<CElement*> &elements)
 	return (m_result && m_argument);
 }
 
-void CLink::calc(const int &timeFrame)
+void CLink::calc(const stTimeLine &timeLine)
 {
-	if(m_argument) m_argument->calc(timeFrame);
+	if(m_argument) m_argument->calc(timeLine);
 }
 
 void CLink::onResultDataColorChanged(const QColor &dataColor)

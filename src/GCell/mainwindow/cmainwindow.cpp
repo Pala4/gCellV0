@@ -11,12 +11,14 @@
 #include <QFileDialog>
 
 #include "calgorithmprotostoolbar.h"
+#include "coptionswindow.h"
 #include "datawindow/cdatawindow.h"
 #include "../scheme/algorithmproto/calgorithmproto.h"
 #include "../scheme/algorithmproto/calgorithmprotomng.h"
 #include "../scheme/cscheme.h"
 #include "../scheme/cschemeeditor.h"
 #include "../engine/cengine.h"
+#include "../engine/ctimeframegenerator.h"
 #include "../algorithms/CSV/CSVIn/ccsvin.h"
 #include "../algorithms/TAC/StepExaction/cstepexcitation.h"
 #include "../algorithms/General/Amp/camp.h"
@@ -36,6 +38,7 @@ void CMainWindow::setupToolBars(void)
 	tbMain->addAction("Save schme", this, SLOT(saveScheme()));
 	tbMain->addAction("Save scheme as...", this, SLOT(saveSchemeAs()));
     tbMain->addAction("Close scheme", this, SLOT(closeScheme()));
+	tbMain->addAction(tr("Options"), this, SLOT(showOptions()));
 	tbMain->addAction("Show data", this, SLOT(showData()));
     if(m_engine)
     {
@@ -177,6 +180,30 @@ void CMainWindow::onSchemeEditorMouseReleased(const QPointF &pos)
 {
     Q_UNUSED(pos)
 	if(m_algorithmProtoMng && m_algorithmProtoMng->selectedAlgorithmProto()) m_algorithmProtoMng->setSelectedAlgorithmProto(0);
+}
+
+void CMainWindow::showOptions(void)
+{
+	COptionsWindow optWnd(this);
+	if(m_engine && m_engine->framer())
+	{
+		optWnd.setStartTime(m_engine->framer()->startTime());
+		optWnd.setTimeStep(m_engine->framer()->timeStep());
+		optWnd.setEndTime(m_engine->framer()->endTime());
+	}
+	int dlgResult = optWnd.exec();
+	switch(dlgResult)
+	{
+		case QDialog::Accepted:
+			if(m_engine && m_engine->framer())
+			{
+				m_engine->framer()->setStartTime(optWnd.startTime());
+				m_engine->framer()->setTimeStep(optWnd.timeStep());
+				m_engine->framer()->setEndTime(optWnd.endTime());
+			}
+		break;
+		case QDialog::Rejected:break;
+	}
 }
 
 void CMainWindow::showData(void)

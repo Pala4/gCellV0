@@ -3,9 +3,12 @@
 #include "../../../scheme/portal/cargument.h"
 #include "../../../scheme/portal/cresult.h"
 
-void CSum::proced(const int &timeFrame)
+void CSum::proced(const stTimeLine &timeLine)
 {
-	m_sumRes->appendBufferData(timeFrame, m_inArg->bufferData(timeFrame).value - m_x1Arg->bufferData(timeFrame).value - m_x2Arg->bufferData(timeFrame).value);
+	m_sumRes->appendBuffer(timeLine.timeFrame,
+							   m_inArg->bufferData(timeLine.timeFrame.timeFrameIndex).value -
+							   m_x1Arg->bufferData(timeLine.timeFrame.timeFrameIndex).value -
+							   m_x2Arg->bufferData(timeLine.timeFrame.timeFrameIndex).value);
 }
 
 CSum::CSum(QGraphicsItem *parent) : CDataTransmitter(parent)

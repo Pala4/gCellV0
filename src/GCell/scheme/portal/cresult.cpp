@@ -46,13 +46,13 @@ CResult::CResult(QGraphicsItem *parent) : CPortal(parent)
 	setDefaultName(tr("result"));
 }
 
-void CResult::calc(const int &timeFrame)
+void CResult::calc(const stTimeLine &timeLine)
 {
 	foreach(CLink *link, links())
 	{
 		if(link)
 		{
-			link->calc(timeFrame);
+			link->calc(timeLine);
 		}
 	}
 }

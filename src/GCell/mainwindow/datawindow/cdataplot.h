@@ -57,7 +57,7 @@ public:
 
 //	virtual QSize minimumSizeHint(void) const{return QSize(0, 0);}
 private slots:
-	void onBufferDataAppended(const stData &data);
+	void onBufferDataAppended(const stTimeFrame &timeFrame, const stData &data);
 	void onBufferCleared(void);
 	void onPortalDestroyed(QObject *objPortal);
 public slots:

@@ -27,7 +27,7 @@ protected:
 	CResult* addResult(const QString &name);
 	void clearResults(void);
 
-	virtual void proced(const int &timeFrame) = 0;
+	virtual void proced(const stTimeLine &timeLine) = 0;
 public:
 	explicit CAlgorithm(QGraphicsItem *parent = 0);
 
@@ -42,7 +42,7 @@ public:
 
 	virtual CElement* createElement(const QString &typeID);
 
-	virtual void calc(const int &timeFrame);
+	virtual void calc(const stTimeLine &timeLine);
 private slots:
 	void onPortalDestroyed(QObject *objPortal);
 public slots:

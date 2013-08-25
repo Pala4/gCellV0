@@ -5,6 +5,8 @@
 
 #include <QFont>
 
+#include "timeframe.h"
+
 class QAction;
 
 class CScheme;
@@ -58,9 +60,9 @@ public:
 	virtual void acceptOptions(CElementOptionsWgt *optWgt);
 
 	virtual bool reIndexing(const QList<CElement*> &elements){Q_UNUSED(elements) return true;}
-    virtual void beforeCalc(void){}
-	virtual void calc(const int &timeFrame) = 0;
-    virtual void afterCalc(void){}
+	virtual void beforeCalc(const qreal &startTime, const qreal &timeStep, const qreal &endTime);
+	virtual void calc(const stTimeLine &timeLine) = 0;
+	virtual void afterCalc(void){}
 public slots:
 	virtual void updateGeometry(void){m_boundingRect = calcBounds();}
 signals:

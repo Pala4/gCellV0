@@ -215,24 +215,24 @@ void CSchemeEditor::mouseMoveEvent(QMouseEvent *event)
 	{
 		case CSchemeEditor::MoveSelectMode:
 		{
-			if(event->buttons() & Qt::LeftButton)
+			if(m_algorithmMover.haveMoved())
 			{
-				if(m_algorithmMover.haveMoved())
+				m_algorithmMover.move(mapToScene(event->pos()));
+			}
+			else
+			{
+				if(m_selector.isStarted())
 				{
-					m_algorithmMover.move(mapToScene(event->pos()));
-				}
-				else
-				{
-					if(m_selector.isStarted())
-					{
-						m_selector.move(mapToScene(event->pos()));
-						if(scene()) scene()->update();
-					}
+					m_selector.move(mapToScene(event->pos()));
+					if(scene()) scene()->update();
 				}
 			}
 			break;
 		}
-		case CSchemeEditor::LinkingMode:break;
+		case CSchemeEditor::LinkingMode:
+		{
+			break;
+		}
 	}
 
 	QGraphicsView::mouseMoveEvent(event);

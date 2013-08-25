@@ -2,9 +2,9 @@
 
 #include "../../../scheme/portal/cresult.h"
 
-void CStepExcitation::proced(const int &timeFrame)
+void CStepExcitation::proced(const stTimeLine &timeLine)
 {
-	m_step->appendBufferData(timeFrame, 1.0);
+	m_step->appendBuffer(timeLine.timeFrame, 1.0);
 }
 
 CStepExcitation::CStepExcitation(QGraphicsItem *parent) : CDataSource(parent)
