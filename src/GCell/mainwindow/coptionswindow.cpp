@@ -17,15 +17,18 @@ COptionsWindow::COptionsWindow(QWidget *parent) : QDialog(parent)
 	vbLayout->addLayout(flTimeLine);
 
 	m_startTimeSpBox = new QDoubleSpinBox();
+	m_startTimeSpBox->setDecimals(3);
 	m_startTimeSpBox->setMaximum(999999.0);
 	flTimeLine->addRow(tr("Start time:"), m_startTimeSpBox);
 
 	m_timeStepSpBox = new QDoubleSpinBox();
+	m_timeStepSpBox->setDecimals(3);
 	m_timeStepSpBox->setValue(1.0);
 	m_timeStepSpBox->setMaximum(999999.0);
 	flTimeLine->addRow(tr("Time step:"), m_timeStepSpBox);
 
 	m_endTimeSpBox = new QDoubleSpinBox();
+	m_endTimeSpBox->setDecimals(3);
 	m_endTimeSpBox->setMaximum(999999.0);
 	flTimeLine->addRow(tr("End time:"), m_endTimeSpBox);
 

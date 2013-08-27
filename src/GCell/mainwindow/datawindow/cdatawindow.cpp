@@ -43,11 +43,21 @@ void CDataWindow::addResults(const QList<CPortal*> &results)
 
 void CDataWindow::addPortals(const QList<CAlgorithm*> &algorithms)
 {
-	foreach(CAlgorithm *alg, algorithms)
+	if(algorithms.isEmpty())
 	{
-		if(!alg) continue;
-		addArguments(alg->argPortals());
-		addResults(alg->resPortals());
+		if(m_argDataPlot) m_argDataPlot->clearPortals();
+		if(m_argDataTable) m_argDataTable->clearPortals();
+		if(m_resDataPlot) m_resDataPlot->clearPortals();
+		if(m_resDataTable) m_resDataTable->clearPortals();
+	}
+	else
+	{
+		foreach(CAlgorithm *alg, algorithms)
+		{
+			if(!alg) continue;
+			addArguments(alg->argPortals());
+			addResults(alg->resPortals());
+		}
 	}
 }
 

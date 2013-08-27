@@ -9,6 +9,17 @@
 #include "../portal/cresult.h"
 #include "../elementlistutil.h"
 
+void CAlgorithm::registerPortal(CPortal *portal)
+{
+	if(!portal) return;
+
+	connect(portal, SIGNAL(destroyed(QObject*)), this, SLOT(onPortalDestroyed(QObject*)));
+	connect(portal, SIGNAL(geometryChanged()), this, SLOT(updateGeometry()));
+	updateGeometry();
+
+	emit portalAdded(portal);
+}
+
 QRectF CAlgorithm::calcBounds(void)
 {
 	prepareGeometryChange();
@@ -19,14 +30,14 @@ QRectF CAlgorithm::calcBounds(void)
 
 	QRectF boundRect;
 	boundRect = innerBound;
-	if(m_portals.isEmpty())
+	if(portals().isEmpty())
 	{
 		update();
 		return boundRect;
 	}
 
 	qreal LPHeight = 0.0, TPWidth = 0.0, RPHeight = 0.0, BPWidth = 0.0;
-	foreach(CPortal *portal, m_portals)
+	foreach(CPortal *portal, portals())
 	{
 		if(!portal) continue;
 		switch((int)portal->portalOrientation())
@@ -47,7 +58,7 @@ QRectF CAlgorithm::calcBounds(void)
 void CAlgorithm::placePortals(void)
 {
 	qreal LPHeight = 0.0, TPWidth = 0.0, RPHeight = 0.0, BPWidth = 0.0;
-	foreach(CPortal *portal, m_portals)
+	foreach(CPortal *portal, portals())
 	{
 		if(!portal) continue;
 		switch((int)portal->portalOrientation())
@@ -66,7 +77,7 @@ void CAlgorithm::placePortals(void)
 	QPointF dRP(boundRect.width() + m_portalMargin, (boundRect.height() - RPHeight + m_portalSpace)/2.0);
 	QPointF dBP((boundRect.width() - BPWidth + m_portalSpace)/2.0, boundRect.height() + m_portalMargin);
 
-	foreach(CPortal *portal, m_portals)
+	foreach(CPortal *portal, portals())
 	{
 		if(!portal) continue;
 		switch((int)portal->portalOrientation())
@@ -95,29 +106,18 @@ void CAlgorithm::placePortals(void)
 	}
 }
 
-void CAlgorithm::addPortal(CPortal *portal)
-{
-	if(!portal) return;
-    if(m_portals.contains(portal->id())) return;
-    if(m_portals.values().contains(portal)) return;
-
-    m_portals[portal->id()] = portal;
-	connect(portal, SIGNAL(destroyed(QObject*)), this, SLOT(onPortalDestroyed(QObject*)));
-	connect(portal, SIGNAL(geometryChanged()), this, SLOT(updateGeometry()));
-    updateGeometry();
-
-	emit portalAdded(portal);
-}
-
 void CAlgorithm::removePortal(const QString &id)
 {
-    if(id.isEmpty()) return;
-    if(!m_portals.contains(id)) return;
-
-    CPortal *portal = m_portals[id];
-	if(portal)
+	if(id.isEmpty()) return;
+	if(m_arguments.contains(id))
 	{
-		portal->deleteLater();
+		CArgument *arg = m_arguments[id];
+		if(arg) arg->deleteLater();
+	}
+	else if(m_results.contains(id))
+	{
+		CResult *res = m_results[id];
+		if(res) res->deleteLater();
 	}
 }
 
@@ -126,8 +126,9 @@ CArgument* CAlgorithm::addArgument(const QString &name)
 	CArgument *arg = new CArgument(this);
 	arg->setPortalOrientation(CPortal::Left);
 	arg->setName(name);
-    arg->setNomber(generateNomber<CPortal*, CArgument*>(m_portals.values()));
-	addPortal(arg);
+	arg->setNomber(generateNomber<CArgument*, CArgument*>(m_arguments.values()));
+	m_arguments[arg->id()] = arg;
+	registerPortal(arg);
 
 	return arg;
 }
@@ -138,17 +139,17 @@ CResult* CAlgorithm::addResult(const QString &name)
 	res->setPortalOrientation(CPortal::Right);
 	res->setDataColor(QColor(qRound(qrand()*255.0/RAND_MAX), qRound(qrand()*255.0/RAND_MAX), qRound(qrand()*255.0/RAND_MAX), 180));
 	res->setName(name);
-    res->setNomber(generateNomber<CPortal*, CResult*>(m_portals.values()));
+	res->setNomber(generateNomber<CResult*, CResult*>(m_results.values()));
 	res->createBuffer();
-	addPortal(res);
+	m_results[res->id()] = res;
+	registerPortal(res);
 
 	return res;
 }
 
 void CAlgorithm::clearResults(void)
 {
-    QList<CResult*> ress = getElements<CResult*, CPortal*>(m_portals.values());
-	foreach(CResult *res, ress)
+	foreach(CResult *res, m_results)
 	{
 		if(res) res->deleteLater();
 	}
@@ -186,35 +187,32 @@ void CAlgorithm::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
 	painter->setPen(pen);
 	painter->drawRect(boundingRect());
 	painter->drawText(boundingRect(), Qt::AlignCenter, caption());
-    painter->restore();
+	painter->restore();
 }
 
 CResult* CAlgorithm::result(const QString &id)
 {
-    if(id.isEmpty()) return 0;
-    if(!m_portals.contains(id)) return 0;
+	if(id.isEmpty()) return 0;
+	if(!m_results.contains(id)) return 0;
 
-	return qobject_cast<CResult*>(m_portals[id]);
+	return m_results[id];
+}
+
+QList<CPortal*> CAlgorithm::portals(void)
+{
+	QList<CPortal*> prtls;
+	prtls << argPortals() << resPortals();
+	return prtls;
 }
 
 QList<CPortal*> CAlgorithm::argPortals(void)
 {
-	return getElements<CPortal*, CPortal*>(portals(), CArgument::staticMetaObject.className());
+	return getElements<CPortal*, CArgument*>(arguments());
 }
 
 QList<CPortal*> CAlgorithm::resPortals(void)
 {
-	return getElements<CPortal*, CPortal*>(portals(), CResult::staticMetaObject.className());
-}
-
-QList<CArgument*> CAlgorithm::arguments(void)
-{
-	return getElements<CArgument*, CPortal*>(portals());
-}
-
-QList<CResult*> CAlgorithm::results(void)
-{
-	return getElements<CResult*, CPortal*>(portals());
+	return getElements<CPortal*, CResult*>(results());
 }
 
 CElement* CAlgorithm::createElement(const QString &typeID)
@@ -233,16 +231,14 @@ CElement* CAlgorithm::createElement(const QString &typeID)
 
 void CAlgorithm::calc(const stTimeLine &timeLine)
 {
-	QList<CArgument*> args = getElements<CArgument*, CPortal*>(portals());
-	foreach(CArgument *arg, args)
+	foreach(CArgument *arg, arguments())
 	{
 		if(!arg) continue;
 		if(!arg->isUsed()) continue;
 		if(!arg->isLoopBackPortal() && !arg->isBufferDataExist(timeLine.timeFrame)) return;
 	}
 	proced(timeLine);
-	QList<CResult*> ress = getElements<CResult*, CPortal*>(portals());
-	foreach(CResult *res, ress)
+	foreach(CResult *res, results())
 	{
 		if(res) res->calc(timeLine);
 	}
@@ -250,8 +246,14 @@ void CAlgorithm::calc(const stTimeLine &timeLine)
 
 void CAlgorithm::onPortalDestroyed(QObject *objPortal)
 {
-    if(!m_portals.values().contains((CPortal*)objPortal)) return;
-    m_portals.remove(m_portals.key((CPortal*)objPortal));
+	if(arguments().contains((CArgument*)objPortal))
+	{
+		m_arguments.remove(m_arguments.key((CArgument*)objPortal));
+	}
+	else if(results().contains((CResult*)objPortal))
+	{
+		m_results.remove(m_results.key((CResult*)objPortal));
+	}
 	updateGeometry();
 }
 

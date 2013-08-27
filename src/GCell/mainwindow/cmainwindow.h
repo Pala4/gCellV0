@@ -7,10 +7,10 @@
 
 class QActionGroup;
 
-class CAlgorithmProtosToolBar;
 class CDataWindow;
 class CAlgorithmProto;
 class CAlgorithmProtoMng;
+class CAlgProtoView;
 class CElement;
 class CAlgorithm;
 class CSchemeEditor;
@@ -22,14 +22,16 @@ class CMainWindow : public QMainWindow
     Q_OBJECT
 private:
     QAction *m_acCalc;
-    QAction *m_acCursor;
+	QActionGroup *m_acGrSchemeMouseMode;
+	QAction *m_acCursor;
     QAction *m_acHand;
 	QAction *m_acLinking;
 
-	CAlgorithmProtosToolBar *m_tbAlgorithmProtos;
 	CDataWindow *m_dataWindow;
 
 	CAlgorithmProtoMng *m_algorithmProtoMng;
+	CAlgProtoView *m_algProtoView;
+
 	CSchemeEditor *m_schemeEditor;
     CScheme *m_scheme;
     CEngine *m_engine;
@@ -55,11 +57,13 @@ private slots:
 	void newScheme(void);
 	void saveScheme(void);
     bool saveSchemeAs(void);
-	void openScheme(void);
+	bool openScheme(const QString &fileName = QString());
     void closeScheme(void);
 
-    void saveConfig(const QString &fileName);
-    void restoreConfig(const QString &fileName);
+	void saveDesktop(const QString &fileName);
+	void restoreDesktop(const QString &fileName);
+	void saveConfig(const QString &fileName);
+	void restoreConfig(const QString &fileName);
 };
 
 #endif // CMAINWINDOW_H

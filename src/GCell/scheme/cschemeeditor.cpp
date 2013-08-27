@@ -99,6 +99,43 @@ void CSelector::draw(QPainter *painter)
 /*!
  * \class CSchemeView
  */
+qreal CSchemeEditor::vecModul(const QPointF &point) const
+{
+	if(point.isNull()) return 0.0;
+
+	return qSqrt(qPow(point.x(), 2.0) + qPow(point.y(), 2.0));
+}
+
+CPortal* CSchemeEditor::poratalUnderPortalHook(const QPoint &mousePos)
+{
+	QRect hookRect = QRect(QPoint(0, 0), m_mousePortalHookSize);
+	hookRect.moveCenter(mousePos);
+	QList<QGraphicsItem*> hookedItems = items(hookRect, Qt::IntersectsItemBoundingRect);
+
+	QList<CPortal*> hookedPortals;
+	foreach(QGraphicsItem *hookedItem, hookedItems)
+	{
+		CPortal *hookedPortal = dynamic_cast<CPortal*>(hookedItem);
+		if(hookedPortal) hookedPortals << hookedPortal;
+	}
+	if(hookedPortals.isEmpty()) return 0;
+	if(hookedPortals.count() == 1) return hookedPortals.at(0);
+
+	qreal minDistance = vecModul(hookedPortals.at(0)->mapToScene(hookedPortals.at(0)->linkPos()) - mapToScene(mousePos));
+	CPortal *hookedPortal = hookedPortals.at(0);
+	for(int ci = 1; ci < hookedPortals.count(); ++ci)
+	{
+		qreal minDistanceTmp = vecModul(hookedPortals.at(ci)->mapToScene(hookedPortals.at(ci)->linkPos()) - mapToScene(mousePos));
+		if(minDistanceTmp < minDistance)
+		{
+			minDistance = minDistanceTmp;
+			hookedPortal = hookedPortals.at(ci);
+		}
+	}
+
+	return hookedPortal;
+}
+
 CScheme* CSchemeEditor::scheme(void)
 {
 	return qobject_cast<CScheme*>(scene());
@@ -169,18 +206,20 @@ void CSchemeEditor::mousePressEvent(QMouseEvent *event)
 		{
 			if(event->buttons() & Qt::LeftButton)
 			{
-				CPortal *portal = dynamic_cast<CPortal*>(itemAt(event->pos()));
-				if(portal)
+//				CPortal *portal = dynamic_cast<CPortal*>(itemAt(event->pos()));
+				if(m_hockedPortal)
 				{
 					if(!m_firstPortal)
 					{
-						m_firstPortal = portal;
+						m_firstPortal = m_hockedPortal;
 					}
 					else if(!m_secondPortal)
 					{
-						m_secondPortal = portal;
+						m_secondPortal = m_hockedPortal;
 					}
-					portal->setChecked(true);
+					m_hockedPortal->setHighLighted(false);
+					m_hockedPortal->setChecked(true);
+					m_hockedPortal = 0;
 				}
 				else
 				{
@@ -231,6 +270,18 @@ void CSchemeEditor::mouseMoveEvent(QMouseEvent *event)
 		}
 		case CSchemeEditor::LinkingMode:
 		{
+			CPortal *hockedPortal = poratalUnderPortalHook(event->pos());
+			if(hockedPortal && hockedPortal->canLinked())
+			{
+				if(m_hockedPortal && (m_hockedPortal != hockedPortal)) m_hockedPortal->setHighLighted(false);
+				m_hockedPortal = hockedPortal;
+				m_hockedPortal->setHighLighted(true);
+			}
+			else
+			{
+				if(m_hockedPortal) m_hockedPortal->setHighLighted(false);
+				m_hockedPortal = 0;
+			}
 			break;
 		}
 	}
@@ -285,6 +336,8 @@ CSchemeEditor::CSchemeEditor(QWidget *parent) : QGraphicsView(parent)
 	m_acDelete = 0;
 	m_mouseMode = CSchemeEditor::MoveSelectMode;
 	m_elementOptionsWgt = 0;
+	m_mousePortalHookSize = QSize(60, 60);
+	m_hockedPortal = 0;
 	m_firstPortal = 0;
 	m_secondPortal = 0;
 
@@ -411,6 +464,14 @@ void CSchemeEditor::onClipBoardChanged(const QClipboard::Mode &mode)
 			}
 		}
 	}
+}
+
+void CSchemeEditor::setMouseMode(const CSchemeEditor::TMouseMode &mouseMode)
+{
+	if(m_mouseMode == mouseMode) return;
+	m_mouseMode = mouseMode;
+
+	setMouseTracking((m_mouseMode == CSchemeEditor::LinkingMode));
 }
 
 void CSchemeEditor::showOptions(void)

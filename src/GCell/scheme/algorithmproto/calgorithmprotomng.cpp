@@ -19,12 +19,13 @@ CAlgorithmProto* CAlgorithmProtoMng::algorithmProto(const QString &id)
     return 0;
 }
 
-CAlgorithmProto* CAlgorithmProtoMng::addProto(const QString &name, const QMetaObject *algorithmMO)
+CAlgorithmProto* CAlgorithmProtoMng::addProto(const QString &name, const QString &groupName,
+											  const QMetaObject *algorithmMO)
 {
     if(algorithmProto(algorithmMO->className())) return 0;
 	if(!CAlgorithmProto::checkAlgorithmMO(algorithmMO)) return 0;
 
-	CAlgorithmProto *algorithmProto = new CAlgorithmProto(name, algorithmMO, this);
+	CAlgorithmProto *algorithmProto = new CAlgorithmProto(name, groupName, algorithmMO, this);
     m_algorithmProtos << algorithmProto;
 
 	emit algorithmProtoAdded(algorithmProto);

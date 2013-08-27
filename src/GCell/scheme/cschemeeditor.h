@@ -113,8 +113,13 @@ private:
 	CItemMover<CAlgorithm*> m_algorithmMover;
     CSelector m_selector;
 	CElementOptionsWgt *m_elementOptionsWgt;
+	QSize m_mousePortalHookSize;
+	CPortal *m_hockedPortal;
 	CPortal *m_firstPortal;
 	CPortal *m_secondPortal;
+
+	qreal vecModul(const QPointF &point) const;
+	CPortal* poratalUnderPortalHook(const QPoint &mousePos);
 
 	CScheme* scheme(void);
 protected:
@@ -133,7 +138,7 @@ private slots:
 	void onSelectionChanged(void);
 	void onClipBoardChanged(const QClipboard::Mode &mode);
 public slots:
-	void setMouseMode(const CSchemeEditor::TMouseMode &mouseMode){m_mouseMode = mouseMode;}
+	void setMouseMode(const CSchemeEditor::TMouseMode &mouseMode);
 
 	void showOptions(void);
 	void copySelected(void);

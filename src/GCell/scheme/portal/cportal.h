@@ -26,7 +26,7 @@ private:
 	QPointF m_linkPos;
 	qreal m_size;
 
-	bool m_hovered;
+	bool m_highLighted;
 	bool m_checked;
 	bool m_loopBackPortal;
 
@@ -47,9 +47,6 @@ protected:
 	const qreal& size(void) const{return m_size;}
 	void setLinkPos(const QPointF &linkPos){m_linkPos = linkPos;}
 	virtual QVariant itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value);
-	virtual void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
-	virtual void hoverMoveEvent(QGraphicsSceneHoverEvent *event);
-	virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent *event);
 	QRectF calcBounds(void);
 public:
 	explicit CPortal(QGraphicsItem *parent = 0);
@@ -62,6 +59,8 @@ public:
 	const QColor& dataColor(void) const{return m_dataColor;}
 	void setDataColor(const QColor &dataColor);
 
+	const bool& isHighLighted(void) const{return m_highLighted;}
+	void setHighLighted(const bool &highLighted);
 	const bool& isChecked(void) const{return m_checked;}
 	void setChecked(const bool &cheked);
 
@@ -74,6 +73,7 @@ public:
 	void addLink(CLink *link);
 	void removeLink(CLink *link);
 	bool isUsed(void) const{return !links().isEmpty();}
+	virtual bool canLinked(void){return true;}
 
 	virtual CDataBuffer* createBuffer(void);
 	void setBuffer(CDataBuffer *dataBuffer);

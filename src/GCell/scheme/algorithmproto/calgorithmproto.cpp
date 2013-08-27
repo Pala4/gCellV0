@@ -10,11 +10,12 @@ CAlgorithmProto::CAlgorithmProto(QObject *parent) : QObject(parent)
 	m_algorithmMO = 0;
 }
 
-CAlgorithmProto::CAlgorithmProto(const QString &name, const QMetaObject *algorithmMO, QObject *parent) : QObject(parent)
+CAlgorithmProto::CAlgorithmProto(const QString &name, const QString &groupName, const QMetaObject *algorithmMO, QObject *parent) : QObject(parent)
 {
 	setObjectName(QStringLiteral("CAlgorithmProto"));
 
     m_name = name;
+	m_groupName = groupName;
 	m_algorithmMO = algorithmMO;
 }
 

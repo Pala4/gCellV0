@@ -85,7 +85,7 @@ CDataPlot::CDataPlot(QWidget *parent) : QwtPlot(parent)
 {
 	setObjectName(QStringLiteral("CPlot"));
 
-	m_skipUpdatesInterval = 0;
+	m_skipUpdatesInterval = 1000;
 	m_skipUpdatesCounter = 0;
 	m_grid = 0;
 

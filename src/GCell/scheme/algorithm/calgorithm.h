@@ -14,16 +14,17 @@ class CAlgorithm : public CElement
 {
 	Q_OBJECT
 private:
-    QMap<QString, CPortal*> m_portals;
+	QMap<QString, CArgument*> m_arguments;
+	QMap<QString, CResult*> m_results;
 	qreal m_portalSpace;
 	qreal m_portalMargin;
 
+	void registerPortal(CPortal *portal);
 	virtual QRectF calcBounds(void);
 	void placePortals(void);
 protected:
-	void addPortal(CPortal *portal);
-    void removePortal(const QString &id);
-    CArgument* addArgument(const QString &name);
+	void removePortal(const QString &id);
+	CArgument* addArgument(const QString &name);
 	CResult* addResult(const QString &name);
 	void clearResults(void);
 
@@ -33,12 +34,12 @@ public:
 
 	virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
-    CResult* result(const QString &id);
-    QList<CPortal*> portals(void) const{return m_portals.values();}
+	CResult* result(const QString &id);
+	QList<CPortal*> portals(void);
 	QList<CPortal*> argPortals(void);
 	QList<CPortal*> resPortals(void);
-	QList<CArgument*> arguments(void);
-	QList<CResult*> results(void);
+	QList<CArgument*> arguments(void){return m_arguments.values();}
+	QList<CResult*> results(void){return m_results.values();}
 
 	virtual CElement* createElement(const QString &typeID);
 

@@ -27,7 +27,7 @@ CDataTable::CDataTable(QObject *parent) : QAbstractTableModel(parent)
 	setObjectName(QStringLiteral("CDataTable"));
 
 	m_maxBuffSize = 0;
-	m_skipUpdatesInterval = 10;
+	m_skipUpdatesInterval = 1000;
 	m_skipUpdatesCounter = 0;
 }
 

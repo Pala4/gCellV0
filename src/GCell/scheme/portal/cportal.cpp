@@ -46,25 +46,6 @@ QVariant CPortal::itemChange(QGraphicsItem::GraphicsItemChange change, const QVa
 	return CElement::itemChange(change, value);
 }
 
-void CPortal::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
-{
-	Q_UNUSED(event)
-	m_hovered = true;
-	update();
-}
-
-void CPortal::hoverMoveEvent(QGraphicsSceneHoverEvent *event)
-{
-	Q_UNUSED(event)
-}
-
-void CPortal::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
-{
-	Q_UNUSED(event)
-	m_hovered = false;
-	update();
-}
-
 QRectF CPortal::calcBounds(void)
 {
 	QRectF boundRect = shape().controlPointRect();
@@ -128,7 +109,7 @@ CPortal::CPortal(QGraphicsItem *parent) : CElement(parent)
 	m_portalOrientation = CPortal::Left;
 	m_dataColor = QColor(255, 255, 255);
 	m_size = 7.0;
-	m_hovered = false;
+	m_highLighted = false;
 	m_checked = false;
 	m_loopBackPortal = false;
 	m_dataBuffer = 0;
@@ -182,7 +163,6 @@ CPortal::CPortal(QGraphicsItem *parent) : CElement(parent)
 	setCaptionFont(QFont("Corier", 7, QFont::Bold));
 
 	setFlag(QGraphicsItem::ItemSendsScenePositionChanges);
-	setAcceptHoverEvents(true);
 }
 
 QPainterPath CPortal::shape(void) const
@@ -196,9 +176,9 @@ void CPortal::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, Q
 
 	QBrush brush;
 	brush.setStyle(Qt::SolidPattern);
-	if(m_hovered)
+	if(isHighLighted())
 	{
-		brush.setColor(QColor(0, 128, 128, 190));
+		brush.setColor(QColor(255, 0, 0));
 	}
 	else if(isChecked())
 	{
@@ -254,6 +234,13 @@ void CPortal::setDataColor(const QColor &dataColor)
 	m_dataColor = dataColor;
 	update();
 	emit dataColorChanged(m_dataColor);
+}
+
+void CPortal::setHighLighted(const bool &highLighted)
+{
+	if(m_highLighted == highLighted) return;
+	m_highLighted = highLighted;
+	update();
 }
 
 void CPortal::setChecked(const bool &cheked)
@@ -316,7 +303,7 @@ stData CPortal::bufferData(const int &index)
 bool CPortal::isBufferDataExist(const stTimeFrame &frame)
 {
 	if(!m_dataBuffer) return false;
-	return m_dataBuffer->containsFrame(frame);
+	return m_dataBuffer->contains(frame.timeFrameIndex);
 }
 
 void CPortal::beforeCalc(const qreal &startTime, const qreal &timeStep, const qreal &endTime)

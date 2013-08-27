@@ -25,7 +25,6 @@ DESTDIR = $$DEST_DIR
 
 SOURCES += \
     mainwindow/cmainwindow.cpp \
-    mainwindow/calgorithmprotostoolbar.cpp \
     algorithms/CSV/CSVIn/ccsvin.cpp \
     algorithms/CSV/CSVOut/ccsvout.cpp \
     algorithms/General/Amp/camp.cpp \
@@ -57,11 +56,11 @@ SOURCES += \
     algorithms/TAC/TransLink/ctlabstractalgorithm.cpp \
     algorithms/TAC/TransLink/cdiscretdiffmethod.cpp \
     engine/ctimeframegenerator.cpp \
-    mainwindow/coptionswindow.cpp
+    mainwindow/coptionswindow.cpp \
+    mainwindow/calgprotoview.cpp
 
 HEADERS += \
     mainwindow/cmainwindow.h \
-    mainwindow/calgorithmprotostoolbar.h \
     algorithms/CSV/CSVIn/ccsvin.h \
     algorithms/CSV/CSVOut/ccsvout.h \
     algorithms/General/Amp/camp.h \
@@ -94,4 +93,5 @@ HEADERS += \
     algorithms/TAC/TransLink/cdiscretdiffmethod.h \
     scheme/timeframe.h \
     engine/ctimeframegenerator.h \
-    mainwindow/coptionswindow.h
+    mainwindow/coptionswindow.h \
+    mainwindow/calgprotoview.h

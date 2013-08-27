@@ -11,6 +11,7 @@ protected:
 public:
 	explicit CArgument(QGraphicsItem *parent = 0);
 
+	virtual bool canLinked(void){return !isUsed();}
 	virtual void calc(const stTimeLine &timeLine);
 };
 

@@ -76,6 +76,7 @@ void CDiscretDiffMethod::prepare(const qreal &startTime, const qreal &timeStep, 
 
 	m_zNomFactors = calcZFactors(nomFactors(), timeStep);
 	m_zDenomFactors = calcZFactors(denomFactors(), timeStep);
+	CTLAbstractAlgorithm::prepare(startTime, timeStep, endTime);
 }
 
 stData CDiscretDiffMethod::doCalc(const stTimeLine &timeLine, const QVector<stData> &x, const QVector<stData> &y)
