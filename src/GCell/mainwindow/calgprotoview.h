@@ -1,12 +1,12 @@
 #ifndef CALGPROTOVIEW_H
 #define CALGPROTOVIEW_H
 
-#include <QToolBox>
+#include <QTabWidget>
 
 #include <QMap>
 
-class QGridLayout;
-class QToolButton;
+class QBoxLayout;
+class QPushButton;
 class QButtonGroup;
 class QAbstractButton;
 
@@ -17,27 +17,30 @@ class CAlgProtoGroupWidget : public QWidget
 {
 	Q_OBJECT
 private:
-	int m_columnCount;
-	int m_currentRow;
-	int m_currentCol;
-	QGridLayout *m_buttonsGrid;
+	QBoxLayout *m_buttonsLayout;
+
+	Qt::Orientation m_orientation;
 public:
-	explicit CAlgProtoGroupWidget(QWidget *parent = 0);
+	explicit CAlgProtoGroupWidget(const Qt::Orientation &orientation = Qt::Vertical, QWidget *parent = 0);
 
-	const int& columnCount(void) const{return m_columnCount;}
-	void setColumnCount(const int &columnCount){m_columnCount = columnCount;}
+	const Qt::Orientation& orientation(void) const{return m_orientation;}
+	void setOrientation(const Qt::Orientation &orientation);
 
-	void addAlgProtoButton(QToolButton *algProtoButton);
+	void addAlgProtoButton(QPushButton *algProtoButton);
 };
 
-class CAlgProtoView : public QToolBox
+class CAlgProtoView : public QTabWidget
 {
 	Q_OBJECT
 private:
 	QString m_defaultGroupName;
 	QMap<QString, CAlgProtoGroupWidget*> m_algProtoGroupWidgets;
-	QMap<QToolButton*, CAlgorithmProto*> m_buttonAlgProtoMap;
+	QMap<QPushButton*, CAlgorithmProto*> m_buttonAlgProtoMap;
 	QButtonGroup *m_buttonGroup;
+
+	Qt::Orientation m_orientation;
+	QTabWidget::TabPosition m_verTabPosition;
+	QTabWidget::TabPosition m_horTabPosition;
 	CAlgorithmProtoMng *m_algProtoMng;
 
 	void fill(void);
@@ -46,13 +49,16 @@ private:
 	void init(void);
 public:
 	explicit CAlgProtoView(QWidget *parent = 0);
-	explicit CAlgProtoView(CAlgorithmProtoMng *algProtoMng, QWidget *parent = 0);
+	explicit CAlgProtoView(CAlgorithmProtoMng *algProtoMng, const Qt::Orientation &orientation = Qt::Vertical, QWidget *parent = 0);
 
 	const QString& defaultGroupName(void) const{return m_defaultGroupName;}
 	void setDefaultGroupName(const QString &defaultGroupName){m_defaultGroupName = defaultGroupName;}
 
 	CAlgorithmProtoMng* algProtoMng(void){return m_algProtoMng;}
 	void setAlgProtoMng(CAlgorithmProtoMng *algProtoMng);
+
+	const Qt::Orientation& orientation(void) const{return m_orientation;}
+	void setOrientation(const Qt::Orientation &orientation);
 private slots:
 	void onAlgProtoAdded(CAlgorithmProto *algProto);
 	void onAlgProtoRemoved(CAlgorithmProto *algProto);

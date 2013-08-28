@@ -1,7 +1,7 @@
 #include "calgprotoview.h"
 
-#include <QGridLayout>
-#include <QToolButton>
+#include <QBoxLayout>
+#include <QPushButton>
 #include <QButtonGroup>
 
 #include "../scheme/algorithmproto/calgorithmproto.h"
@@ -10,40 +10,44 @@
 /*!
  * \class CAlgProtoGroupWidget
  */
-CAlgProtoGroupWidget::CAlgProtoGroupWidget(QWidget *parent) : QWidget(parent)
+CAlgProtoGroupWidget::CAlgProtoGroupWidget(const Qt::Orientation &orientation, QWidget *parent) : QWidget(parent)
 {
 	setObjectName(QStringLiteral("CAlgProtoGroupWidget"));
 
-	m_columnCount = 3;
-	m_currentRow = 0;
-	m_currentCol = 0;
-	m_buttonsGrid = 0;
+	m_buttonsLayout = 0;
+	m_orientation = Qt::Vertical;
+	QBoxLayout::Direction dir = QBoxLayout::TopToBottom;
+	if(m_orientation == Qt::Horizontal) dir = QBoxLayout::LeftToRight;
 
-	m_buttonsGrid = new QGridLayout();
-	m_buttonsGrid->setObjectName(QStringLiteral("actionsGrid"));
-	m_buttonsGrid->setSpacing(0);
-	m_buttonsGrid->setMargin(0);
-	m_buttonsGrid->setContentsMargins(0, 0, 0, 0);
-	setLayout(m_buttonsGrid);
+	m_buttonsLayout = new QBoxLayout(dir);
+	m_buttonsLayout->setObjectName(QStringLiteral("buttonsLayout"));
+	m_buttonsLayout->setSpacing(0);
+	m_buttonsLayout->setMargin(0);
+	m_buttonsLayout->setContentsMargins(0, 0, 0, 0);
+	m_buttonsLayout->addStretch();
+	setLayout(m_buttonsLayout);
+
+	setOrientation(orientation);
 }
 
-void CAlgProtoGroupWidget::addAlgProtoButton(QToolButton *algProtoButton)
+void CAlgProtoGroupWidget::setOrientation(const Qt::Orientation &orientation)
+{
+	m_orientation = orientation;
+	if(m_orientation == Qt::Vertical)
+	{
+		if(m_buttonsLayout) m_buttonsLayout->setDirection(QBoxLayout::TopToBottom);
+	}
+	else if(m_orientation == Qt::Horizontal)
+	{
+		if(m_buttonsLayout) m_buttonsLayout->setDirection(QBoxLayout::LeftToRight);
+	}
+}
+
+void CAlgProtoGroupWidget::addAlgProtoButton(QPushButton *algProtoButton)
 {
 	if(!algProtoButton) return;
 
-	if(m_currentCol < columnCount() - 1)
-	{
-		++m_currentCol;
-	}
-	else
-	{
-		m_currentCol = 0;
-		++m_currentRow;
-	}
-
-	if(m_buttonsGrid) m_buttonsGrid->addWidget(algProtoButton,
-											   m_currentRow, m_currentCol,
-											   Qt::AlignLeft | Qt::AlignTop);
+	if(m_buttonsLayout) m_buttonsLayout->insertWidget(m_buttonsLayout->count() - 1, algProtoButton, 0, Qt::AlignCenter);
 }
 
 /*!
@@ -63,17 +67,17 @@ void CAlgProtoView::fill(void)
 		{
 			groupWidget = new CAlgProtoGroupWidget();
 			groupWidget->setObjectName(groupName + QStringLiteral("_groupWgt"));
-			addItem(groupWidget, groupName);
+			addTab(groupWidget, groupName);
 			m_algProtoGroupWidgets[groupName] = groupWidget;
 		}
-		QToolButton *tbAlgProto = new QToolButton();
-		tbAlgProto->setObjectName(algProto->name() + QStringLiteral("_tbAlg"));
-		tbAlgProto->setText(algProto->name());
-		tbAlgProto->setToolButtonStyle(Qt::ToolButtonFollowStyle);
-		tbAlgProto->setCheckable(true);
-		m_buttonAlgProtoMap[tbAlgProto] = algProto;
-		groupWidget->addAlgProtoButton(tbAlgProto);
-		if(m_buttonGroup) m_buttonGroup->addButton(tbAlgProto);
+		QPushButton *pbAlgProto = new QPushButton();
+		pbAlgProto->setObjectName(algProto->name() + QStringLiteral("_tbAlg"));
+		pbAlgProto->setText(algProto->name());
+//		pbAlgProto->setFlat(true);
+		pbAlgProto->setCheckable(true);
+		m_buttonAlgProtoMap[pbAlgProto] = algProto;
+		groupWidget->addAlgProtoButton(pbAlgProto);
+		if(m_buttonGroup) m_buttonGroup->addButton(pbAlgProto);
 	}
 }
 
@@ -89,6 +93,9 @@ void CAlgProtoView::init(void)
 
 	m_defaultGroupName = tr("General");
 	m_buttonGroup = 0;
+	m_orientation = Qt::Vertical;
+	m_verTabPosition = QTabWidget::East;
+	m_horTabPosition = QTabWidget::North;
 	m_algProtoMng = 0;
 
 	m_buttonGroup = new QButtonGroup(this);
@@ -99,15 +106,18 @@ void CAlgProtoView::init(void)
 	setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Ignored));
 }
 
-CAlgProtoView::CAlgProtoView(QWidget *parent) : QToolBox(parent)
+CAlgProtoView::CAlgProtoView(QWidget *parent) : QTabWidget(parent)
 {
 	init();
+
+	setOrientation(m_orientation);
 }
 
-CAlgProtoView::CAlgProtoView(CAlgorithmProtoMng *algProtoMng, QWidget *parent) : QToolBox(parent)
+CAlgProtoView::CAlgProtoView(CAlgorithmProtoMng *algProtoMng, const Qt::Orientation &orientation, QWidget *parent) : QTabWidget(parent)
 {
 	init();
 
+	setOrientation(orientation);
 	setAlgProtoMng(algProtoMng);
 }
 
@@ -131,6 +141,26 @@ void CAlgProtoView::setAlgProtoMng(CAlgorithmProtoMng *algProtoMng)
 		connect(m_algProtoMng, SIGNAL(algorithmProtoSelected(CAlgorithmProto*)), this, SLOT(onAlgProtoProgrammSelected(CAlgorithmProto*)));
 		connect(m_algProtoMng, SIGNAL(destroyed(QObject*)), this, SLOT(onAlgProtoDestroyed(QObject*)));
 		fill();
+	}
+}
+
+void CAlgProtoView::setOrientation(const Qt::Orientation &orientation)
+{
+	m_orientation = orientation;
+	for(int ci = 0; ci < m_algProtoGroupWidgets.values().count(); ++ci)
+	{
+		CAlgProtoGroupWidget *algProtoWgt = m_algProtoGroupWidgets.values().at(ci);
+		if(algProtoWgt) algProtoWgt->setOrientation(m_orientation);
+	}
+	if(m_orientation == Qt::Vertical)
+	{
+		setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Ignored));
+		setTabPosition(m_verTabPosition);
+	}
+	else if(m_orientation == Qt::Horizontal)
+	{
+		setSizePolicy(QSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed));
+		setTabPosition(m_horTabPosition);
 	}
 }
 
@@ -174,7 +204,7 @@ void CAlgProtoView::onButtonGroupButtonPressed(QAbstractButton *button)
 		}
 	}
 
-	QToolButton *tb = qobject_cast<QToolButton*>(button);
+	QPushButton *tb = qobject_cast<QPushButton*>(button);
 	if(!tb) return;
 	if(!m_buttonAlgProtoMap.contains(tb)) return;
 	if(!m_buttonAlgProtoMap[tb]) return;

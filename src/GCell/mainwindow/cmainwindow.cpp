@@ -11,6 +11,8 @@
 #include <QFileDialog>
 #include <QDockWidget>
 
+#include <QLabel>
+
 #include "coptionswindow.h"
 #include "datawindow/cdatawindow.h"
 #include "../scheme/algorithmproto/calgorithmproto.h"
@@ -32,8 +34,8 @@
  */
 void CMainWindow::setupToolBars(void)
 {
-    QToolBar *tbMain = addToolBar("Main");
-    tbMain->setObjectName(QStringLiteral("tbMain"));
+	QToolBar *tbMain = addToolBar("Main");
+	tbMain->setObjectName(QStringLiteral("tbMain"));
 	tbMain->addAction(tr("New scheme"), this, SLOT(newScheme()));
 	tbMain->addAction(tr("Open"), this, SLOT(openScheme()));
 	tbMain->addAction(tr("Save schme"), this, SLOT(saveScheme()));
@@ -41,12 +43,12 @@ void CMainWindow::setupToolBars(void)
 	tbMain->addAction(tr("Close scheme"), this, SLOT(closeScheme()));
 	tbMain->addAction(tr("Options"), this, SLOT(showOptions()));
 	tbMain->addAction(tr("Show data"), this, SLOT(showData()));
-    if(m_engine)
-    {
-        m_acCalc = tbMain->addAction("Calc", m_engine, SLOT(calc()));
-        m_acCalc->setObjectName(QStringLiteral("acCalc"));
-        m_acCalc->setEnabled((m_scheme != 0));
-    }
+	if(m_engine)
+	{
+		m_acCalc = tbMain->addAction("Calc", m_engine, SLOT(calc()));
+		m_acCalc->setObjectName(QStringLiteral("acCalc"));
+		m_acCalc->setEnabled((m_scheme != 0));
+	}
 
 	tbMain->addSeparator();
 
@@ -108,24 +110,25 @@ void CMainWindow::closeEvent(QCloseEvent *event)
 	saveScheme();
 	saveConfig("config.ini");
 	saveDesktop("desktop.ini");
-    QMainWindow::closeEvent(event);
+	QMainWindow::closeEvent(event);
 }
 
 CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
 {
-    setObjectName("CMainWindow");
+	setObjectName("CMainWindow");
 
-    m_acCalc = 0;
+	m_acCalc = 0;
 	m_acGrSchemeMouseMode = 0;
 	m_acCursor = 0;
-    m_acHand = 0;
+	m_acHand = 0;
 	m_acLinking = 0;
 	m_dataWindow = 0;
 	m_algorithmProtoMng = 0;
 	m_algProtoView = 0;
+	m_algProtoViewDock = 0;
 	m_schemeEditor = 0;
-    m_scheme = 0;
-    m_engine = 0;
+	m_scheme = 0;
+	m_engine = 0;
 
 	m_dataWindow = new CDataWindow(this);
 	m_dataWindow->setObjectName(QStringLiteral("dataWindow"));
@@ -138,16 +141,19 @@ CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
 	m_algorithmProtoMng->addProto(tr("CSV Out"), tr("CSV"), &CCSVOut::staticMetaObject);
 	m_algorithmProtoMng->addProto(tr("A(t)"), tr("TAC"), &CStepExcitation::staticMetaObject);
 	m_algorithmProtoMng->addProto(tr("TL"), tr("TAC"), &CTransLink::staticMetaObject);
-    connect(m_algorithmProtoMng, SIGNAL(algorithmProtoSelected(CAlgorithmProto*)), this, SLOT(onAlgorithmProtoSelected(CAlgorithmProto*)));
+	connect(m_algorithmProtoMng, SIGNAL(algorithmProtoSelected(CAlgorithmProto*)), this, SLOT(onAlgorithmProtoSelected(CAlgorithmProto*)));
 
-	m_algProtoView = new CAlgProtoView(m_algorithmProtoMng);
+	m_algProtoView = new CAlgProtoView(m_algorithmProtoMng, Qt::Vertical);
 	m_algProtoView->setObjectName(QStringLiteral("algProtoView"));
 	m_algProtoView->setWindowTitle(tr("Algorithm prototypes"));
-	QDockWidget *algProtoViewDock = new QDockWidget(m_algProtoView->windowTitle());
-	algProtoViewDock->setObjectName(QStringLiteral("algProtoViewDock"));
-	algProtoViewDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-	algProtoViewDock->setWidget(m_algProtoView);
-	addDockWidget(Qt::LeftDockWidgetArea, algProtoViewDock);
+	m_algProtoViewDock = new QDockWidget(m_algProtoView->windowTitle());
+	m_algProtoViewDock->setObjectName(QStringLiteral("algProtoViewDock"));
+	m_algProtoViewDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+	m_algProtoViewDock->setWidget(m_algProtoView);
+	m_algProtoViewDock->setTitleBarWidget(new QLabel(""));
+	connect(m_algProtoViewDock, SIGNAL(dockLocationChanged(Qt::DockWidgetArea)), this, SLOT(onAlgProtosViewDockLocationChanged(Qt::DockWidgetArea)));
+	connect(m_algProtoViewDock, SIGNAL(topLevelChanged(bool)), this, SLOT(onAlgProtosViewDockTopLevelChanged(bool)));
+	addDockWidget(Qt::LeftDockWidgetArea, m_algProtoViewDock);
 
 	m_schemeEditor = new CSchemeEditor(this);
 	m_schemeEditor->setObjectName(QStringLiteral("schemeEditor"));
@@ -155,11 +161,11 @@ CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
 	connect(m_schemeEditor, SIGNAL(mouseReleased(QPointF)), this, SLOT(onSchemeEditorMouseReleased(QPointF)));
 	setCentralWidget(m_schemeEditor);
 
-    m_engine = new CEngine(this);
-    m_engine->setObjectName(QStringLiteral("engine"));
+	m_engine = new CEngine(this);
+	m_engine->setObjectName(QStringLiteral("engine"));
 	connect(m_engine, SIGNAL(calcStopped()), m_dataWindow, SLOT(flushBuffers()));
 
-    setupToolBars();
+	setupToolBars();
 
 	restoreConfig("config.ini");
 	restoreDesktop("desktop.ini");
@@ -190,7 +196,7 @@ void CMainWindow::onAlgorithmProtoSelected(CAlgorithmProto *selectedProto)
 
 void CMainWindow::onSchemeEditorMouseReleased(const QPointF &pos)
 {
-    Q_UNUSED(pos)
+	Q_UNUSED(pos)
 	if(m_algorithmProtoMng && m_algorithmProtoMng->selectedAlgorithmProto()) m_algorithmProtoMng->setSelectedAlgorithmProto(0);
 	if(m_schemeEditor)
 	{
@@ -207,6 +213,26 @@ void CMainWindow::onSchemeEditorMouseReleased(const QPointF &pos)
 			m_schemeEditor->setMouseMode(CSchemeEditor::LinkingMode);
 		}
 	}
+}
+
+void CMainWindow::onAlgProtosViewDockLocationChanged(const Qt::DockWidgetArea &area)
+{
+	if(!m_algProtoView) return;
+	if(area == Qt::LeftDockWidgetArea || area == Qt::RightDockWidgetArea)
+	{
+		if(m_algProtoViewDock) m_algProtoViewDock->setFeatures(m_algProtoViewDock->features() & ~QDockWidget::DockWidgetVerticalTitleBar);
+		m_algProtoView->setOrientation(Qt::Vertical);
+	}
+	else if(area == Qt::TopDockWidgetArea || area == Qt::BottomDockWidgetArea)
+	{
+		if(m_algProtoViewDock) m_algProtoViewDock->setFeatures(m_algProtoViewDock->features() | QDockWidget::DockWidgetVerticalTitleBar);
+		m_algProtoView->setOrientation(Qt::Horizontal);
+	}
+}
+
+void CMainWindow::onAlgProtosViewDockTopLevelChanged(const bool &topLevel)
+{
+	if(topLevel && m_algProtoView) m_algProtoView->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
 }
 
 void CMainWindow::showOptions(void)
@@ -250,12 +276,12 @@ void CMainWindow::updateTitle(void)
 
 void CMainWindow::newScheme(void)
 {
-    if(m_scheme) closeScheme();
+	if(m_scheme) closeScheme();
 
-    m_scheme = new CScheme(this);
-    m_scheme->setObjectName(QStringLiteral("scheme"));
+	m_scheme = new CScheme(this);
+	m_scheme->setObjectName(QStringLiteral("scheme"));
 	m_scheme->setNewScheme(true);
-    m_scheme->setAlgorithmProtoMng(m_algorithmProtoMng);
+	m_scheme->setAlgorithmProtoMng(m_algorithmProtoMng);
 	connect(m_scheme, SIGNAL(fileNameChanged(QString)), this, SLOT(updateTitle()));
 	if(m_schemeEditor) m_schemeEditor->setScheme(m_scheme);
 	if(m_engine)
@@ -276,7 +302,7 @@ void CMainWindow::saveScheme(void)
 	if(!m_scheme) return;
 	if(m_scheme->isNewScheme())
 	{
-        if(saveSchemeAs()) m_scheme->setNewScheme(false);
+		if(saveSchemeAs()) m_scheme->setNewScheme(false);
 	}
 	else
 	{
@@ -288,11 +314,11 @@ bool CMainWindow::saveSchemeAs(void)
 {
 	if(!m_scheme) return false;
 	QString fileName = QFileDialog::getSaveFileName(this, "Save as...", m_scheme->fileName());
-    if(fileName.isEmpty()) return false;
+	if(fileName.isEmpty()) return false;
 
 	m_scheme->setFileName(fileName);
 	writeScheme(m_scheme, m_scheme->fileName());
-    return true;
+	return true;
 }
 
 bool CMainWindow::openScheme(const QString &fileName)
@@ -314,18 +340,18 @@ bool CMainWindow::openScheme(const QString &fileName)
 
 void CMainWindow::closeScheme(void)
 {
-    if(m_scheme)
-    {
-        m_scheme->deleteLater();
-        m_scheme = 0;
-        if(m_acCalc) m_acCalc->setEnabled(false);
-    }
+	if(m_scheme)
+	{
+		m_scheme->deleteLater();
+		m_scheme = 0;
+		if(m_acCalc) m_acCalc->setEnabled(false);
+	}
 	updateTitle();
 }
 
 void CMainWindow::saveDesktop(const QString &fileName)
 {
-    if(fileName.isEmpty()) return;
+	if(fileName.isEmpty()) return;
 
 	QSettings desk(fileName, QSettings::IniFormat);
 	desk.setValue("MainWindow/geometry", saveGeometry());
@@ -341,7 +367,7 @@ void CMainWindow::saveDesktop(const QString &fileName)
 
 void CMainWindow::restoreDesktop(const QString &fileName)
 {
-    if(fileName.isEmpty()) return;
+	if(fileName.isEmpty()) return;
 
 	QSettings desk(fileName, QSettings::IniFormat);
 	restoreGeometry(desk.value("MainWindow/geometry").toByteArray());
