@@ -3,24 +3,12 @@
 
 #include <QDialog>
 
-#include "../widgets/clineeditbutton.h"
+#include "../widgets/ccolorlineedit.h"
 
 class QCheckBox;
 class QLineEdit;
 class QSpinBox;
 class QDoubleSpinBox;
-
-class CColorLineEdit : public CLineEditButton
-{
-	Q_OBJECT
-public:
-	explicit CColorLineEdit(QWidget *parent = 0);
-
-	QColor color(void) const;
-	void setColor(const QColor &color);
-private slots:
-	void onButtonClicked(void);
-};
 
 class COptionsWindow : public QDialog
 {

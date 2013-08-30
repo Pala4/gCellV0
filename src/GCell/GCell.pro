@@ -58,7 +58,8 @@ SOURCES += \
     engine/ctimeframegenerator.cpp \
     mainwindow/coptionswindow.cpp \
     mainwindow/calgprotoview.cpp \
-    widgets/clineeditbutton.cpp
+    widgets/clineeditbutton.cpp \
+    widgets/ccolorlineedit.cpp
 
 HEADERS += \
     mainwindow/cmainwindow.h \
@@ -96,4 +97,5 @@ HEADERS += \
     engine/ctimeframegenerator.h \
     mainwindow/coptionswindow.h \
     mainwindow/calgprotoview.h \
-    widgets/clineeditbutton.h
+    widgets/clineeditbutton.h \
+    widgets/ccolorlineedit.h
