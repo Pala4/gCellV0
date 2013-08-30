@@ -15,14 +15,15 @@
 /*!
  * \class CGreed
  */
-CGreed::CGreed(const QColor &color, const QColor &bkGndColor, const int &step)
+CGrid::CGrid(const QColor &color, const QColor &bkGndColor, const int &step, const bool &align)
 {
 	m_color = color;
 	m_bkGndColor = bkGndColor;
 	m_step = step;
+	m_align = align;
 }
 
-QBrush CGreed::bkGndBrush(void)
+QBrush CGrid::bkGndBrush(void)
 {
 	QPen pen;
 	pen.setWidth(0);
@@ -38,9 +39,9 @@ QBrush CGreed::bkGndBrush(void)
 	return QBrush(pixmap);
 }
 
-QPointF CGreed::align(const QPointF &pos)
+QPointF CGrid::align(const QPointF &pos)
 {
-	if(m_step == 0) return pos;
+	if(m_step == 0 || !isAlign()) return pos;
 
 	qreal numStepsX = pos.x()/qreal(m_step);
 	qreal modNumStepsX = qFabs(numStepsX - (int)numStepsX);
@@ -206,7 +207,6 @@ void CSchemeEditor::mousePressEvent(QMouseEvent *event)
 		{
 			if(event->buttons() & Qt::LeftButton)
 			{
-//				CPortal *portal = dynamic_cast<CPortal*>(itemAt(event->pos()));
 				if(m_hockedPortal)
 				{
 					if(!m_firstPortal)
@@ -241,7 +241,7 @@ void CSchemeEditor::mousePressEvent(QMouseEvent *event)
 		{
 			if(event->buttons() & Qt::LeftButton)
 			{
-				if(scheme()) scheme()->createAlgorithm(m_greed.align(mapToScene(event->pos())));
+				if(scheme()) scheme()->createAlgorithm(m_grid.align(mapToScene(event->pos())));
 			}
 		}
 		break;
@@ -336,7 +336,7 @@ CSchemeEditor::CSchemeEditor(QWidget *parent) : QGraphicsView(parent)
 	m_acDelete = 0;
 	m_mouseMode = CSchemeEditor::MoveSelectMode;
 	m_elementOptionsWgt = 0;
-	m_mousePortalHookSize = QSize(60, 60);
+	m_mousePortalHookSize = QSize(20, 20);
 	m_hockedPortal = 0;
 	m_firstPortal = 0;
 	m_secondPortal = 0;
@@ -391,12 +391,52 @@ CSchemeEditor::CSchemeEditor(QWidget *parent) : QGraphicsView(parent)
 	connect(m_acDelete, SIGNAL(triggered()), this, SLOT(deleteSelected()));
 	addAction(m_acDelete);
 
-	m_algorithmMover.setGreed(&m_greed);
+	m_algorithmMover.setGreed(&m_grid);
 
 	QClipboard *clpb = QApplication::clipboard();
 	connect(clpb, SIGNAL(changed(QClipboard::Mode)), this, SLOT(onClipBoardChanged(QClipboard::Mode)));
 
-	setBackgroundBrush(m_greed.bkGndBrush());
+	setBackgroundBrush(m_grid.bkGndBrush());
+}
+
+void CSchemeEditor::setGridColor(const QColor &gridColor)
+{
+	if(m_grid.color() == gridColor) return;
+
+	m_grid.setColor(gridColor);
+	setBackgroundBrush(m_grid.bkGndBrush());
+}
+
+void CSchemeEditor::setGridBkGndColor(const QColor &gridBkGndColor)
+{
+	if(m_grid.bkGndColor() == gridBkGndColor) return;
+
+	m_grid.setBkGndColor(gridBkGndColor);
+	setBackgroundBrush(m_grid.bkGndBrush());
+}
+
+void CSchemeEditor::setGridStep(const int &gridStep)
+{
+	if(m_grid.step() == gridStep) return;
+
+	m_grid.setStep(gridStep);
+	setBackgroundBrush(m_grid.bkGndBrush());
+}
+
+void CSchemeEditor::setupGrid(const QColor &gridColor, const QColor &gridBkColor,
+							  const int &gridStep, const bool &gridAlign)
+{
+	if((m_grid.color() == gridColor) &&
+	   (m_grid.bkGndColor() == gridBkColor) &&
+	   (m_grid.step() == gridStep) &&
+	   (m_grid.isAlign() == gridAlign)) return;
+
+	m_grid.setColor(gridColor);
+	m_grid.setBkGndColor(gridBkColor);
+	m_grid.setStep(gridStep);
+	m_grid.setAlign(gridAlign);
+
+	setBackgroundBrush(m_grid.bkGndBrush());
 }
 
 void CSchemeEditor::setScheme(CScheme *a_scheme)
@@ -405,13 +445,19 @@ void CSchemeEditor::setScheme(CScheme *a_scheme)
 	if(scheme())
 	{
 		disconnect(scheme(), SIGNAL(selectionChanged()), this, SLOT(onSelectionChanged()));
+		disconnect(scheme(), SIGNAL(fileNameChanged(QString)), this, SLOT(updateTitle()));
+		disconnect(scheme(), SIGNAL(sceneRectChanged(QRectF)), this, SLOT(onSchemeRectChanged(QRectF)));
 	}
 	setScene(a_scheme);
 	if(scheme())
 	{
 		connect(scheme(), SIGNAL(selectionChanged()), this, SLOT(onSelectionChanged()));
+		connect(scheme(), SIGNAL(fileNameChanged(QString)), this, SLOT(updateTitle()));
+		connect(scheme(), SIGNAL(sceneRectChanged(QRectF)), this, SLOT(onSchemeRectChanged(QRectF)));
 	}
 	centerOn(0.0, 0.0);
+
+	updateTitle();
 }
 
 void CSchemeEditor::onSelectionChanged(void)
@@ -464,6 +510,20 @@ void CSchemeEditor::onClipBoardChanged(const QClipboard::Mode &mode)
 			}
 		}
 	}
+}
+
+void CSchemeEditor::onSchemeRectChanged(const QRectF &rect)
+{
+	Q_UNUSED(rect)
+	centerOn(0.0, 0.0);
+}
+
+void CSchemeEditor::updateTitle(void)
+{
+	QString title = scheme() ? scheme()->fileName() : QString();
+	setWindowTitle(title);
+
+	emit windowTitleChanged();
 }
 
 void CSchemeEditor::setMouseMode(const CSchemeEditor::TMouseMode &mouseMode)

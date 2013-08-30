@@ -121,28 +121,42 @@ void CAlgorithm::removePortal(const QString &id)
 	}
 }
 
-CArgument* CAlgorithm::addArgument(const QString &name)
+void CAlgorithm::addArgument(CArgument *arg)
 {
-	CArgument *arg = new CArgument(this);
+	if(!arg) return;
+
 	arg->setPortalOrientation(CPortal::Left);
-	arg->setName(name);
 	arg->setNomber(generateNomber<CArgument*, CArgument*>(m_arguments.values()));
 	m_arguments[arg->id()] = arg;
 	registerPortal(arg);
+}
+
+CArgument* CAlgorithm::addArgument(const QString &name)
+{
+	CArgument *arg = new CArgument(this);
+	arg->setName(name);
+	addArgument(arg);
 
 	return arg;
+}
+
+void CAlgorithm::addResult(CResult *res)
+{
+	if(!res) return;
+
+	res->setPortalOrientation(CPortal::Right);
+	res->setDataColor(QColor(qRound(qrand()*255.0/RAND_MAX), qRound(qrand()*255.0/RAND_MAX), qRound(qrand()*255.0/RAND_MAX), 180));
+	res->setNomber(generateNomber<CResult*, CResult*>(m_results.values()));
+	res->createBuffer();
+	m_results[res->id()] = res;
+	registerPortal(res);
 }
 
 CResult* CAlgorithm::addResult(const QString &name)
 {
 	CResult *res = new CResult(this);
-	res->setPortalOrientation(CPortal::Right);
-	res->setDataColor(QColor(qRound(qrand()*255.0/RAND_MAX), qRound(qrand()*255.0/RAND_MAX), qRound(qrand()*255.0/RAND_MAX), 180));
 	res->setName(name);
-	res->setNomber(generateNomber<CResult*, CResult*>(m_results.values()));
-	res->createBuffer();
-	m_results[res->id()] = res;
-	registerPortal(res);
+	addResult(res);
 
 	return res;
 }

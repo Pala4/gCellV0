@@ -10,7 +10,7 @@
 #include <QFile>
 #include <QFileDialog>
 #include <QDockWidget>
-
+#include <QStatusBar>
 #include <QLabel>
 
 #include "coptionswindow.h"
@@ -79,13 +79,18 @@ void CMainWindow::setupToolBars(void)
 	if(m_schemeEditor) m_schemeEditor->addActions(m_acGrSchemeMouseMode->actions());
 }
 
+void CMainWindow::setupStatusBar(void)
+{
+	statusBar()->showMessage(tr("Ready"));
+}
+
 void CMainWindow::writeScheme(CScheme *scheme, const QString &fileName)
 {
 	if(!scheme || fileName.isEmpty()) return;
 
 	QFile fileHandler(fileName);
 	if(!fileHandler.open(QIODevice::WriteOnly)) return;
-	QTextStream(&fileHandler) << scheme->toXMLDom(scheme->elements()).toString(); /*xmlScheme.schemeToDom(scheme).toString();*/
+	QTextStream(&fileHandler) << scheme->toXMLDom(scheme->elements(), scheme).toString();
 	fileHandler.close();
 }
 
@@ -102,14 +107,15 @@ void CMainWindow::readScheme(CScheme *scheme, const QString &fileName)
 	int errCol = 0;
 	if(!domDoc.setContent(&fileHandler, &errMsg, &errLine, &errCol)) return;
 
-	scheme->addElements(scheme->fromXMLDom(domDoc));
+	scheme->addElements(scheme->fromXMLDom(domDoc, scheme));
 }
 
 void CMainWindow::closeEvent(QCloseEvent *event)
 {
-	saveScheme();
-	saveConfig("config.ini");
-	saveDesktop("desktop.ini");
+	if(isAutoSaveLastScheme()) saveScheme();
+	if(isAutoSaveDesktop()) saveDesktop("desktop.ini");
+	if(isAutoSaveConfig()) saveConfig("config.ini");
+
 	QMainWindow::closeEvent(event);
 }
 
@@ -117,11 +123,21 @@ CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
 {
 	setObjectName("CMainWindow");
 
+	m_autoSaveConfig = false;
+	m_autoSaveDesktop = false;
+	m_autoSaveLastScheme = false;
+	m_autoLoadLastScheme = false;
+	m_gridColor = Qt::black;
+	m_gridBkGndColor = Qt::white;
+	m_gridStep = 8;
+	m_gridAlign = true;
+
 	m_acCalc = 0;
 	m_acGrSchemeMouseMode = 0;
 	m_acCursor = 0;
 	m_acHand = 0;
 	m_acLinking = 0;
+	m_workSpaceTabWgt = 0;
 	m_dataWindow = 0;
 	m_algorithmProtoMng = 0;
 	m_algProtoView = 0;
@@ -129,6 +145,10 @@ CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
 	m_schemeEditor = 0;
 	m_scheme = 0;
 	m_engine = 0;
+
+	m_workSpaceTabWgt = new QTabWidget();
+	m_workSpaceTabWgt->setObjectName(QStringLiteral("workSpaceTabWgt"));
+	setCentralWidget(m_workSpaceTabWgt);
 
 	m_dataWindow = new CDataWindow(this);
 	m_dataWindow->setObjectName(QStringLiteral("dataWindow"));
@@ -155,20 +175,47 @@ CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
 	connect(m_algProtoViewDock, SIGNAL(topLevelChanged(bool)), this, SLOT(onAlgProtosViewDockTopLevelChanged(bool)));
 	addDockWidget(Qt::LeftDockWidgetArea, m_algProtoViewDock);
 
-	m_schemeEditor = new CSchemeEditor(this);
-	m_schemeEditor->setObjectName(QStringLiteral("schemeEditor"));
-	m_schemeEditor->setSceneRect(0.0, 0.0, 1000.0, 1000.0);
-	connect(m_schemeEditor, SIGNAL(mouseReleased(QPointF)), this, SLOT(onSchemeEditorMouseReleased(QPointF)));
-	setCentralWidget(m_schemeEditor);
-
 	m_engine = new CEngine(this);
 	m_engine->setObjectName(QStringLiteral("engine"));
 	connect(m_engine, SIGNAL(calcStopped()), m_dataWindow, SLOT(flushBuffers()));
 
 	setupToolBars();
+	setupStatusBar();
 
 	restoreConfig("config.ini");
 	restoreDesktop("desktop.ini");
+}
+
+void CMainWindow::setGridColor(const QColor &gridColor)
+{
+	if(m_gridColor == gridColor) return;
+
+	m_gridColor = gridColor;
+	if(m_schemeEditor) m_schemeEditor->setGridColor(m_gridColor);
+}
+
+void CMainWindow::setGridBkGndColor(const QColor &gridBkGndColor)
+{
+	if(m_gridBkGndColor == gridBkGndColor) return;
+
+	m_gridBkGndColor = gridBkGndColor;
+	if(m_schemeEditor) m_schemeEditor->setGridBkGndColor(m_gridBkGndColor);
+}
+
+void CMainWindow::setGridStep(const int &gridStep)
+{
+	if(m_gridStep == gridStep) return;
+
+	m_gridStep = gridStep;
+	if(m_schemeEditor) m_schemeEditor->setGridStep(m_gridStep);
+}
+
+void CMainWindow::setGridAlign(const bool &gridAlign)
+{
+	if(m_gridAlign == gridAlign) return;
+
+	m_gridAlign = gridAlign;
+	if(m_schemeEditor) m_schemeEditor->setGridAlign(m_gridAlign);
 }
 
 void CMainWindow::onCursorTriggered(const bool &checked)
@@ -235,19 +282,62 @@ void CMainWindow::onAlgProtosViewDockTopLevelChanged(const bool &topLevel)
 	if(topLevel && m_algProtoView) m_algProtoView->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
 }
 
+void CMainWindow::onSchemeEditorWindowTitleChanged(void)
+{
+	if(m_schemeEditor && m_workSpaceTabWgt)
+	{
+		int tabIndex = m_workSpaceTabWgt->indexOf(m_schemeEditor);
+		if(tabIndex >= 0) m_workSpaceTabWgt->setTabText(tabIndex, m_schemeEditor->windowTitle());
+	}
+}
+
 void CMainWindow::showOptions(void)
 {
 	COptionsWindow optWnd(this);
+	optWnd.setAutoSaveConfig(isAutoSaveConfig());
+	optWnd.setAutoSaveDesktop(isAutoSaveDesktop());
+	optWnd.setAutoSaveLastScheme(isAutoSaveLastScheme());
+	optWnd.setAutoLoadLastScheme(isAutoLoadLastScheme());
+
+	optWnd.setGridColor(gridColor());
+	optWnd.setGridBkGndColor(gridBkGndColor());
+	optWnd.setGridStep(gridStep());
+	optWnd.setGridAlign(isGridAlign());
+
+	if(m_scheme)
+	{
+		optWnd.setSchemeWidhet(m_scheme->sceneRect().width());
+		optWnd.setSchemeHeight(m_scheme->sceneRect().height());
+	}
+	if(optWnd.schemeTab()) optWnd.schemeTab()->setEnabled((m_scheme));
+
 	if(m_engine && m_engine->framer())
 	{
 		optWnd.setStartTime(m_engine->framer()->startTime());
 		optWnd.setTimeStep(m_engine->framer()->timeStep());
 		optWnd.setEndTime(m_engine->framer()->endTime());
 	}
+	if(optWnd.calcParamTab()) optWnd.calcParamTab()->setEnabled((m_engine && m_engine->framer()));
+
 	int dlgResult = optWnd.exec();
 	switch(dlgResult)
 	{
 		case QDialog::Accepted:
+			setAutoSaveConfig(optWnd.isAutoSaveConfig());
+			setAutoSaveDesktop(optWnd.isAutoSaveDesktop());
+			setAutoSaveLastScheme(optWnd.isAutoSaveLastScheme());
+			setAutoLoadLastScheme(optWnd.isAutoLoadLastScheme());
+
+			setGridColor(optWnd.gridColor());
+			setGridBkGndColor(optWnd.gridBkGndColor());
+			setGridStep(optWnd.gridStep());
+			setGridAlign(optWnd.isGridAlign());
+
+			if(m_scheme)
+			{
+				m_scheme->setSceneRect(0.0, 0.0, optWnd.schemeWidth(), optWnd.schemeHeight());
+			}
+
 			if(m_engine && m_engine->framer())
 			{
 				m_engine->framer()->setStartTime(optWnd.startTime());
@@ -267,23 +357,24 @@ void CMainWindow::showData(void)
 	}
 }
 
-void CMainWindow::updateTitle(void)
-{
-	QString newTitle = QApplication::applicationName();
-	if(m_scheme) newTitle += " [" + m_scheme->fileName() + "]";
-	setWindowTitle(newTitle);
-}
-
 void CMainWindow::newScheme(void)
 {
 	if(m_scheme) closeScheme();
 
 	m_scheme = new CScheme(this);
 	m_scheme->setObjectName(QStringLiteral("scheme"));
+	m_scheme->setSceneRect(0.0, 0.0, 1000.0, 1000.0);
 	m_scheme->setNewScheme(true);
 	m_scheme->setAlgorithmProtoMng(m_algorithmProtoMng);
-	connect(m_scheme, SIGNAL(fileNameChanged(QString)), this, SLOT(updateTitle()));
-	if(m_schemeEditor) m_schemeEditor->setScheme(m_scheme);
+
+	m_schemeEditor = new CSchemeEditor(this);
+	m_schemeEditor->setObjectName(QStringLiteral("schemeEditor"));
+	m_schemeEditor->setupGrid(gridColor(), gridBkGndColor(), gridStep(), isGridAlign());
+	m_schemeEditor->setScheme(m_scheme);
+	connect(m_schemeEditor, SIGNAL(mouseReleased(QPointF)), this, SLOT(onSchemeEditorMouseReleased(QPointF)));
+	connect(m_schemeEditor, SIGNAL(windowTitleChanged()), this, SLOT(onSchemeEditorWindowTitleChanged()));
+	if(m_workSpaceTabWgt) m_workSpaceTabWgt->addTab(m_schemeEditor, m_schemeEditor->windowTitle());
+
 	if(m_engine)
 	{
 		m_engine->setScheme(m_scheme);
@@ -294,7 +385,6 @@ void CMainWindow::newScheme(void)
 		connect(m_scheme, SIGNAL(algorithmsSelected(QList<CAlgorithm*>)), m_dataWindow, SLOT(setAlgorithms(QList<CAlgorithm*>)));
 		m_dataWindow->setAlgorithms(m_scheme->selectedAlgorithms());
 	}
-	updateTitle();
 }
 
 void CMainWindow::saveScheme(void)
@@ -346,7 +436,11 @@ void CMainWindow::closeScheme(void)
 		m_scheme = 0;
 		if(m_acCalc) m_acCalc->setEnabled(false);
 	}
-	updateTitle();
+	if(m_schemeEditor)
+	{
+		m_schemeEditor->deleteLater();
+		m_schemeEditor = 0;
+	}
 }
 
 void CMainWindow::saveDesktop(const QString &fileName)
@@ -356,13 +450,16 @@ void CMainWindow::saveDesktop(const QString &fileName)
 	QSettings desk(fileName, QSettings::IniFormat);
 	desk.setValue("MainWindow/geometry", saveGeometry());
 	desk.setValue("MainWindow/state", saveState());
+
+	QString oldSchemeFileName;
 	if(m_scheme)
 	{
 		if(!m_scheme->isNewScheme() && !m_scheme->fileName().isEmpty())
 		{
-			desk.setValue("Old scheme", m_scheme->fileName());
+			oldSchemeFileName = m_scheme->fileName();
 		}
 	}
+	desk.setValue("MainWindow/Old scheme", oldSchemeFileName);
 }
 
 void CMainWindow::restoreDesktop(const QString &fileName)
@@ -370,19 +467,21 @@ void CMainWindow::restoreDesktop(const QString &fileName)
 	if(fileName.isEmpty()) return;
 
 	QSettings desk(fileName, QSettings::IniFormat);
-	restoreGeometry(desk.value("MainWindow/geometry").toByteArray());
-	restoreState(desk.value("MainWindow/state").toByteArray());
-
-	QString oldSchemeFileName = desk.value("Old scheme", QString()).toString();
 	bool openResult = false;
-	if(!oldSchemeFileName.isEmpty())
+	if(isAutoLoadLastScheme())
 	{
-		openResult = openScheme(oldSchemeFileName);
+		QString oldSchemeFileName = desk.value("MainWindow/Old scheme", QString()).toString();
+		if(!oldSchemeFileName.isEmpty())
+		{
+			openResult = openScheme(oldSchemeFileName);
+		}
 	}
 	if(!openResult)
 	{
 		newScheme();
 	}
+	restoreGeometry(desk.value("MainWindow/geometry").toByteArray());
+	restoreState(desk.value("MainWindow/state").toByteArray());
 }
 
 void CMainWindow::saveConfig(const QString &fileName)
@@ -390,6 +489,16 @@ void CMainWindow::saveConfig(const QString &fileName)
 	if(fileName.isEmpty()) return;
 
 	QSettings cfg(fileName, QSettings::IniFormat);
+	cfg.setValue("General/autoSaveConfig", isAutoSaveConfig());
+	cfg.setValue("General/autoSaveDesktop", isAutoSaveDesktop());
+	cfg.setValue("General/autoSaveLastScheme", isAutoSaveLastScheme());
+	cfg.setValue("General/autoLoadLastScheme", isAutoLoadLastScheme());
+
+	cfg.setValue("SchemeEditor/gridColor", gridColor());
+	cfg.setValue("SchemeEditor/gridBkGndColor", gridBkGndColor());
+	cfg.setValue("SchemeEditor/gridStep", gridStep());
+	cfg.setValue("SchemeEditor/gridAlign", isGridAlign());
+
 	if(m_engine)
 	{
 		if(m_engine->framer())
@@ -406,6 +515,16 @@ void CMainWindow::restoreConfig(const QString &fileName)
 	if(fileName.isEmpty()) return;
 
 	QSettings cfg(fileName, QSettings::IniFormat);
+	setAutoSaveConfig(cfg.value("General/autoSaveConfig", false).toBool());
+	setAutoSaveDesktop(cfg.value("General/autoSaveDesktop", false).toBool());
+	setAutoSaveLastScheme(cfg.value("General/autoSaveLastScheme", false).toBool());
+	setAutoLoadLastScheme(cfg.value("General/autoLoadLastScheme", false).toBool());
+
+	setGridColor(cfg.value("SchemeEditor/gridColor", m_gridColor).value<QColor>());
+	setGridBkGndColor(cfg.value("SchemeEditor/gridBkGndColor", m_gridBkGndColor).value<QColor>());
+	setGridStep(cfg.value("SchemeEditor/gridStep", m_gridStep).toInt());
+	setGridAlign(cfg.value("SchemeEditor/gridAlign", m_gridAlign).toBool());
+
 	if(m_engine)
 	{
 		if(m_engine->framer())

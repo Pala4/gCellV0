@@ -43,7 +43,7 @@ QPainterPath CResult::calcPortalForm(void)
 CResult::CResult(QGraphicsItem *parent) : CPortal(parent)
 {
 	setObjectName(QStringLiteral("CResult"));
-	setDefaultName(tr("result"));
+	setDefaultName(tr("res"));
 }
 
 void CResult::calc(const stTimeLine &timeLine)

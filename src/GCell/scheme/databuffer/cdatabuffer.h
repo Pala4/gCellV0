@@ -36,7 +36,7 @@ public:
 	void append(const stTimeFrame &timeFrame, const qreal &value);
 	QVector<stTimeFrame> frames(const qreal &value) const;
 	QVector<qreal> values(const stTimeFrame &frame) const;
-	int count(void) const{return m_data.count();}
+	quint64 size(void) const{return m_data.count();}
 	bool isEmpty(void) const{return m_data.isEmpty();}
 	bool contains(const int &index) const;
 	bool containsFrame(const stTimeFrame &frame);

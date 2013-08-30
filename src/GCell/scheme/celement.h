@@ -47,7 +47,7 @@ public:
 	const QFont& captionFont(void) const{return m_captionFont;}
 	void setCaptionFont(const QFont &captionFont);
 
-	QString caption(void) const;
+	virtual QString caption(void) const;
 
 	const QList<QAction*>& actions(void) const{return m_actions;}
 	void addAction(QAction *action);

@@ -57,7 +57,8 @@ SOURCES += \
     algorithms/TAC/TransLink/cdiscretdiffmethod.cpp \
     engine/ctimeframegenerator.cpp \
     mainwindow/coptionswindow.cpp \
-    mainwindow/calgprotoview.cpp
+    mainwindow/calgprotoview.cpp \
+    widgets/clineeditbutton.cpp
 
 HEADERS += \
     mainwindow/cmainwindow.h \
@@ -94,4 +95,5 @@ HEADERS += \
     scheme/timeframe.h \
     engine/ctimeframegenerator.h \
     mainwindow/coptionswindow.h \
-    mainwindow/calgprotoview.h
+    mainwindow/calgprotoview.h \
+    widgets/clineeditbutton.h

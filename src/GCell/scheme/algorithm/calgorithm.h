@@ -24,7 +24,9 @@ private:
 	void placePortals(void);
 protected:
 	void removePortal(const QString &id);
+	void addArgument(CArgument *arg);
 	CArgument* addArgument(const QString &name);
+	void addResult(CResult *res);
 	CResult* addResult(const QString &name);
 	void clearResults(void);
 

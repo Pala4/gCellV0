@@ -96,6 +96,8 @@ QRectF CPortal::calcBounds(void)
 			m_captionRect.moveTop(portalFormRect.height() + 2.0);
 		break;
 	}
+	QPainterPath captionPath;
+	captionPath.addRect(m_captionRect);
 	m_portalForm.translate(offsetX, offsetY);
 	setLinkPos(QPointF(linkPos().x() + offsetX, linkPos().y() + offsetY));
 
@@ -163,6 +165,25 @@ CPortal::CPortal(QGraphicsItem *parent) : CElement(parent)
 	setCaptionFont(QFont("Corier", 7, QFont::Bold));
 
 	setFlag(QGraphicsItem::ItemSendsScenePositionChanges);
+}
+
+QString CPortal::caption(void) const
+{
+	return captionPrefix() + CElement::caption() + captionPostfix();
+}
+
+void CPortal::setCaptionPrefix(const QString &captionPrefix)
+{
+	if(m_captionPrefix == captionPrefix) return;
+	m_captionPrefix = captionPrefix;
+	updateGeometry();
+}
+
+void CPortal::setCaptionPostfix(const QString &captionPostfix)
+{
+	if(m_captionPostfix == captionPostfix) return;
+	m_captionPostfix = captionPostfix;
+	updateGeometry();
 }
 
 QPainterPath CPortal::shape(void) const
@@ -285,19 +306,25 @@ void CPortal::clearBuffer(void)
 	m_dataBuffer->clear();
 }
 
+quint64 CPortal::bufferSize(void) const
+{
+	if(m_dataBuffer) return m_dataBuffer->size();
+	return 0;
+}
+
 void CPortal::appendBuffer(const stTimeFrame &timeFrame, const qreal &value)
 {
 	if(m_dataBuffer && !m_dataBufferIsReference) m_dataBuffer->append(timeFrame, value);
 }
 
-stData CPortal::bufferData(const int &index)
+stData CPortal::bufferData(const quint64 &timeFrameIndex)
 {
 	if(!m_dataBuffer) return stData();
 	if(isLoopBackPortal())
 	{
 		return m_dataBuffer->last();
 	}
-	return m_dataBuffer->data(index);
+	return m_dataBuffer->data(timeFrameIndex);
 }
 
 bool CPortal::isBufferDataExist(const stTimeFrame &frame)

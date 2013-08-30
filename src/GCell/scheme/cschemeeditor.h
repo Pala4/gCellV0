@@ -12,15 +12,25 @@
 class CScheme;
 class CElementOptionsWgt;
 
-class CGreed
+class CGrid
 {
 private:
 	QColor m_color;
 	QColor m_bkGndColor;
 	int m_step;
+	bool m_align;
 public:
-	CGreed(void) : m_color(Qt::black), m_bkGndColor(Qt::white), m_step(8){}
-	CGreed(const QColor &color, const QColor &bkGndColor, const int &step);
+	CGrid(void) : m_color(Qt::black), m_bkGndColor(Qt::white), m_step(8), m_align(true){}
+	CGrid(const QColor &color, const QColor &bkGndColor, const int &step, const bool &align);
+
+	const QColor& color(void) const{return m_color;}
+	void setColor(const QColor &color){m_color = color;}
+	const QColor& bkGndColor(void) const{return m_bkGndColor;}
+	void setBkGndColor(const QColor &bkGndColor){m_bkGndColor = bkGndColor;}
+	const int& step(void) const{return m_step;}
+	void setStep(const int  &step){m_step = step;}
+	const bool& isAlign(void) const{return m_align;}
+	void setAlign(const bool &align){m_align = align;}
 
 	QBrush bkGndBrush(void);
 	QPointF align(const QPointF &pos);
@@ -30,13 +40,13 @@ template<typename Type>
 class CItemMover
 {
 private:
-	CGreed *m_greed;
+	CGrid *m_greed;
     QMap<QGraphicsItem*, QPointF> m_elementOffsets;
 public:
-	CItemMover(CGreed *greed = 0){m_greed = greed;}
+	CItemMover(CGrid *greed = 0){m_greed = greed;}
 
-	CGreed* greed(void) const{return m_greed;}
-	void setGreed(CGreed *greed){m_greed = greed;}
+	CGrid* greed(void) const{return m_greed;}
+	void setGreed(CGrid *greed){m_greed = greed;}
 
     bool haveMoved(void){return !m_elementOffsets.isEmpty();}
 
@@ -99,6 +109,10 @@ public:
 class CSchemeEditor : public QGraphicsView
 {
     Q_OBJECT
+	Q_PROPERTY(QColor gridColor READ gridColor WRITE setGridColor)
+	Q_PROPERTY(QColor gridBkGndColor READ gridBkGndColor WRITE setGridBkGndColor)
+	Q_PROPERTY(int gridStep READ gridStep WRITE setGridStep)
+	Q_PROPERTY(bool gridAlign READ isGridAlign WRITE setGridAlign)
 public:
 	enum TMouseMode{MoveSelectMode, MoveSceneMode, LinkingMode, AddAlgorithmMode};
 private:
@@ -109,7 +123,7 @@ private:
 	QAction *m_acCut;
 	QAction *m_acDelete;
 	CSchemeEditor::TMouseMode m_mouseMode;
-	CGreed m_greed;
+	CGrid m_grid;
 	CItemMover<CAlgorithm*> m_algorithmMover;
     CSelector m_selector;
 	CElementOptionsWgt *m_elementOptionsWgt;
@@ -131,12 +145,24 @@ protected:
 public:
 	explicit CSchemeEditor(QWidget *parent = 0);
 
-	void setScheme(CScheme *a_scheme);
+	const QColor& gridColor(void) const{return m_grid.color();}
+	const QColor& gridBkGndColor(void) const{return m_grid.bkGndColor();}
+	const int& gridStep(void) const{return m_grid.step();}
+	const bool& isGridAlign(void) const{return m_grid.isAlign();}
+	void setGridColor(const QColor &gridColor);
+	void setGridBkGndColor(const QColor &gridBkGndColor);
+	void setGridStep(const int &gridStep);
+	void setGridAlign(const bool &gridAlign){m_grid.setAlign(gridAlign);}
+	void setupGrid(const QColor &gridColor, const QColor &gridBkColor,
+				   const int &gridStep, const bool &gridAlign);
 
+	void setScheme(CScheme *a_scheme);
 	QList<QAction*> schemeEditorActions(void);
 private slots:
 	void onSelectionChanged(void);
 	void onClipBoardChanged(const QClipboard::Mode &mode);
+	void onSchemeRectChanged(const QRectF &rect);
+	void updateTitle(void);
 public slots:
 	void setMouseMode(const CSchemeEditor::TMouseMode &mouseMode);
 
@@ -147,6 +173,7 @@ public slots:
 	void deleteSelected(void);
 signals:
     void mouseReleased(QPointF pos);
+	void windowTitleChanged(void);
 };
 
 #endif // CSCHEMEEDITOR_H

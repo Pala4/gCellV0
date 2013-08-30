@@ -10,14 +10,14 @@
 /*!
  * \class CDataTable
  */
-int CDataTable::maxBuffSize(void) const
+quint64 CDataTable::maxBuffSize(void) const
 {
-	int maxCount = 0;
+	quint64 maxCount = 0;
 	foreach(CPortal *portal, m_portals)
 	{
 		if(!portal) continue;
 		if(!portal->buffer()) continue;
-		if(portal->buffer()->count() > maxCount) maxCount = portal->buffer()->count();
+		if(portal->buffer()->size() > maxCount) maxCount = portal->buffer()->size();
 	}
 	return maxCount;
 }
@@ -116,7 +116,7 @@ QVariant CDataTable::data(const QModelIndex &index, int role) const
 
 	CDataBuffer *buf = m_portals.at(col)->buffer();
 	if(!buf) return QVariant();
-	if(index.row() >= buf->count()) return QVariant();
+	if((quint64)index.row() >= buf->size()) return QVariant();
 
 	switch(role)
 	{

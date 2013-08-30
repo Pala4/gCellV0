@@ -47,8 +47,8 @@ public:
 	QList<CLink*> links(void);
 
 	bool checkXMLSchemeFormat(const QDomDocument &domDoc);
-	QDomDocument toXMLDom(const QList<CElement*> &elements);
-	QList<CElement*> fromXMLDom(const QDomDocument &domDoc);
+	QDomDocument toXMLDom(const QList<CElement*> &elements, CScheme *scheme = 0);
+	QList<CElement*> fromXMLDom(const QDomDocument &domDoc, CScheme *scheme = 0);
 private slots:
 	void onSelectionChanged(void);
 public slots:

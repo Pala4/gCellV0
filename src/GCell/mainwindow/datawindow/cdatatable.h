@@ -16,7 +16,7 @@ private:
 	int m_skipUpdatesCounter;
 	QList<CPortal*> m_portals;
 
-	int maxBuffSize(void) const;
+	quint64 maxBuffSize(void) const;
 public:
 	explicit CDataTable(QObject *parent = 0);
 

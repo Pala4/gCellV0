@@ -18,6 +18,8 @@ class CPortal : public CElement
 public:
 	enum TPortalOrientation{Left, Top, Right, Bottom};
 private:
+	QString m_captionPrefix;
+	QString m_captionPostfix;
 	CPortal::TPortalOrientation m_portalOrientation;
 	QColor m_dataColor;
 
@@ -51,6 +53,12 @@ protected:
 public:
 	explicit CPortal(QGraphicsItem *parent = 0);
 
+	virtual QString caption(void) const;
+	const QString& captionPrefix(void) const{return m_captionPrefix;}
+	void setCaptionPrefix(const QString &captionPrefix);
+	const QString& captionPostfix(void) const{return m_captionPostfix;}
+	void setCaptionPostfix(const QString &captionPostfix);
+
 	virtual QPainterPath shape(void) const;
 	virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
@@ -80,8 +88,9 @@ public:
 	void clearBuffer(void);
 	CDataBuffer* buffer(void){return m_dataBuffer;}
 
+	quint64 bufferSize(void) const;
 	void appendBuffer(const stTimeFrame &timeFrame, const qreal &value);
-	stData bufferData(const int &index);
+	virtual stData bufferData(const quint64 &timeFrameIndex);
 	bool isBufferDataExist(const stTimeFrame &frame);
 
 	void operator << (const stData &data)

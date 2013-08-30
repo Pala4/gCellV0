@@ -204,7 +204,7 @@ bool CScheme::checkXMLSchemeFormat(const QDomDocument &domDoc)
 	return true;
 }
 
-QDomDocument CScheme::toXMLDom(const QList<CElement*> &elements)
+QDomDocument CScheme::toXMLDom(const QList<CElement*> &elements, CScheme *scheme)
 {
 	QDomDocument domDoc("scheme");
 
@@ -215,6 +215,11 @@ QDomDocument CScheme::toXMLDom(const QList<CElement*> &elements)
 
 	QDomElement domElHeader = domDoc.createElement("scheme_header");
 	domElHeader.appendChild(variantToDomElement(domDoc, "version", "1.0"));
+	if(scheme)
+	{
+		domElHeader.appendChild(variantToDomElement(domDoc, "width", scheme->sceneRect().width()));
+		domElHeader.appendChild(variantToDomElement(domDoc, "height", scheme->sceneRect().height()));
+	}
 	domElBody.appendChild(domElHeader);
 
 	QDomElement domElElements = domDoc.createElement("elements");
@@ -230,10 +235,46 @@ QDomDocument CScheme::toXMLDom(const QList<CElement*> &elements)
 	return domDoc;
 }
 
-QList<CElement*> CScheme::fromXMLDom(const QDomDocument &domDoc)
+QList<CElement*> CScheme::fromXMLDom(const QDomDocument &domDoc, CScheme *scheme)
 {
 	QList<CElement*> elements;
 	if(!checkXMLSchemeFormat(domDoc)) return elements;
+
+	if(scheme)
+	{
+		qreal width = scheme->sceneRect().width();
+		qreal height = scheme->sceneRect().height();
+
+		QDomElement domElBody = domDoc.documentElement();
+		if(domElBody.tagName() == "body")
+		{
+			QDomElement domElHeader = domElBody.firstChildElement("scheme_header");
+			if(!domElHeader.isNull())
+			{
+				QDomElement domElWidth = domElHeader.firstChildElement("width");
+				if(!domElWidth.isNull())
+				{
+					QVariant varWidth = domElementToVariant(domElWidth);
+					if(varWidth.isValid() && varWidth.canConvert(QVariant::Double))
+					{
+						width = varWidth.toDouble();
+					}
+				}
+
+				QDomElement domElHeight = domElHeader.firstChildElement("height");
+				if(!domElHeight.isNull())
+				{
+					QVariant varHeight = domElementToVariant(domElHeight);
+					if(varHeight.isValid() && varHeight.canConvert(QVariant::Double))
+					{
+						height = varHeight.toDouble();
+					}
+				}
+
+				scheme->setSceneRect(0.0, 0.0, width, height);
+			}
+		}
+	}
 
 	QDomElement domElBody = domDoc.documentElement();
 	QDomElement domElElements = domElBody.firstChildElement("elements");

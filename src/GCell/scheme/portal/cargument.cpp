@@ -47,7 +47,7 @@ QPainterPath CArgument::calcPortalForm(void)
 CArgument::CArgument(QGraphicsItem *parent) : CPortal(parent)
 {
 	setObjectName(QStringLiteral("CArgument"));
-	setDefaultName(tr("argument"));
+	setDefaultName(tr("arg"));
 }
 
 void CArgument::calc(const stTimeLine &timeLine)

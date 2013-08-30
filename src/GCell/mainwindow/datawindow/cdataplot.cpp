@@ -25,7 +25,7 @@ QRectF CCurveData::boundingRect(void) const
 size_t CCurveData::size(void) const
 {
 	if(!m_buffer) return QwtArraySeriesData::size();
-	return m_buffer->count();
+	return m_buffer->size();
 }
 
 QPointF CCurveData::sample(size_t index) const
