@@ -1,6 +1,8 @@
 #include "cmainwindow.h"
 
 #include <QApplication>
+#include <QMimeData>
+#include <QMenuBar>
 #include <QToolBar>
 #include <QAction>
 #include <QEvent>
@@ -32,56 +34,279 @@
 /*!
  * \class CMainWindow
  */
-void CMainWindow::setupToolBars(void)
+void CMainWindow::setupActions(void)
 {
-	QToolBar *tbMain = addToolBar("Main");
-	tbMain->setObjectName(QStringLiteral("tbMain"));
-	tbMain->addAction(tr("New scheme"), this, SLOT(newScheme()));
-	tbMain->addAction(tr("Open"), this, SLOT(openScheme()));
-	tbMain->addAction(tr("Save schme"), this, SLOT(saveScheme()));
-	tbMain->addAction(tr("Save scheme as..."), this, SLOT(saveSchemeAs()));
-	tbMain->addAction(tr("Close scheme"), this, SLOT(closeScheme()));
-	tbMain->addAction(tr("Options"), this, SLOT(showOptions()));
-	tbMain->addAction(tr("Show data"), this, SLOT(showData()));
-	if(m_engine)
-	{
-		m_acCalc = tbMain->addAction("Calc", m_engine, SLOT(calc()));
-		m_acCalc->setObjectName(QStringLiteral("acCalc"));
-		m_acCalc->setEnabled((m_scheme != 0));
-	}
+	//File
+	m_acNewScheme = new QAction(tr("New scheme"), this);
+	m_acNewScheme->setObjectName(QStringLiteral("acNewScheme"));
+	connect(m_acNewScheme, SIGNAL(triggered()), this, SLOT(newScheme()));
 
-	tbMain->addSeparator();
+	m_acOpenScheme = new QAction(tr("Open scheme..."), this);
+	m_acOpenScheme->setObjectName(QStringLiteral("acOpenScheme"));
+	connect(m_acOpenScheme, SIGNAL(triggered()), this, SLOT(openScheme()));
 
+	m_acSaveScheme = new QAction(tr("Save scheme"), this);
+	m_acSaveScheme->setObjectName(QStringLiteral("acSaveScheme"));
+	connect(m_acSaveScheme, SIGNAL(triggered()), this, SLOT(saveScheme()));
+
+	m_acSaveSchemeAs = new QAction(tr("Save scheme as..."), this);
+	m_acSaveSchemeAs->setObjectName(QStringLiteral("acSaveSchemeAs"));
+	connect(m_acSaveSchemeAs, SIGNAL(triggered()), this, SLOT(saveSchemeAs()));
+
+	m_acCloseScheme = new QAction(tr("Close scheme"), this);
+	m_acCloseScheme->setObjectName(QStringLiteral("acCloseScheme"));
+	connect(m_acCloseScheme, SIGNAL(triggered()), this, SLOT(closeScheme()));
+
+	m_acQuit = new QAction(tr("Quit"), this);
+	m_acQuit->setObjectName(QStringLiteral("acQuit"));
+	connect(m_acQuit, SIGNAL(triggered()), QApplication::instance(), SLOT(quit()));
+
+	//Edit
 	m_acGrSchemeMouseMode = new QActionGroup(this);
 	m_acGrSchemeMouseMode->setObjectName(QStringLiteral("acGrSchemeMouseMode"));
 	m_acGrSchemeMouseMode->setExclusive(true);
 
-	m_acCursor = new QAction(tr("cursor"), this);
+	m_acCursor = new QAction(tr("Cursor"), this);
 	m_acCursor->setObjectName(QStringLiteral("acCursor"));
 	m_acCursor->setCheckable(true);
+	m_acCursor->setEnabled(false);
 	connect(m_acCursor, SIGNAL(triggered(bool)), this, SLOT(onCursorTriggered(bool)));
 	m_acCursor->trigger();
 	m_acGrSchemeMouseMode->addAction(m_acCursor);
 
-	m_acHand = new QAction(tr("hand"), this);
+	m_acHand = new QAction(tr("Hand"), this);
 	m_acHand->setObjectName(QStringLiteral("acHand"));
 	m_acHand->setCheckable(true);
+	m_acHand->setEnabled(false);
 	connect(m_acHand, SIGNAL(triggered(bool)), this, SLOT(onHandTriggered(bool)));
 	m_acGrSchemeMouseMode->addAction(m_acHand);
 
-	m_acLinking = new QAction(tr("link"), this);
+	m_acLinking = new QAction(tr("Link"), this);
 	m_acLinking->setObjectName(QStringLiteral("acLinking"));
 	m_acLinking->setCheckable(true);
+	m_acLinking->setEnabled(false);
 	connect(m_acLinking, SIGNAL(triggered(bool)), this, SLOT(onLinkingTriggered(bool)));
 	m_acGrSchemeMouseMode->addAction(m_acLinking);
 
-	tbMain->addActions(m_acGrSchemeMouseMode->actions());
-	if(m_schemeEditor) m_schemeEditor->addActions(m_acGrSchemeMouseMode->actions());
+	m_acEditSep = new QAction(this);
+	m_acEditSep->setSeparator(true);
+	m_acEditSep->setVisible(false);
+
+	m_acCopy = new QAction(tr("Copy"), this);
+	m_acCopy->setObjectName(QStringLiteral("acCopy"));
+	m_acCopy->setShortcut(QKeySequence::Copy);
+	m_acCopy->setShortcutContext(Qt::WindowShortcut);
+	m_acCopy->setEnabled(false);
+	m_acCopy->setVisible(false);
+	connect(m_acCopy, SIGNAL(triggered()), this, SLOT(copy()));
+
+	m_acCut = new QAction(tr("Cut"), this);
+	m_acCut->setObjectName(QStringLiteral("acCut"));
+	m_acCut->setShortcut(QKeySequence::Cut);
+	m_acCut->setShortcutContext(Qt::WindowShortcut);
+	m_acCut->setEnabled(false);
+	m_acCut->setVisible(false);
+	connect(m_acCut, SIGNAL(triggered()), this, SLOT(cut()));
+
+	m_acDelete = new QAction(tr("Delete"), this);
+	m_acDelete->setObjectName(QStringLiteral("acDelete"));
+	m_acDelete->setShortcut(QKeySequence::Delete);
+	m_acDelete->setShortcutContext(Qt::WindowShortcut);
+	m_acDelete->setEnabled(false);
+	m_acDelete->setVisible(false);
+	connect(m_acDelete, SIGNAL(triggered()), this, SLOT(del()));
+
+	m_acPaste = new QAction(tr("Paste"), this);
+	m_acPaste->setObjectName(QStringLiteral("acPaste"));
+	m_acPaste->setShortcut(QKeySequence::Paste);
+	m_acPaste->setShortcutContext(Qt::WindowShortcut);
+	m_acPaste->setEnabled(false);
+	m_acPaste->setVisible(false);
+	connect(m_acPaste, SIGNAL(triggered()), this, SLOT(paste()));
+
+	//View
+	m_acDataWindow = new QAction(tr("Data window..."), this);
+	m_acDataWindow->setObjectName(QStringLiteral("acDataWindow"));
+	m_acDataWindow->setCheckable(true);
+	connect(m_acDataWindow, SIGNAL(triggered(bool)), this, SLOT(setDataWindowVisible(bool)));
+
+	//Calc
+	m_acCalc = new QAction(tr("Calc"), this);
+	m_acCalc->setObjectName(QStringLiteral("acCalc"));
+	m_acCalc->setEnabled(false);
+	connect(m_acCalc, SIGNAL(triggered()), this, SLOT(calc()));
+
+	//Options
+	m_acOptions = new QAction(tr("Options..."), this);
+	m_acOptions->setObjectName(QStringLiteral("acOptions"));
+	connect(m_acOptions, SIGNAL(triggered()), this, SLOT(showOptions()));
+
+	m_acElementOptions = new QAction(tr("Element options..."), this);
+	m_acElementOptions->setObjectName(QStringLiteral("acElementOptions"));
+	m_acElementOptions->setEnabled(false);
+	m_acElementOptions->setVisible(false);
+	connect(m_acElementOptions, SIGNAL(triggered()), this, SLOT(elementOptions()));
+}
+
+void CMainWindow::setupMainMenu(void)
+{
+	QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
+	if(m_acNewScheme) fileMenu->addAction(m_acNewScheme);
+	if(m_acOpenScheme)
+	{
+		fileMenu->addAction(m_acOpenScheme);
+		fileMenu->addSeparator();
+	}
+	if(m_acSaveScheme) fileMenu->addAction(m_acSaveScheme);
+	if(m_acSaveSchemeAs)
+	{
+		fileMenu->addAction(m_acSaveSchemeAs);
+		fileMenu->addSeparator();
+	}
+	if(m_acCloseScheme)
+	{
+		fileMenu->addAction(m_acCloseScheme);
+		fileMenu->addSeparator();
+	}
+	if(m_acQuit) fileMenu->addAction(m_acQuit);
+
+	QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
+	if(m_acGrSchemeMouseMode) editMenu->addActions(m_acGrSchemeMouseMode->actions());
+	if(m_acEditSep) editMenu->addAction(m_acEditSep);
+	if(m_acCopy) editMenu->addAction(m_acCopy);
+	if(m_acCut) editMenu->addAction(m_acCut);
+	if(m_acDelete) editMenu->addAction(m_acDelete);
+	if(m_acPaste) editMenu->addAction(m_acPaste);
+
+	QMenu *viewMenu = menuBar()->addMenu(tr("&View"));
+	if(m_acDataWindow) viewMenu->addAction(m_acDataWindow);
+	m_viewToolBarsMenu = viewMenu->addMenu(tr("Tool bars"));
+	m_viewToolBarsMenu->setObjectName("viewToolBarsMenu");
+	m_viewDocksMenu = viewMenu->addMenu(tr("Docks"));
+	m_viewDocksMenu->setObjectName(QStringLiteral("viewDocksMenu"));
+
+	QMenu *calcMenu = menuBar()->addMenu(tr("&Calculate"));
+	if(m_acCalc) calcMenu->addAction(m_acCalc);
+
+//	menuBar()->addMenu(tr("&Algorithms"));
+
+	QMenu *optionsMenu = menuBar()->addMenu(tr("&Options"));
+	if(m_acOptions) optionsMenu->addAction(m_acOptions);
+	if(m_acElementOptions) optionsMenu->addAction(m_acElementOptions);
+
+	menuBar()->addMenu(tr("&Help"));	
+}
+
+void CMainWindow::setupToolBars(void)
+{
+	//File
+	QToolBar *tbFile = addToolBar(tr("File"));
+	tbFile->setObjectName(QStringLiteral("tbMain"));
+	if(m_viewToolBarsMenu) m_viewToolBarsMenu->addAction(tbFile->toggleViewAction());
+	if(m_acNewScheme) tbFile->addAction(m_acNewScheme);
+	if(m_acOpenScheme)
+	{
+		tbFile->addAction(m_acOpenScheme);
+		tbFile->addSeparator();
+	}
+	if(m_acSaveScheme) tbFile->addAction(m_acSaveScheme);
+	if(m_acSaveSchemeAs)
+	{
+		tbFile->addAction(m_acSaveSchemeAs);
+		tbFile->addSeparator();
+	}
+	if(m_acCloseScheme)
+	{
+		tbFile->addAction(m_acCloseScheme);
+		tbFile->addSeparator();
+	}
+	if(m_acQuit) tbFile->addAction(m_acQuit);
+
+	//Edit
+	addToolBarBreak();
+	QToolBar *tbEdit = addToolBar(tr("Edit"));
+	tbEdit->setObjectName(QStringLiteral("tbEdit"));
+	if(m_viewToolBarsMenu) m_viewToolBarsMenu->addAction(tbEdit->toggleViewAction());
+	if(m_acGrSchemeMouseMode) tbEdit->addActions(m_acGrSchemeMouseMode->actions());
+	if(m_acEditSep) tbEdit->addAction(m_acEditSep);
+	if(m_acCopy) tbEdit->addAction(m_acCopy);
+	if(m_acCut) tbEdit->addAction(m_acCut);
+	if(m_acDelete) tbEdit->addAction(m_acDelete);
+
+	//View
+	QToolBar *tbView = addToolBar(tr("View"));
+	tbView->setObjectName(QStringLiteral("tbView"));
+	if(m_viewToolBarsMenu) m_viewToolBarsMenu->addAction(tbView->toggleViewAction());
+	if(m_acDataWindow) tbView->addAction(m_acDataWindow);
+
+	//Calc
+	QToolBar *tbCalc = addToolBar(tr("Calculation"));
+	tbCalc->setObjectName(QStringLiteral("tbCalc"));
+	if(m_viewToolBarsMenu) m_viewToolBarsMenu->addAction(tbCalc->toggleViewAction());
+	if(m_acCalc) tbCalc->addAction(m_acCalc);
+
+	//Options
+	QToolBar *tbOptions = addToolBar(tr("Options"));
+	tbOptions->setObjectName(QStringLiteral("tbOptions"));
+	if(m_viewToolBarsMenu) m_viewToolBarsMenu->addAction(tbOptions->toggleViewAction());
+	if(m_acOptions) tbOptions->addAction(m_acOptions);
+}
+
+void CMainWindow::setupDocks(void)
+{
+	if(m_algProtoView)
+	{
+		m_algProtoViewDock = new QDockWidget(m_algProtoView->windowTitle());
+		m_algProtoViewDock->setObjectName(QStringLiteral("algProtoViewDock"));
+		m_algProtoViewDock->setAllowedAreas(Qt::AllDockWidgetAreas);
+		m_algProtoViewDock->setWidget(m_algProtoView);
+		m_algProtoViewDock->setTitleBarWidget(new QLabel(""));
+		if(m_viewDocksMenu) m_viewDocksMenu->addAction(m_algProtoViewDock->toggleViewAction());
+		connect(m_algProtoViewDock, SIGNAL(dockLocationChanged(Qt::DockWidgetArea)), this, SLOT(onAlgProtosViewDockLocationChanged(Qt::DockWidgetArea)));
+		connect(m_algProtoViewDock, SIGNAL(topLevelChanged(bool)), this, SLOT(onAlgProtosViewDockTopLevelChanged(bool)));
+		addDockWidget(Qt::TopDockWidgetArea, m_algProtoViewDock);
+	}
 }
 
 void CMainWindow::setupStatusBar(void)
 {
 	statusBar()->showMessage(tr("Ready"));
+}
+
+void CMainWindow::setupSchemeEditorContextMenu(void)
+{
+	if(!m_schemeEditorContextMenu)
+	{
+		m_schemeEditorContextMenu = new QMenu();
+		m_schemeEditorContextMenu->setObjectName(QStringLiteral("schemeEditorContextMenu"));
+	}
+
+	m_schemeEditorContextMenu->clear();
+
+	if(m_acElementOptions) m_schemeEditorContextMenu->addAction(m_acElementOptions);
+
+	if(m_schemeEditor && (m_schemeEditor->selectedElements().count() == 1))
+	{
+		if(!m_schemeEditor->selectedElements().at(0)->actions().isEmpty())
+		{
+			if(!m_schemeEditorContextMenu->isEmpty()) m_schemeEditorContextMenu->addSeparator();
+			m_schemeEditorContextMenu->addActions(m_schemeEditor->selectedElements().at(0)->actions());
+		}
+	}
+	else
+	{
+		if(m_acCursor)
+		{
+			if(!m_schemeEditorContextMenu->isEmpty()) m_schemeEditorContextMenu->addSeparator();
+			m_schemeEditorContextMenu->addAction(m_acCursor);
+		}
+		if(m_acHand) m_schemeEditorContextMenu->addAction(m_acHand);
+		if(m_acLinking) m_schemeEditorContextMenu->addAction(m_acLinking);
+	}
+	if(m_acEditSep) m_schemeEditorContextMenu->addAction(m_acEditSep);
+	if(m_acCopy) m_schemeEditorContextMenu->addAction(m_acCopy);
+	if(m_acCut) m_schemeEditorContextMenu->addAction(m_acCut);
+	if(m_acDelete) m_schemeEditorContextMenu->addAction(m_acDelete);
 }
 
 void CMainWindow::writeScheme(CScheme *scheme, const QString &fileName)
@@ -90,7 +315,12 @@ void CMainWindow::writeScheme(CScheme *scheme, const QString &fileName)
 
 	QFile fileHandler(fileName);
 	if(!fileHandler.open(QIODevice::WriteOnly)) return;
-	QTextStream(&fileHandler) << scheme->toXMLDom(scheme->elements(), scheme).toString();
+
+	stSchemeDesc schemeDesc;
+	schemeDesc.width = scheme->sceneRect().width();
+	schemeDesc.height = scheme->sceneRect().height();
+
+	QTextStream(&fileHandler) << scheme->toXMLDom(scheme->elements(), &schemeDesc).toString();
 	fileHandler.close();
 }
 
@@ -107,7 +337,10 @@ void CMainWindow::readScheme(CScheme *scheme, const QString &fileName)
 	int errCol = 0;
 	if(!domDoc.setContent(&fileHandler, &errMsg, &errLine, &errCol)) return;
 
-	scheme->addElements(scheme->fromXMLDom(domDoc, scheme));
+	stSchemeDesc schemeDesc;
+	QList<CElement*> elements = scheme->fromXMLDom(domDoc, &schemeDesc);
+	scheme->setSceneRect(0.0, 0.0, schemeDesc.width, schemeDesc.height);
+	scheme->addElements(elements);
 }
 
 void CMainWindow::closeEvent(QCloseEvent *event)
@@ -130,18 +363,40 @@ CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
 	m_gridColor = Qt::black;
 	m_gridBkGndColor = Qt::white;
 	m_gridStep = 8;
+	m_gridPointSize = 0.0;
 	m_gridAlign = true;
 
-	m_acCalc = 0;
+	m_acNewScheme = 0;
+	m_acOpenScheme = 0;
+	m_acSaveScheme = 0;
+	m_acSaveSchemeAs = 0;
+	m_acCloseScheme = 0;
+	m_acQuit = 0;
 	m_acGrSchemeMouseMode = 0;
 	m_acCursor = 0;
 	m_acHand = 0;
 	m_acLinking = 0;
+	m_acEditSep = 0;
+	m_acCopy = 0;
+	m_acCut = 0;
+	m_acDelete = 0;
+	m_acPaste = 0;
+	m_acDataWindow = 0;
+	m_acCalc = 0;
+	m_acOptions = 0;
+	m_acElementOptions = 0;
+
+	m_viewToolBarsMenu = 0;
+	m_viewDocksMenu = 0;
+
+	m_schemeEditorContextMenu = 0;
+
+	m_algProtoViewDock = 0;
+
 	m_workSpaceTabWgt = 0;
 	m_dataWindow = 0;
 	m_algorithmProtoMng = 0;
 	m_algProtoView = 0;
-	m_algProtoViewDock = 0;
 	m_schemeEditor = 0;
 	m_scheme = 0;
 	m_engine = 0;
@@ -163,24 +418,23 @@ CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
 	m_algorithmProtoMng->addProto(tr("TL"), tr("TAC"), &CTransLink::staticMetaObject);
 	connect(m_algorithmProtoMng, SIGNAL(algorithmProtoSelected(CAlgorithmProto*)), this, SLOT(onAlgorithmProtoSelected(CAlgorithmProto*)));
 
-	m_algProtoView = new CAlgProtoView(m_algorithmProtoMng, Qt::Vertical);
+	m_algProtoView = new CAlgProtoView(m_algorithmProtoMng, Qt::Horizontal);
 	m_algProtoView->setObjectName(QStringLiteral("algProtoView"));
 	m_algProtoView->setWindowTitle(tr("Algorithm prototypes"));
-	m_algProtoViewDock = new QDockWidget(m_algProtoView->windowTitle());
-	m_algProtoViewDock->setObjectName(QStringLiteral("algProtoViewDock"));
-	m_algProtoViewDock->setAllowedAreas(Qt::AllDockWidgetAreas);
-	m_algProtoViewDock->setWidget(m_algProtoView);
-	m_algProtoViewDock->setTitleBarWidget(new QLabel(""));
-	connect(m_algProtoViewDock, SIGNAL(dockLocationChanged(Qt::DockWidgetArea)), this, SLOT(onAlgProtosViewDockLocationChanged(Qt::DockWidgetArea)));
-	connect(m_algProtoViewDock, SIGNAL(topLevelChanged(bool)), this, SLOT(onAlgProtosViewDockTopLevelChanged(bool)));
-	addDockWidget(Qt::LeftDockWidgetArea, m_algProtoViewDock);
 
 	m_engine = new CEngine(this);
 	m_engine->setObjectName(QStringLiteral("engine"));
 	connect(m_engine, SIGNAL(calcStopped()), m_dataWindow, SLOT(flushBuffers()));
 
+	QClipboard *clpb = QApplication::clipboard();
+	connect(clpb, SIGNAL(changed(QClipboard::Mode)), this, SLOT(onClipBoardChanged(QClipboard::Mode)));
+
+	setupActions();
+	setupMainMenu();
 	setupToolBars();
+	setupDocks();
 	setupStatusBar();
+	setupSchemeEditorContextMenu();
 
 	restoreConfig("config.ini");
 	restoreDesktop("desktop.ini");
@@ -210,12 +464,25 @@ void CMainWindow::setGridStep(const int &gridStep)
 	if(m_schemeEditor) m_schemeEditor->setGridStep(m_gridStep);
 }
 
+void CMainWindow::setGridPointSize(const qreal &gridPointSize)
+{
+	if(m_gridPointSize == gridPointSize) return;
+
+	m_gridPointSize = gridPointSize;
+	if(m_schemeEditor) m_schemeEditor->setGridPointSize(gridPointSize);
+}
+
 void CMainWindow::setGridAlign(const bool &gridAlign)
 {
 	if(m_gridAlign == gridAlign) return;
 
 	m_gridAlign = gridAlign;
 	if(m_schemeEditor) m_schemeEditor->setGridAlign(m_gridAlign);
+}
+
+bool CMainWindow::isDataWindowVisisble(void) const
+{
+	return m_dataWindow ? m_dataWindow->isVisible() : false;
 }
 
 void CMainWindow::onCursorTriggered(const bool &checked)
@@ -241,9 +508,8 @@ void CMainWindow::onAlgorithmProtoSelected(CAlgorithmProto *selectedProto)
 	}
 }
 
-void CMainWindow::onSchemeEditorMouseReleased(const QPointF &pos)
+void CMainWindow::onSchemeEditorAddAlgorithmModeFinished(void)
 {
-	Q_UNUSED(pos)
 	if(m_algorithmProtoMng && m_algorithmProtoMng->selectedAlgorithmProto()) m_algorithmProtoMng->setSelectedAlgorithmProto(0);
 	if(m_schemeEditor)
 	{
@@ -291,6 +557,78 @@ void CMainWindow::onSchemeEditorWindowTitleChanged(void)
 	}
 }
 
+void CMainWindow::onSchemeEditorElementsSelected(const QList<CElement*> &elements)
+{
+	bool ownSelect = (elements.count() == 1);
+	bool hasSelected = !elements.isEmpty();
+
+	if(m_acElementOptions)
+	{
+		m_acElementOptions->setEnabled(ownSelect);
+		m_acElementOptions->setVisible(ownSelect);
+	}
+	bool enableCopy = hasSelected;
+	bool enableDelete = hasSelected;
+	if(ownSelect)
+	{
+		CElement *element = elements.at(0);
+		if(element)
+		{
+			enableCopy = (element->intercations() & CElement::Copyable);
+			enableDelete = (element->intercations() & CElement::Deletable);
+		}
+	}
+	bool enableCut = (enableCopy && enableDelete);
+	if(m_acEditSep) m_acEditSep->setVisible((enableCopy || enableCut || enableDelete));
+	if(m_acCopy)
+	{
+		m_acCopy->setEnabled(enableCopy);
+		m_acCopy->setVisible(enableCopy);
+	}
+	if(m_acCut)
+	{
+		m_acCut->setEnabled(enableCut);
+		m_acCut->setVisible(enableCut);
+	}
+	if(m_acDelete)
+	{
+		m_acDelete->setEnabled(enableDelete);
+		m_acDelete->setVisible(enableDelete);
+	}
+
+	setupSchemeEditorContextMenu();
+}
+
+void CMainWindow::onClipBoardChanged(const QClipboard::Mode &mode)
+{
+	Q_UNUSED(mode)
+
+	QClipboard *clpb = QApplication::clipboard();
+	if(clpb->mimeData()->hasHtml())
+	{
+		QDomDocument domDoc;
+		QString errMsg;
+		int errLine = 0;
+		int errCol = 0;
+		if(domDoc.setContent(clpb->mimeData()->html(), &errMsg, &errLine, &errCol))
+		{
+			if(m_scheme && m_scheme->checkXMLSchemeFormat(domDoc))
+			{
+				if(m_acPaste)
+				{
+					m_acPaste->setEnabled(true);
+					m_acPaste->setVisible(true);
+				}
+			}
+		}
+	}
+}
+
+void CMainWindow::calc(void)
+{
+	if(m_engine) m_engine->calc();
+}
+
 void CMainWindow::showOptions(void)
 {
 	COptionsWindow optWnd(this);
@@ -302,6 +640,7 @@ void CMainWindow::showOptions(void)
 	optWnd.setGridColor(gridColor());
 	optWnd.setGridBkGndColor(gridBkGndColor());
 	optWnd.setGridStep(gridStep());
+	optWnd.setGridPointSize(gridPointSize());
 	optWnd.setGridAlign(isGridAlign());
 
 	if(m_scheme)
@@ -331,6 +670,7 @@ void CMainWindow::showOptions(void)
 			setGridColor(optWnd.gridColor());
 			setGridBkGndColor(optWnd.gridBkGndColor());
 			setGridStep(optWnd.gridStep());
+			setGridPointSize(optWnd.gridPointSize());
 			setGridAlign(optWnd.isGridAlign());
 
 			if(m_scheme)
@@ -349,11 +689,13 @@ void CMainWindow::showOptions(void)
 	}
 }
 
-void CMainWindow::showData(void)
+void CMainWindow::setDataWindowVisible(const bool &visible)
 {
-	if(m_dataWindow)
+	if(m_dataWindow) m_dataWindow->setVisible(visible);
+
+	if(m_acDataWindow && (sender() != m_acDataWindow))
 	{
-		m_dataWindow->show();
+		m_acDataWindow->setChecked(visible);
 	}
 }
 
@@ -361,25 +703,28 @@ void CMainWindow::newScheme(void)
 {
 	if(m_scheme) closeScheme();
 
-	m_scheme = new CScheme(this);
-	m_scheme->setObjectName(QStringLiteral("scheme"));
-	m_scheme->setSceneRect(0.0, 0.0, 1000.0, 1000.0);
-	m_scheme->setNewScheme(true);
-	m_scheme->setAlgorithmProtoMng(m_algorithmProtoMng);
-
 	m_schemeEditor = new CSchemeEditor(this);
 	m_schemeEditor->setObjectName(QStringLiteral("schemeEditor"));
-	m_schemeEditor->setupGrid(gridColor(), gridBkGndColor(), gridStep(), isGridAlign());
-	m_schemeEditor->setScheme(m_scheme);
-	connect(m_schemeEditor, SIGNAL(mouseReleased(QPointF)), this, SLOT(onSchemeEditorMouseReleased(QPointF)));
+	m_schemeEditor->setupGrid(gridColor(), gridBkGndColor(), gridStep(), gridPointSize(), isGridAlign());
+	if(m_schemeEditorContextMenu) m_schemeEditor->setContextMenu(m_schemeEditorContextMenu);
+	connect(m_schemeEditor, SIGNAL(addAlgorithmModeFinished()), this, SLOT(onSchemeEditorAddAlgorithmModeFinished()));
 	connect(m_schemeEditor, SIGNAL(windowTitleChanged()), this, SLOT(onSchemeEditorWindowTitleChanged()));
+	connect(m_schemeEditor, SIGNAL(elementsSelected(QList<CElement*>)), this, SLOT(onSchemeEditorElementsSelected(QList<CElement*>)));
 	if(m_workSpaceTabWgt) m_workSpaceTabWgt->addTab(m_schemeEditor, m_schemeEditor->windowTitle());
 
-	if(m_engine)
-	{
-		m_engine->setScheme(m_scheme);
-		if(m_acCalc) m_acCalc->setEnabled(true);
-	}
+	m_scheme = new CScheme(this);
+	m_scheme->setObjectName(QStringLiteral("scheme"));
+	m_scheme->setSceneRect(0.0, 0.0, 2000.0, 2000.0);
+	m_scheme->setNewScheme(true);
+	m_scheme->setAlgorithmProtoMng(m_algorithmProtoMng);
+	m_schemeEditor->setScheme(m_scheme);
+
+	if(m_engine) m_engine->setScheme(m_scheme);
+
+	if(m_acCursor) m_acCursor->setEnabled(true);
+	if(m_acHand) m_acHand->setEnabled(true);
+	if(m_acLinking) m_acLinking->setEnabled(true);
+	if(m_acCalc) m_acCalc->setEnabled(true);
 	if(m_dataWindow)
 	{
 		connect(m_scheme, SIGNAL(algorithmsSelected(QList<CAlgorithm*>)), m_dataWindow, SLOT(setAlgorithms(QList<CAlgorithm*>)));
@@ -434,13 +779,67 @@ void CMainWindow::closeScheme(void)
 	{
 		m_scheme->deleteLater();
 		m_scheme = 0;
-		if(m_acCalc) m_acCalc->setEnabled(false);
+	}
+	if(m_acCursor) m_acCursor->setEnabled(false);
+	if(m_acHand) m_acHand->setEnabled(false);
+	if(m_acLinking) m_acLinking->setEnabled(false);
+	if(m_acEditSep) m_acEditSep->setVisible(false);
+	if(m_acCopy)
+	{
+		m_acCopy->setEnabled(false);
+		m_acCopy->setVisible(false);
+	}
+	if(m_acCut)
+	{
+		m_acCut->setEnabled(false);
+		m_acCut->setVisible(false);
+	}
+	if(m_acDelete)
+	{
+		m_acDelete->setEnabled(false);
+		m_acDelete->setVisible(false);
+	}
+	if(m_acPaste)
+	{
+		m_acPaste->setEnabled(false);
+		m_acPaste->setVisible(false);
+	}
+	if(m_acCalc) m_acCalc->setEnabled(false);
+	if(m_acElementOptions)
+	{
+		m_acElementOptions->setEnabled(false);
+		m_acElementOptions->setVisible(false);
 	}
 	if(m_schemeEditor)
 	{
 		m_schemeEditor->deleteLater();
 		m_schemeEditor = 0;
 	}
+}
+
+void CMainWindow::copy(void)
+{
+	if(m_schemeEditor) m_schemeEditor->copySelected();
+}
+
+void CMainWindow::cut(void)
+{
+	if(m_schemeEditor) m_schemeEditor->cutSelected();
+}
+
+void CMainWindow::del(void)
+{
+	if(m_schemeEditor) m_schemeEditor->deleteSelected();
+}
+
+void CMainWindow::paste(void)
+{
+	if(m_schemeEditor) m_schemeEditor->pasteSelected();
+}
+
+void CMainWindow::elementOptions(void)
+{
+	if(m_schemeEditor) m_schemeEditor->showElementOptions();
 }
 
 void CMainWindow::saveDesktop(const QString &fileName)
@@ -450,6 +849,13 @@ void CMainWindow::saveDesktop(const QString &fileName)
 	QSettings desk(fileName, QSettings::IniFormat);
 	desk.setValue("MainWindow/geometry", saveGeometry());
 	desk.setValue("MainWindow/state", saveState());
+
+	if(m_dataWindow)
+	{
+		desk.setValue("DataWindow/geometry", m_dataWindow->saveGeometry());
+		desk.setValue("DataWindow/state", m_dataWindow->saveState());
+		desk.setValue("DataWindow/visible", isDataWindowVisisble());
+	}
 
 	QString oldSchemeFileName;
 	if(m_scheme)
@@ -480,6 +886,12 @@ void CMainWindow::restoreDesktop(const QString &fileName)
 	{
 		newScheme();
 	}
+	if(m_dataWindow)
+	{
+		m_dataWindow->restoreGeometry(desk.value("DataWindow/geometry").toByteArray());
+		m_dataWindow->restoreState(desk.value("DataWindow/state").toByteArray());
+		setDataWindowVisible(desk.value("DataWindow/visible").toBool());
+	}
 	restoreGeometry(desk.value("MainWindow/geometry").toByteArray());
 	restoreState(desk.value("MainWindow/state").toByteArray());
 }
@@ -497,6 +909,7 @@ void CMainWindow::saveConfig(const QString &fileName)
 	cfg.setValue("SchemeEditor/gridColor", gridColor());
 	cfg.setValue("SchemeEditor/gridBkGndColor", gridBkGndColor());
 	cfg.setValue("SchemeEditor/gridStep", gridStep());
+	cfg.setValue("SchemeEditor/gridPointSize", gridPointSize());
 	cfg.setValue("SchemeEditor/gridAlign", isGridAlign());
 
 	if(m_engine)
@@ -523,6 +936,7 @@ void CMainWindow::restoreConfig(const QString &fileName)
 	setGridColor(cfg.value("SchemeEditor/gridColor", m_gridColor).value<QColor>());
 	setGridBkGndColor(cfg.value("SchemeEditor/gridBkGndColor", m_gridBkGndColor).value<QColor>());
 	setGridStep(cfg.value("SchemeEditor/gridStep", m_gridStep).toInt());
+	setGridPointSize(cfg.value("SchemeEditor/gridPointSize", m_gridPointSize).toDouble());
 	setGridAlign(cfg.value("SchemeEditor/gridAlign", m_gridAlign).toBool());
 
 	if(m_engine)

@@ -33,6 +33,7 @@ QPainterPath CArgument::calcPortalForm(void)
 			p2 = arrowRect.bottomRight();
 			pLink = QPointF(p1.x(), p0.y());
 		break;
+		case CPortal::NoOrientation: break;
 	}
 	setLinkPos(pLink);
 
@@ -47,12 +48,14 @@ QPainterPath CArgument::calcPortalForm(void)
 CArgument::CArgument(QGraphicsItem *parent) : CPortal(parent)
 {
 	setObjectName(QStringLiteral("CArgument"));
+
+	setPortalOrientation(CPortal::Left);
 	setDefaultName(tr("arg"));
 }
 
 void CArgument::calc(const stTimeLine &timeLine)
 {
 	if(isLoopBackPortal()) return;
-	CAlgorithm *alg = dynamic_cast<CAlgorithm*>(parentItem());
-	if(alg) alg->calc(timeLine);
+	CElement *nextElement = hostElement();
+	if(nextElement) nextElement->calc(timeLine);
 }

@@ -59,7 +59,10 @@ SOURCES += \
     mainwindow/coptionswindow.cpp \
     mainwindow/calgprotoview.cpp \
     widgets/clineeditbutton.cpp \
-    widgets/ccolorlineedit.cpp
+    widgets/ccolorlineedit.cpp \
+    scheme/link/clinksegment.cpp \
+    scheme/link/clinkenv.cpp \
+    scheme/link/csegmentmover.cpp
 
 HEADERS += \
     mainwindow/cmainwindow.h \
@@ -98,4 +101,7 @@ HEADERS += \
     mainwindow/coptionswindow.h \
     mainwindow/calgprotoview.h \
     widgets/clineeditbutton.h \
-    widgets/ccolorlineedit.h
+    widgets/ccolorlineedit.h \
+    scheme/link/clinksegment.h \
+    scheme/link/clinkenv.h \
+    scheme/link/csegmentmover.h

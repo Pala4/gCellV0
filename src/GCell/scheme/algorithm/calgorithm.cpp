@@ -52,7 +52,7 @@ QRectF CAlgorithm::calcBounds(void)
 	boundRect.setWidth(qMax(qMax(TPWidth, BPWidth), boundRect.width()));
 	boundRect.setHeight(qMax(qMax(LPHeight, RPHeight), boundRect.height()));
 
-	return boundRect;
+	return boundRect.adjusted(-1.0, -1.0, 1.0, 1.0);
 }
 
 void CAlgorithm::placePortals(void)
@@ -176,7 +176,6 @@ CAlgorithm::CAlgorithm(QGraphicsItem *parent) : CElement(parent)
 	m_portalSpace = 5.0;
 	m_portalMargin = 2.0;
 
-	setFlag(QGraphicsItem::ItemIsSelectable);
 	setFlag(QGraphicsItem::ItemIsMovable, false);
 }
 
@@ -200,7 +199,7 @@ void CAlgorithm::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
 	painter->setRenderHint(QPainter::TextAntialiasing, true);
 	painter->setPen(pen);
 	painter->drawRect(boundingRect());
-	painter->drawText(boundingRect(), Qt::AlignCenter, caption());
+	if(isCaptionVisible()) painter->drawText(boundingRect(), Qt::AlignCenter, caption());
 	painter->restore();
 }
 

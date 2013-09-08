@@ -7,6 +7,7 @@
 #include <QFormLayout>
 #include <QLineEdit>
 #include <QDialogButtonBox>
+#include <QCheckBox>
 
 #include "celement.h"
 
@@ -17,6 +18,7 @@ CElementOptionsWgt::CElementOptionsWgt(CElement *element, QWidget *parent) : QDi
 	m_tabWidget = 0;
 	m_generalLayout = 0;
 	m_captionEdit = 0;
+	m_captionVisibleChBx = 0;
 	m_element = 0;
 
 	m_element = element;
@@ -40,6 +42,10 @@ CElementOptionsWgt::CElementOptionsWgt(CElement *element, QWidget *parent) : QDi
 	m_captionEdit = new QLineEdit(this);
 	m_captionEdit->setObjectName(QStringLiteral("captionEdit"));
 	m_generalFormLayout->addRow(tr("&Caption:"), m_captionEdit);
+
+	m_captionVisibleChBx = new QCheckBox(tr("Caption is visible"));
+	m_captionVisibleChBx->setObjectName(QStringLiteral("captionVisibleChBx"));
+	m_generalFormLayout->addRow(m_captionVisibleChBx);
 
 	QWidget *generalTab = new QWidget(this);
 	generalTab->setObjectName(QStringLiteral("generalTab"));
@@ -67,4 +73,14 @@ CElementOptionsWgt::CElementOptionsWgt(CElement *element, QWidget *parent) : QDi
 QString CElementOptionsWgt::elementCaption(void)
 {
 	return m_captionEdit ? m_captionEdit->text() : QString();
+}
+
+bool CElementOptionsWgt::isCaptionVisible(void) const
+{
+	return m_captionVisibleChBx ? m_captionVisibleChBx->isChecked() : false;
+}
+
+void CElementOptionsWgt::setCaptionVisible(const bool &captionVisible)
+{
+	if(m_captionVisibleChBx) m_captionVisibleChBx->setChecked(captionVisible);
 }

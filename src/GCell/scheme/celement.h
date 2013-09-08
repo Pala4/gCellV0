@@ -14,21 +14,31 @@ class CElementOptionsWgt;
 
 class CElement : public QGraphicsObject
 {
-    Q_OBJECT
+	Q_OBJECT
 	Q_PROPERTY(int nomber READ nomber WRITE setNomber)
 	Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
+	Q_PROPERTY(bool captionVisible READ isCaptionVisible WRITE setCaptionVisible)
+public:
+	enum Interaction{NoIntercations = 0x0, Copyable = 0x1, Deletable = 0x2, AllIntercations = 0xF};
+	Q_DECLARE_FLAGS(Interactions, Interaction)
 private:
 	QString m_name;
 	QString m_defaultName;
 	int m_nomber;
+	bool m_captionVisible;
 	QFont m_captionFont;
+	CElement::Interactions m_intercations;
 
 	QRectF m_boundingRect;
 
 	QList<QAction*> m_actions;
 protected:
 	CScheme* scheme(void);
+	void setInteractions(const CElement::Interactions &interactions){m_intercations = interactions;}
 	virtual QRectF calcBounds(void){return QRectF();}
+	virtual void mousePressEvent(QGraphicsSceneMouseEvent *event);
+	virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+	virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 public:
 	explicit CElement(QGraphicsItem *parent = 0);
 
@@ -44,8 +54,11 @@ public:
 	void setDefaultName(const QString &defaultName);
 	const int& nomber(void) const{return m_nomber;}
 	void setNomber(const int &nomber){m_nomber = nomber;}
+	const bool& isCaptionVisible(void) const{return m_captionVisible;}
+	void setCaptionVisible(const bool &captionVisible){m_captionVisible = captionVisible; updateGeometry();}
 	const QFont& captionFont(void) const{return m_captionFont;}
 	void setCaptionFont(const QFont &captionFont);
+	const CElement::Interactions& intercations(void) const{return m_intercations;}
 
 	virtual QString caption(void) const;
 
@@ -68,5 +81,6 @@ public slots:
 signals:
 	void nameChanged(QString name);
 };
+Q_DECLARE_OPERATORS_FOR_FLAGS(CElement::Interactions)
 
 #endif // CELEMENT_H

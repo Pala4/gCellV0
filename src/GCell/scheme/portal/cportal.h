@@ -16,7 +16,7 @@ class CPortal : public CElement
 	Q_PROPERTY(int portalOrientation READ portalOrientation WRITE setPortalOrientation)
 	Q_PROPERTY(QColor dataColor READ dataColor WRITE setDataColor NOTIFY dataColorChanged)
 public:
-	enum TPortalOrientation{Left, Top, Right, Bottom};
+	enum TPortalOrientation{NoOrientation, Left, Top, Right, Bottom};
 private:
 	QString m_captionPrefix;
 	QString m_captionPostfix;
@@ -82,6 +82,8 @@ public:
 	void removeLink(CLink *link);
 	bool isUsed(void) const{return !links().isEmpty();}
 	virtual bool canLinked(void){return true;}
+
+	CElement* hostElement(void){return dynamic_cast<CElement*>(parentItem());}
 
 	virtual CDataBuffer* createBuffer(void);
 	void setBuffer(CDataBuffer *dataBuffer);

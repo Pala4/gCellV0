@@ -4,6 +4,7 @@
 #include <QMainWindow>
 
 #include <QMap>
+#include <QClipboard>
 
 class QActionGroup;
 class QTabWidget;
@@ -28,6 +29,7 @@ class CMainWindow : public QMainWindow
 	Q_PROPERTY(QColor gridColor READ gridColor WRITE setGridColor)
 	Q_PROPERTY(QColor gridBkGndColor READ gridBkGndColor WRITE setGridBkGndColor)
 	Q_PROPERTY(int gridStep READ gridStep WRITE setGridStep)
+	Q_PROPERTY(qreal gridPointSize READ gridPointSize WRITE setGridPointSize)
 	Q_PROPERTY(bool gridAlign READ isGridAlign WRITE setGridAlign)
 private:
 	bool m_autoSaveConfig;
@@ -37,13 +39,33 @@ private:
 	QColor m_gridColor;
 	QColor m_gridBkGndColor;
 	int m_gridStep;
+	qreal m_gridPointSize;
 	bool m_gridAlign;
 
-	QAction *m_acCalc;
+	QAction *m_acNewScheme;
+	QAction *m_acOpenScheme;
+	QAction *m_acSaveScheme;
+	QAction *m_acSaveSchemeAs;
+	QAction *m_acCloseScheme;
+	QAction *m_acQuit;
 	QActionGroup *m_acGrSchemeMouseMode;
 	QAction *m_acCursor;
 	QAction *m_acHand;
 	QAction *m_acLinking;
+	QAction *m_acEditSep;
+	QAction *m_acCopy;
+	QAction *m_acCut;
+	QAction *m_acDelete;
+	QAction *m_acPaste;
+	QAction *m_acDataWindow;
+	QAction *m_acCalc;
+	QAction *m_acOptions;
+	QAction *m_acElementOptions;
+
+	QMenu *m_viewToolBarsMenu;
+	QMenu *m_viewDocksMenu;
+
+	QMenu *m_schemeEditorContextMenu;
 
 	QTabWidget *m_workSpaceTabWgt;
 
@@ -57,8 +79,13 @@ private:
 	CScheme *m_scheme;
 	CEngine *m_engine;
 
+	void setupActions(void);
+	void setupMainMenu(void);
 	void setupToolBars(void);
+	void setupDocks(void);
 	void setupStatusBar(void);
+	void setupSchemeEditorContextMenu(void);
+
 	void writeScheme(CScheme *scheme, const QString &fileName);
 	void readScheme(CScheme *scheme, const QString &fileName);
 protected:
@@ -80,27 +107,40 @@ public:
 	void setGridBkGndColor(const QColor &gridBkGndColor);
 	const int& gridStep(void) const{return m_gridStep;}
 	void setGridStep(const int &gridStep);
+	const qreal& gridPointSize(void) const{return m_gridPointSize;}
+	void setGridPointSize(const qreal &gridPointSize);
 	const bool& isGridAlign(void) const{return m_gridAlign;}
 	void setGridAlign(const bool &gridAlign);
+
+	bool isDataWindowVisisble(void) const;
 private slots:
 	void onCursorTriggered(const bool &checked);
 	void onHandTriggered(const bool &checked);
 	void onLinkingTriggered(const bool &checked);
 	void onAlgorithmProtoSelected(CAlgorithmProto *selectedProto);
-	void onSchemeEditorMouseReleased(const QPointF &pos);
+	void onSchemeEditorAddAlgorithmModeFinished(void);
 	void onAlgProtosViewDockLocationChanged(const Qt::DockWidgetArea &area);
 	void onAlgProtosViewDockTopLevelChanged(const bool &topLevel);
-
 	void onSchemeEditorWindowTitleChanged(void);
+	void onSchemeEditorElementsSelected(const QList<CElement*> &elements);
+	void onClipBoardChanged(const QClipboard::Mode &mode);
 
+	void calc(void);
 	void showOptions(void);
-	void showData(void);
+	void setDataWindowVisible(const bool &visible);
 
 	void newScheme(void);
 	void saveScheme(void);
 	bool saveSchemeAs(void);
 	bool openScheme(const QString &fileName = QString());
 	void closeScheme(void);
+
+	void copy(void);
+	void cut(void);
+	void del(void);
+	void paste(void);
+
+	void elementOptions(void);
 
 	void saveDesktop(const QString &fileName);
 	void restoreDesktop(const QString &fileName);

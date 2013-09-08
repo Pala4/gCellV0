@@ -22,6 +22,7 @@ private:
 	CColorLineEdit *m_gridColorLEdit;
 	CColorLineEdit *m_gridBkGndColorLEdit;
 	QSpinBox *m_gridStepSpBox;
+	QDoubleSpinBox *m_gridPointSize;
 	QCheckBox *m_gridAlignChBox;
 
 	QWidget *m_schemeTab;
@@ -50,6 +51,8 @@ public:
 	void setGridBkGndColor(const QColor &bkGndColor);
 	int gridStep(void) const;
 	void setGridStep(const int &gridStep);
+	qreal gridPointSize(void) const;
+	void setGridPointSize(const qreal &gridPointSize);
 	bool isGridAlign(void) const;
 	void setGridAlign(const bool &gridAlign);
 

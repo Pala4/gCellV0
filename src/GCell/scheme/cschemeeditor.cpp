@@ -1,5 +1,6 @@
 #include "cschemeeditor.h"
 
+#include <QActionGroup>
 #include <QMenu>
 #include <QContextMenuEvent>
 #include <QApplication>
@@ -11,22 +12,47 @@
 #include "cscheme.h"
 #include "celementoptionswgt.h"
 #include "portal/cportal.h"
+#include "link/clink.h"
+#include "link/csegmentmover.h"
+
+/*!
+ * \class CBounds
+ */
+CBounds::CBounds(const QRectF &bounds)
+{
+	setBounds(bounds);
+}
+
+bool CBounds::outBounds(const QPointF &pos, const QRectF &itemBoundingRect)
+{
+	return !m_bounds.contains(QRectF(pos, itemBoundingRect.size()));
+}
+
+QPointF CBounds::posByBound(const QPointF &newPos, const QRectF &itemBoundingRect)
+{
+	QPointF resPos = newPos;
+	if(newPos.x() < bounds().left()) resPos.setX(bounds().left());
+	if(newPos.y() < bounds().top()) resPos.setY(bounds().top());
+	if(newPos.x() + itemBoundingRect.width() > bounds().right()) resPos.setX(bounds().right() - itemBoundingRect.width());
+	if(newPos.y() + itemBoundingRect.height() > bounds().bottom()) resPos.setY(bounds().bottom() - itemBoundingRect.height());
+	return resPos;
+}
+
+void CBounds::paint(QPainter *painter)
+{
+	if(!painter) return;
+	painter->save();
+	painter->drawRect(bounds());
+	painter->restore();
+}
 
 /*!
  * \class CGreed
  */
-CGrid::CGrid(const QColor &color, const QColor &bkGndColor, const int &step, const bool &align)
-{
-	m_color = color;
-	m_bkGndColor = bkGndColor;
-	m_step = step;
-	m_align = align;
-}
-
-QBrush CGrid::bkGndBrush(void)
+void CGrid::initBrush(void)
 {
 	QPen pen;
-	pen.setWidth(0);
+	pen.setWidthF(m_pointSize);
 	pen.setColor(m_color);
 
 	QPixmap pixmap(m_step, m_step);
@@ -36,7 +62,20 @@ QBrush CGrid::bkGndBrush(void)
 	bkGndPainter.setPen(pen);
 	bkGndPainter.drawPoint(0.0, 0.0);
 
-	return QBrush(pixmap);
+	m_bkGndBrush = QBrush(pixmap);
+}
+
+CGrid::CGrid(const QColor &color, const QColor &bkGndColor, const int &step, const qreal &pointSize, const bool &align, CBounds *bounds)
+{
+	m_color = color;
+	m_bkGndColor = bkGndColor;
+	m_step = step;
+	m_pointSize = pointSize;
+	m_align = align;
+	m_bounds = 0;
+
+	setBounds(bounds);
+	initBrush();
 }
 
 QPointF CGrid::align(const QPointF &pos)
@@ -52,6 +91,15 @@ QPointF CGrid::align(const QPointF &pos)
 	qreal alY = (modNumStepsY > 0.5) ? (qreal)qCeil(numStepsY)*m_step : (qreal)qFloor(numStepsY)*m_step;
 
 	return QPointF(alX, alY);
+}
+
+void CGrid::paint(QPainter *painter)
+{
+	if(!painter) return;
+
+	painter->save();
+	painter->fillRect(m_bounds->bounds(), m_bkGndBrush);
+	painter->restore();
 }
 
 /*!
@@ -144,24 +192,44 @@ CScheme* CSchemeEditor::scheme(void)
 
 void CSchemeEditor::contextMenuEvent(QContextMenuEvent *event)
 {
-	QMenu menu;
-
-	CElement *element = 0;
-	QGraphicsItem *item = itemAt(event->pos());
-	if(item && (!item->isSelected() || (item->isSelected() && scene() && (scene()->selectedItems().count() == 1))))
+	QMenu *menu = 0;
+	bool delMenu = false;
+	if(m_contextMenu && !m_contextMenu->isEmpty())
 	{
-		element = dynamic_cast<CElement*>(item);
+		menu = m_contextMenu;
 	}
-	if(element)
+	else
 	{
-		if(!element->actions().isEmpty())
+		delMenu = true;
+		menu = new QMenu(this);
+		CElement *element = 0;
+		QGraphicsItem *item = itemAt(event->pos());
+		if(item && (!item->isSelected() || (item->isSelected() && scene() && (scene()->selectedItems().count() == 1))))
 		{
-			menu.addActions(element->actions());
-			menu.addSeparator();
+			element = dynamic_cast<CElement*>(item);
 		}
+		if(element)
+		{
+			if(!element->actions().isEmpty())
+			{
+				menu->addActions(element->actions());
+				menu->addSeparator();
+			}
+		}
+		menu->addActions(actions());
 	}
-	menu.addActions(actions());
-	menu.exec(event->globalPos());
+
+	if(menu)
+	{
+		bool showMenu = false;
+		foreach(QAction *ac, menu->actions())
+		{
+			if(ac->isVisible()){showMenu = true; break;}
+		}
+		if(showMenu) menu->exec(event->globalPos());
+
+		if(delMenu) menu->deleteLater();
+	}
 }
 
 void CSchemeEditor::mousePressEvent(QMouseEvent *event)
@@ -241,7 +309,15 @@ void CSchemeEditor::mousePressEvent(QMouseEvent *event)
 		{
 			if(event->buttons() & Qt::LeftButton)
 			{
-				if(scheme()) scheme()->createAlgorithm(m_grid.align(mapToScene(event->pos())));
+				if(scheme())
+				{
+					QPointF pos = mapToScene(event->pos());
+					if(m_bounds.inBounds(pos))
+					{
+						scheme()->createAlgorithm(m_grid.align(pos));
+						emit addAlgorithmModeFinished();
+					}
+				}
 			}
 		}
 		break;
@@ -313,7 +389,13 @@ void CSchemeEditor::mouseReleaseEvent(QMouseEvent *event)
 		m_secondPortal->setChecked(false);
 		m_secondPortal = 0;
 	}
-	emit mouseReleased(mapToScene(event->pos()));
+}
+
+void CSchemeEditor::drawBackground(QPainter *painter, const QRectF &rect)
+{
+	Q_UNUSED(rect)
+	m_bounds.paint(painter);
+	m_grid.paint(painter);
 }
 
 void CSchemeEditor::drawForeground(QPainter *painter, const QRectF &rect)
@@ -329,74 +411,25 @@ CSchemeEditor::CSchemeEditor(QWidget *parent) : QGraphicsView(parent)
 {
 	setObjectName(QStringLiteral("CSchemeView"));
 
-	m_acElementOptions = 0;
-	m_acCopy = 0;
-	m_acPaste = 0;
-	m_acCut = 0;
-	m_acDelete = 0;
+	m_contextMenu = 0;
+
 	m_mouseMode = CSchemeEditor::MoveSelectMode;
 	m_elementOptionsWgt = 0;
 	m_mousePortalHookSize = QSize(20, 20);
 	m_hockedPortal = 0;
 	m_firstPortal = 0;
 	m_secondPortal = 0;
+	m_segmentMover = 0;
 
-	m_acElementOptions = new QAction(tr("Element options..."), this);
-	m_acElementOptions->setObjectName(QStringLiteral("acElementOptions"));
-	m_acElementOptions->setEnabled(false);
-	m_acElementOptions->setVisible(false);
-	connect(m_acElementOptions, SIGNAL(triggered()), this, SLOT(showOptions()));
-	addAction(m_acElementOptions);
-
-	m_acElementActionsSeparator = new QAction(this);
-	m_acElementActionsSeparator->setObjectName("acElementActionsSeparator");
-	m_acElementActionsSeparator->setSeparator(true);
-	m_acElementActionsSeparator->setEnabled(false);
-	m_acElementActionsSeparator->setVisible(false);
-	addAction(m_acElementActionsSeparator);
-
-	m_acCopy = new QAction(tr("Copy"), this);
-	m_acCopy->setObjectName(QStringLiteral("acCopy"));
-	m_acCopy->setShortcut(QKeySequence::Copy);
-	m_acCopy->setShortcutContext(Qt::WidgetShortcut);
-	m_acCopy->setEnabled(false);
-	m_acCopy->setVisible(false);
-	connect(m_acCopy, SIGNAL(triggered()), this, SLOT(copySelected()));
-	addAction(m_acCopy);
-
-	m_acPaste = new QAction(tr("Paste"), this);
-	m_acPaste->setObjectName(QStringLiteral("acPaste"));
-	m_acPaste->setShortcut(QKeySequence::Paste);
-	m_acPaste->setShortcutContext(Qt::WidgetShortcut);
-	m_acPaste->setEnabled(false);
-	m_acPaste->setVisible(false);
-	connect(m_acPaste, SIGNAL(triggered()), this, SLOT(pasteSelected()));
-	addAction(m_acPaste);
-
-	m_acCut = new QAction(tr("Cut"), this);
-	m_acCut->setObjectName(QStringLiteral("acCut"));
-	m_acCut->setShortcut(QKeySequence::Cut);
-	m_acCut->setShortcutContext(Qt::WidgetShortcut);
-	m_acCut->setEnabled(false);
-	m_acCut->setVisible(false);
-	connect(m_acCut, SIGNAL(triggered()), this, SLOT(cutSelected()));
-	addAction(m_acCut);
-
-	m_acDelete = new QAction(tr("Delete"), this);
-	m_acDelete->setObjectName(QStringLiteral("acDelete"));
-	m_acDelete->setShortcut(QKeySequence::Delete);
-	m_acDelete->setShortcutContext(Qt::WidgetShortcut);
-	m_acDelete->setEnabled(false);
-	m_acDelete->setVisible(false);
-	connect(m_acDelete, SIGNAL(triggered()), this, SLOT(deleteSelected()));
-	addAction(m_acDelete);
-
+	m_grid.setBounds(&m_bounds);
+	m_algorithmMover.setBounds(&m_bounds);
 	m_algorithmMover.setGreed(&m_grid);
 
-	QClipboard *clpb = QApplication::clipboard();
-	connect(clpb, SIGNAL(changed(QClipboard::Mode)), this, SLOT(onClipBoardChanged(QClipboard::Mode)));
+	m_segmentMover = new CSegmentMover(this);
+	m_segmentMover->setObjectName(QStringLiteral("segmentMover"));
 
-	setBackgroundBrush(m_grid.bkGndBrush());
+	setAlignment(Qt::AlignLeft | Qt::AlignTop);
+	setViewportUpdateMode(QGraphicsView::MinimalViewportUpdate);
 }
 
 void CSchemeEditor::setGridColor(const QColor &gridColor)
@@ -404,7 +437,7 @@ void CSchemeEditor::setGridColor(const QColor &gridColor)
 	if(m_grid.color() == gridColor) return;
 
 	m_grid.setColor(gridColor);
-	setBackgroundBrush(m_grid.bkGndBrush());
+	update();
 }
 
 void CSchemeEditor::setGridBkGndColor(const QColor &gridBkGndColor)
@@ -412,7 +445,7 @@ void CSchemeEditor::setGridBkGndColor(const QColor &gridBkGndColor)
 	if(m_grid.bkGndColor() == gridBkGndColor) return;
 
 	m_grid.setBkGndColor(gridBkGndColor);
-	setBackgroundBrush(m_grid.bkGndBrush());
+	update();
 }
 
 void CSchemeEditor::setGridStep(const int &gridStep)
@@ -420,23 +453,34 @@ void CSchemeEditor::setGridStep(const int &gridStep)
 	if(m_grid.step() == gridStep) return;
 
 	m_grid.setStep(gridStep);
-	setBackgroundBrush(m_grid.bkGndBrush());
+	update();
+}
+
+void CSchemeEditor::setGridPointSize(const qreal &gridPointSize)
+{
+	if(m_grid.pointSize() == gridPointSize) return;
+
+	m_grid.setPointSize(gridPointSize);
+	update();
 }
 
 void CSchemeEditor::setupGrid(const QColor &gridColor, const QColor &gridBkColor,
-							  const int &gridStep, const bool &gridAlign)
+							  const int &gridStep, const qreal &gridPointSize,
+							  const bool &gridAlign)
 {
 	if((m_grid.color() == gridColor) &&
 	   (m_grid.bkGndColor() == gridBkColor) &&
 	   (m_grid.step() == gridStep) &&
+	   (m_grid.pointSize() == gridPointSize) &&
 	   (m_grid.isAlign() == gridAlign)) return;
 
 	m_grid.setColor(gridColor);
 	m_grid.setBkGndColor(gridBkColor);
 	m_grid.setStep(gridStep);
+	m_grid.setPointSize(gridPointSize);
 	m_grid.setAlign(gridAlign);
 
-	setBackgroundBrush(m_grid.bkGndBrush());
+	update();
 }
 
 void CSchemeEditor::setScheme(CScheme *a_scheme)
@@ -454,68 +498,38 @@ void CSchemeEditor::setScheme(CScheme *a_scheme)
 		connect(scheme(), SIGNAL(selectionChanged()), this, SLOT(onSelectionChanged()));
 		connect(scheme(), SIGNAL(fileNameChanged(QString)), this, SLOT(updateTitle()));
 		connect(scheme(), SIGNAL(sceneRectChanged(QRectF)), this, SLOT(onSchemeRectChanged(QRectF)));
-	}
-	centerOn(0.0, 0.0);
 
+		m_bounds.setBounds(scheme()->sceneRect());
+	}
+
+	centerOn(0.0, 0.0);
 	updateTitle();
+	update();
+}
+
+QList<CElement*> CSchemeEditor::selectedElements(void)
+{
+	return scheme() ? scheme()->selectedElements() : QList<CElement*>();
 }
 
 void CSchemeEditor::onSelectionChanged(void)
 {
-	bool hasSelected = (scheme() && !scheme()->selectedItems().isEmpty());
-	bool ownSelect = (scheme() && scheme()->selectedItems().count() == 1);
-	if(m_acElementOptions)
+	if(scheme())
 	{
-		m_acElementOptions->setEnabled(ownSelect);
-		m_acElementOptions->setVisible(ownSelect);
-		if(m_acElementActionsSeparator) m_acElementActionsSeparator->setVisible(ownSelect);
-	}
-	if(m_acCopy)
-	{
-		m_acCopy->setEnabled(hasSelected);
-		m_acCopy->setVisible(hasSelected);
-	}
-	if(m_acCut)
-	{
-		m_acCut->setEnabled(hasSelected);
-		m_acCut->setVisible(hasSelected);
-	}
-	if(m_acDelete)
-	{
-		m_acDelete->setEnabled(hasSelected);
-		m_acDelete->setVisible(hasSelected);
-	}
-}
-
-void CSchemeEditor::onClipBoardChanged(const QClipboard::Mode &mode)
-{
-	Q_UNUSED(mode)
-
-	QClipboard *clpb = QApplication::clipboard();
-	if(clpb->mimeData()->hasHtml())
-	{
-		QDomDocument domDoc;
-		QString errMsg;
-		int errLine = 0;
-		int errCol = 0;
-		if(domDoc.setContent(clpb->mimeData()->html(), &errMsg, &errLine, &errCol))
+		CLink *link = 0;
+		if(scheme()->selectedElements().count() == 1)
 		{
-			if(scheme() && scheme()->checkXMLSchemeFormat(domDoc))
-			{
-				if(m_acPaste)
-				{
-					m_acPaste->setEnabled(true);
-					m_acPaste->setVisible(true);
-				}
-			}
+			link = dynamic_cast<CLink*>(scheme()->selectedItems().at(0));
 		}
+		if(m_segmentMover) m_segmentMover->setLink(link);
+		emit elementsSelected(scheme()->selectedElements());
 	}
 }
 
 void CSchemeEditor::onSchemeRectChanged(const QRectF &rect)
 {
-	Q_UNUSED(rect)
-	centerOn(0.0, 0.0);
+	m_bounds.setBounds(rect);
+	update();
 }
 
 void CSchemeEditor::updateTitle(void)
@@ -534,7 +548,7 @@ void CSchemeEditor::setMouseMode(const CSchemeEditor::TMouseMode &mouseMode)
 	setMouseTracking((m_mouseMode == CSchemeEditor::LinkingMode));
 }
 
-void CSchemeEditor::showOptions(void)
+void CSchemeEditor::showElementOptions(void)
 {
 	if((scheme() && scheme()->selectedItems().count() == 1))
 	{
@@ -559,7 +573,12 @@ void CSchemeEditor::copySelected(void)
 {
 	if(scheme())
 	{
-		QDomDocument domDoc = scheme()->toXMLDom(scheme()->selectedElements());
+		QList<CElement*> elementsToCopy;
+		foreach(CElement *element, scheme()->selectedElements())
+		{
+			if(element && (element->intercations() & CElement::Copyable)) elementsToCopy << element;
+		}
+		QDomDocument domDoc = scheme()->toXMLDom(elementsToCopy);
 		QMimeData *mimeData = new QMimeData();
 		mimeData->setHtml(domDoc.toString());
 		QClipboard *clpb = QApplication::clipboard();
@@ -591,8 +610,8 @@ void CSchemeEditor::pasteSelected(void)
 
 void CSchemeEditor::cutSelected(void)
 {
-    copySelected();
-    deleteSelected();
+	copySelected();
+	deleteSelected();
 }
 
 void CSchemeEditor::deleteSelected(void)

@@ -33,6 +33,7 @@ public:
 	virtual CElement* createElement(const QString &typeID);
 private slots:
 	CSumArgument* addSumArg(void);
+	void onSumArgDestroyed(QObject *objSumArg);
 };
 
 #endif // CSUM_H

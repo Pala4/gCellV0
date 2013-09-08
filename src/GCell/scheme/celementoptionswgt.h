@@ -7,6 +7,7 @@ class QTabWidget;
 class QGridLayout;
 class QFormLayout;
 class QLineEdit;
+class QCheckBox;
 
 class CElement;
 
@@ -18,6 +19,8 @@ private:
 	QGridLayout *m_generalLayout;
 	QFormLayout *m_generalFormLayout;
 	QLineEdit *m_captionEdit;
+	QCheckBox *m_captionVisibleChBx;
+
 	CElement *m_element;
 public:
 	explicit CElementOptionsWgt(CElement *element, QWidget *parent = 0);
@@ -28,6 +31,8 @@ public:
 	QLineEdit* captionEdit(void){return m_captionEdit;}
 
 	QString elementCaption(void);
+	bool isCaptionVisible(void) const;
+	void setCaptionVisible(const bool &captionVisible);
 };
 
 #endif // CELEMENTOPTIONSWGT_H

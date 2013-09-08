@@ -108,7 +108,7 @@ CPortal::CPortal(QGraphicsItem *parent) : CElement(parent)
 {
 	setObjectName(QStringLiteral("CPortal"));
 
-	m_portalOrientation = CPortal::Left;
+	m_portalOrientation = CPortal::NoOrientation;
 	m_dataColor = QColor(255, 255, 255);
 	m_size = 7.0;
 	m_highLighted = false;
@@ -163,7 +163,7 @@ CPortal::CPortal(QGraphicsItem *parent) : CElement(parent)
 	acgrOrient->addAction(m_acBottomOrient);
 
 	setCaptionFont(QFont("Corier", 7, QFont::Bold));
-
+	setInteractions(intercations() & ~CElement::Copyable & ~CElement::Deletable);
 	setFlag(QGraphicsItem::ItemSendsScenePositionChanges);
 }
 
@@ -227,8 +227,7 @@ void CPortal::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, Q
 	painter->save();
 	painter->setRenderHint(QPainter::Antialiasing);
 
-//	painter->drawRect(boundingRect());
-	painter->drawText(m_captionRect, Qt::AlignCenter, caption());
+	if(isCaptionVisible()) painter->drawText(m_captionRect, Qt::AlignCenter, caption());
 
 	painter->setBrush(brush);
 	painter->setPen(pen);

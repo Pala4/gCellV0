@@ -12,14 +12,36 @@ CScheme* CElement::scheme(void)
 	return qobject_cast<CScheme*>(scene());
 }
 
+void CElement::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+	update();
+	QGraphicsObject::mousePressEvent(event);
+}
+
+void CElement::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+//	update();
+	QGraphicsObject::mouseMoveEvent(event);
+}
+
+void CElement::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{
+	update();
+	QGraphicsObject::mouseReleaseEvent(event);
+}
+
 CElement::CElement(QGraphicsItem *parent) : QGraphicsObject(parent)
 {
 	setObjectName(QStringLiteral("CElement"));
 
 	m_defaultName = tr("element");
 	m_nomber = 0;
+	m_captionVisible = true;
 
 	connect(this, SIGNAL(nameChanged(QString)), this, SLOT(updateGeometry()));
+
+	setInteractions(CElement::AllIntercations);
+	setFlag(QGraphicsItem::ItemIsSelectable);
 }
 
 void CElement::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -95,7 +117,9 @@ QList<CElement*> CElement::childElements(void)
 
 CElementOptionsWgt* CElement::optionsWidget(QWidget *parentWidget)
 {
-	return new CElementOptionsWgt(this, parentWidget);
+	CElementOptionsWgt *optWgt = new CElementOptionsWgt(this, parentWidget);
+	optWgt->setCaptionVisible(isCaptionVisible());
+	return optWgt;
 }
 
 void CElement::acceptOptions(CElementOptionsWgt *optWgt)
@@ -103,6 +127,7 @@ void CElement::acceptOptions(CElementOptionsWgt *optWgt)
 	if(optWgt)
 	{
 		setName(optWgt->elementCaption());
+		setCaptionVisible(optWgt->isCaptionVisible());
 	}
 }
 

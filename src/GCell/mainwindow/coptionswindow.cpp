@@ -26,6 +26,7 @@ COptionsWindow::COptionsWindow(QWidget *parent) : QDialog(parent)
 	m_gridColorLEdit = 0;
 	m_gridBkGndColorLEdit = 0;
 	m_gridStepSpBox = 0;
+	m_gridPointSize = 0;
 	m_gridAlignChBox = 0;
 
 	m_schemeTab = 0;
@@ -99,6 +100,11 @@ COptionsWindow::COptionsWindow(QWidget *parent) : QDialog(parent)
 	m_gridStepSpBox = new QSpinBox();
 	m_gridStepSpBox->setObjectName(QStringLiteral("gridStepSpBox"));
 	flSchemeEditor->addRow(tr("Grid step:"), m_gridStepSpBox);
+
+	m_gridPointSize = new QDoubleSpinBox();
+	m_gridPointSize->setObjectName(QStringLiteral("gridPointSize"));
+	m_gridPointSize->setRange(0.0, 3.0);
+	flSchemeEditor->addRow(tr("Grid point size:"), m_gridPointSize);
 
 	m_gridAlignChBox = new QCheckBox(tr("Align by grid"));
 	m_gridAlignChBox->setObjectName(QStringLiteral("gridAlignChBox"));
@@ -227,6 +233,16 @@ int COptionsWindow::gridStep(void) const
 void COptionsWindow::setGridStep(const int &gridStep)
 {
 	if(m_gridStepSpBox) m_gridStepSpBox->setValue(gridStep);
+}
+
+qreal COptionsWindow::gridPointSize(void) const
+{
+	return m_gridPointSize ? m_gridPointSize->value() : 0.0;
+}
+
+void COptionsWindow::setGridPointSize(const qreal &gridPointSize)
+{
+	if(m_gridPointSize) m_gridPointSize->setValue(gridPointSize);
 }
 
 bool COptionsWindow::isGridAlign(void) const

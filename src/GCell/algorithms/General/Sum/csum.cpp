@@ -20,6 +20,8 @@ CSumArgument::CSumArgument(QGraphicsItem *parent) : CArgument(parent)
 	acInvers->setChecked(false);
 	connect(acInvers, SIGNAL(triggered(bool)), this, SLOT(setInvert(bool)));
 	addAction(acInvers);
+
+	setInteractions(intercations() | CElement::Deletable);
 }
 
 stData CSumArgument::bufferData(const quint64 &timeFrameIndex)
@@ -93,6 +95,13 @@ CSumArgument* CSum::addSumArg(void)
 {
 	 CSumArgument *sumArg = new CSumArgument(this);
 	 addArgument(sumArg);
+	 connect(sumArg, SIGNAL(destroyed(QObject*)), this, SLOT(onSumArgDestroyed(QObject*)));
 	 m_sumArgs << sumArg;
 	 return sumArg;
+}
+
+void CSum::onSumArgDestroyed(QObject *objSumArg)
+{
+	CSumArgument *sumArg = (CSumArgument*)objSumArg;
+	if(sumArg && m_sumArgs.contains(sumArg)) m_sumArgs.removeOne(sumArg);
 }

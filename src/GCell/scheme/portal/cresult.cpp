@@ -29,6 +29,7 @@ QPainterPath CResult::calcPortalForm(void)
 			p1 = QPointF(m_arrowRect.center().x(), m_arrowRect.bottom());
 			p2 = m_arrowRect.topRight();
 		break;
+		case CPortal::NoOrientation: break;
 	}
 	setLinkPos(p1);
 
@@ -43,6 +44,8 @@ QPainterPath CResult::calcPortalForm(void)
 CResult::CResult(QGraphicsItem *parent) : CPortal(parent)
 {
 	setObjectName(QStringLiteral("CResult"));
+
+	setPortalOrientation(CPortal::Right);
 	setDefaultName(tr("res"));
 }
 
