@@ -18,6 +18,7 @@ void CLinkMoverPart::mousePressEvent(QGraphicsSceneMouseEvent *event)
 		m_moved = true;
 		m_dP = event->scenePos() - pos();
 	}
+	update();
 
 	QGraphicsItem::mousePressEvent(event);
 }
@@ -39,12 +40,15 @@ void CLinkMoverPart::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 
 		emit stateChanged();
 	}
+
+	QGraphicsObject::mouseMoveEvent(event);
 }
 
 void CLinkMoverPart::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
 	m_moved = false;
 	m_dP = QPointF();
+	update();
 
 	QGraphicsItem::mouseReleaseEvent(event);
 }
@@ -224,12 +228,12 @@ void CSegmentMover::setLink(CLink *link)
 			{
 				if(segment)
 				{
-					CLinkMoverPart *part = new CLinkMoverPart(0, this);
+					CLinkMoverPart *part = new CLinkMoverPart(m_link, this);
 					part->setSegment(segment);
 					connect(part, SIGNAL(stateChanged()), this, SLOT(onPartStateChanged()));
 					m_parts << part;
-					m_link->scene()->addItem(part);
-					m_link->stackBefore(part);
+//					m_link->scene()->addItem(part);
+//					m_link->stackBefore(part);
 				}
 			}
 		}

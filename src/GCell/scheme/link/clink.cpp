@@ -10,26 +10,20 @@
 
 QPainterPath CLink::shapeFromPath(const QPainterPath &path, const QPen &pen)
 {
-	 // We unfortunately need this hack as QPainterPathStroker will set a width of 1.0
-	 // if we pass a value of 0.0 to QPainterPathStroker::setWidth()
-	 const qreal penWidthZero = qreal(0.00000001);
+	if(path == QPainterPath()) return path;
 
-	 if(path == QPainterPath()) return path;
-	 QPainterPathStroker ps;
-	 ps.setCapStyle(pen.capStyle());
-	 if(pen.widthF() <= 0.0)
-	 {
-		  ps.setWidth(penWidthZero);
-	 }
-	 else
-	 {
-		  ps.setWidth(pen.widthF());
-	 }
-	 ps.setJoinStyle(pen.joinStyle());
-	 ps.setMiterLimit(pen.miterLimit());
-	 QPainterPath p = ps.createStroke(path);
-	 p.addPath(path);
-	 return p;
+	QPainterPathStroker ps;
+	ps.setCapStyle(pen.capStyle());
+
+	qreal penWidth = pen.widthF() <= 8.0 ? 10.0 : pen.widthF() + 2.0;
+	ps.setWidth(penWidth);
+
+	ps.setJoinStyle(pen.joinStyle());
+	ps.setMiterLimit(pen.miterLimit());
+	QPainterPath p = ps.createStroke(path);
+	p.addPath(path);
+
+	return p;
 }
 
 void CLink::calcLink(void)
@@ -65,7 +59,7 @@ void CLink::calcLink(void)
 
 QRectF CLink::calcBounds(void)
 {
-	 return shape().controlPointRect();
+	 return shape().controlPointRect().adjusted(-1.0, -1.0, 1.0, 1.0);
 }
 
 CLink::CLink(QGraphicsItem *parent) : CElement(parent)
