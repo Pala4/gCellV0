@@ -60,6 +60,7 @@ public:
 private slots:
 	 void onSelectionChanged(void);
 public slots:
+	 void addElement(CElement *element);
 	 void addElements(const QList<CElement*> &els);
 	 void createAlgorithm(const QPointF &pos);
 	 void addAlgorithm(CAlgorithmProto *algorithmProto, const QPointF &pos);
@@ -68,6 +69,7 @@ public slots:
 	 void addLink(CPortal *firstPortal, CPortal *secondPortal);
 	 void deleteSelected(void);
 signals:
+	 void elementAdded(CElement *element);
 	 void fileNameChanged(QString fileName);
 	 void algorithmsSelected(QList<CAlgorithm*> algorithms);
 };

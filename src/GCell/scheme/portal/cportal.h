@@ -24,7 +24,6 @@ private:
 	QColor m_dataColor;
 
 	QPainterPath m_portalForm;
-	QRectF m_captionRect;
 	QPointF m_linkPos;
 	qreal m_size;
 
@@ -49,7 +48,8 @@ protected:
 	const qreal& size(void) const{return m_size;}
 	void setLinkPos(const QPointF &linkPos){m_linkPos = linkPos;}
 	virtual QVariant itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value);
-	QRectF calcBounds(void);
+	virtual QRectF calcBounds(void);
+	virtual QPointF captionEditorPosition(void);
 public:
 	explicit CPortal(QGraphicsItem *parent = 0);
 

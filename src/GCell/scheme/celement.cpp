@@ -2,14 +2,88 @@
 
 #include <QAction>
 #include <QPainter>
+#include <QTextCursor>
+#include <QTextDocument>
+#include <QGraphicsSceneMouseEvent>
 
 #include "cscheme.h"
+#include "cgrid.h"
+#include "cbounds.h"
 #include "elementlistutil.h"
 #include "celementoptionswgt.h"
 
+/*!
+ * \class CGraphicsTextItem
+ */
+QVariant CGraphicsTextItem::itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value)
+{
+	switch((int)change)
+	{
+		case QGraphicsItem::ItemSelectedHasChanged:
+			if(!isSelected())
+			{
+				setTextInteractionFlags(Qt::NoTextInteraction);
+				QTextCursor txtCursor = textCursor();
+				txtCursor.clearSelection();
+				setTextCursor(txtCursor);
+				setFlag(QGraphicsItem::ItemStacksBehindParent, true);
+			}
+			else
+			{
+				if(textInteractionFlags() == Qt::NoTextInteraction)
+				{
+					setTextInteractionFlags(Qt::TextEditorInteraction);
+				}
+			}
+		break;
+	}
+	return QGraphicsTextItem::itemChange(change, value);
+}
+
+CGraphicsTextItem::CGraphicsTextItem(const QString &text, QGraphicsItem *parent) : QGraphicsTextItem(text, parent)
+{
+	setObjectName("CGraphicsTextItem");
+
+	connect(document(), SIGNAL(contentsChanged()), this, SLOT(onDocumentContentChanged()));
+
+	setFlag(QGraphicsItem::ItemIsMovable, false);
+	setFlag(QGraphicsItem::ItemIsSelectable);
+	setFlag(QGraphicsItem::ItemStacksBehindParent);
+	setTextInteractionFlags(Qt::NoTextInteraction);
+}
+
+void CGraphicsTextItem::onDocumentContentChanged(void)
+{
+	emit textChanged(toPlainText());
+}
+
+void CGraphicsTextItem::setText(const QString &text)
+{
+	QString oldText = toPlainText();
+
+	setPlainText(text);
+
+	if(oldText != text) emit textChanged(text);
+}
+
+/*!
+ * \class CElement
+ */
 CScheme* CElement::scheme(void)
 {
 	return qobject_cast<CScheme*>(scene());
+}
+
+QRectF CElement::calcBounds(void)
+{
+	QRectF r = m_captionEditor->boundingRect();
+	return m_captionEditor ? r : QRectF();
+}
+
+void CElement::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
+{
+	QGraphicsObject::mouseDoubleClickEvent(event);
+	if(m_captionEditor) m_captionEditor->setFlag(QGraphicsItem::ItemStacksBehindParent, false);
 }
 
 void CElement::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -30,18 +104,54 @@ void CElement::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 	QGraphicsObject::mouseReleaseEvent(event);
 }
 
+QVariant CElement::itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value)
+{
+	switch((int)change)
+	{
+		case QGraphicsItem::ItemPositionChange:
+			if(m_grid)
+			{
+				QPointF newPos = value.toPointF();
+				newPos = m_grid->align(newPos);
+				if(m_grid->bounds())
+				{
+					if(m_grid->bounds()->isOutBounds(newPos, boundingRect()))
+					{
+						newPos = pos();
+					}
+					else
+					{
+						newPos = m_grid->bounds()->posByBound(newPos, boundingRect());
+					}
+				}
+				return QVariant(newPos);
+			}
+		break;
+	}
+
+	return QGraphicsObject::itemChange(change, value);
+}
+
 CElement::CElement(QGraphicsItem *parent) : QGraphicsObject(parent)
 {
 	setObjectName(QStringLiteral("CElement"));
 
 	m_defaultName = tr("element");
 	m_nomber = 0;
-	m_captionVisible = true;
+	m_blockCaptionEditorSetText = false;
+	m_captionEditor = 0;
+	m_grid = 0;
 
-	connect(this, SIGNAL(nameChanged(QString)), this, SLOT(updateGeometry()));
+	m_captionEditor = new CGraphicsTextItem(QString(), this);
+	m_captionEditor->setObjectName(QStringLiteral("captionEditor"));
+	connect(m_captionEditor, SIGNAL(textChanged(QString)), this, SLOT(onCaptionEditorTextChanged(QString)));
+
+	connect(this, SIGNAL(nameChanged(QString)), this, SLOT(onNameChanged(QString)));
 
 	setInteractions(CElement::AllIntercations);
-	setFlag(QGraphicsItem::ItemIsSelectable);
+	setFlag(QGraphicsItem::ItemIsSelectable, true);
+	setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+	setZValue(1000.0);
 }
 
 void CElement::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -72,6 +182,7 @@ void CElement::setName(const QString &name)
 {
 	if(m_name == name) return;
 	m_name = name;
+
 	emit nameChanged(m_name);
 }
 
@@ -136,4 +247,25 @@ void CElement::beforeCalc(const qreal &startTime, const qreal &timeStep, const q
 	Q_UNUSED(startTime)
 	Q_UNUSED(timeStep)
 	Q_UNUSED(endTime)
+}
+
+void CElement::onCaptionEditorTextChanged(const QString &text)
+{
+	if(name() == text) return;
+	m_blockCaptionEditorSetText = true;
+	setName(text);
+}
+
+void CElement::onNameChanged(const QString &name)
+{
+	Q_UNUSED(name)
+	if(m_captionEditor && !m_blockCaptionEditorSetText) m_captionEditor->setText(caption());
+	m_blockCaptionEditorSetText = false;
+	updateGeometry();
+}
+
+void CElement::updateGeometry(void)
+{
+	m_boundingRect = calcBounds();
+	if(m_captionEditor) m_captionEditor->setPos(captionEditorPosition());
 }

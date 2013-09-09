@@ -311,7 +311,16 @@ QList<CElement*> CScheme::fromXMLDom(const QDomDocument &domDoc, stSchemeDesc *s
 
 void CScheme::onSelectionChanged(void)
 {
-	 emit algorithmsSelected(getElements<CAlgorithm*, QGraphicsItem*>(selectedItems()));
+	emit algorithmsSelected(getElements<CAlgorithm*, QGraphicsItem*>(selectedItems()));
+}
+
+void CScheme::addElement(CElement *element)
+{
+	if(!element) return;
+
+	addItem(element);
+
+	emit elementAdded(element);
 }
 
 void CScheme::addElements(const QList<CElement*> &els)
@@ -320,7 +329,7 @@ void CScheme::addElements(const QList<CElement*> &els)
 	 {
 		  if(!el) continue;
 		  if(element(el->id())) el->setNomber(generateNomber<CElement*, CElement*>(elements(el->typeID())));
-		  addItem(el);
+		  addElement(el);
 	 }
 }
 
@@ -344,7 +353,7 @@ void CScheme::addAlgorithm(CAlgorithm *algorithm, const QPointF &pos)
 
 	 algorithm->setNomber(generateNomber<CAlgorithm*, CAlgorithm*>(getElements<CAlgorithm*, QGraphicsItem*>(items(), algorithm->typeID())));
 	 algorithm->setPos(pos);
-	 addItem(algorithm);
+	 addElement(algorithm);
 }
 
 void CScheme::addLink(const QString &firstPortalID, const QString &secondPortalID)
@@ -374,7 +383,7 @@ void CScheme::addLink(CPortal *firstPortal, CPortal *secondPortal)
 	 link->setResult(result);
 	 link->setArgument(argument);
 	 link->setNomber(generateNomber<CLink*, CLink*>(getElements<CLink*, QGraphicsItem*>(items())));
-	 addItem(link);
+	 addElement(link);
 	 link->updateGeometry();
 }
 

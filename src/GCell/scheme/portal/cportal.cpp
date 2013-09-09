@@ -48,60 +48,50 @@ QVariant CPortal::itemChange(QGraphicsItem::GraphicsItemChange change, const QVa
 
 QRectF CPortal::calcBounds(void)
 {
+	return shape().controlPointRect();
+}
+
+QPointF CPortal::captionEditorPosition(void)
+{
+	if(!captionEditor()) return CElement::captionEditorPosition();
+
 	QRectF boundRect = shape().controlPointRect();
-	QRectF portalFormRect = boundRect;
-
-	QFontMetricsF fm(captionFont());
-	m_captionRect = boundRect;
-	m_captionRect.setWidth(fm.boundingRect(caption()).width() + 2.0);
-	m_captionRect.setHeight(fm.boundingRect(caption()).height() + 2.0);
-
-	qreal maxWidth = qMax(boundRect.width(), m_captionRect.width());
-	qreal maxHeight = qMax(boundRect.height(), m_captionRect.height());
-
-	switch ((int)portalOrientation())
+	QRectF captionBound = captionEditor()->boundingRect();
+	QPointF captionPosition = captionEditor()->pos();
+	switch((int)portalOrientation())
+	{
+		case CPortal::Left:
+			captionPosition.setX(-captionBound.width());
+		break;
+		case CPortal::Right:
+			captionPosition.setX(boundRect.width());
+		break;
+		case CPortal::Top:
+			captionPosition.setY(-captionBound.height());
+		break;
+		case CPortal::Bottom:
+			captionPosition.setY(boundRect.height());
+		break;
+	}
+	qreal minHeight = qMin(boundRect.height(), captionBound.height());
+	qreal maxHeight = qMax(boundRect.height(), captionBound.height());
+	int yOffsetSign = boundRect.height() < captionBound.height() ? -1 : 1;
+	qreal minWidth = qMin(boundRect.width(), captionBound.width());
+	qreal maxWidth = qMax(boundRect.width(), captionBound.width());
+	int xOffsetSign = boundRect.width() < captionBound.width() ? -1 : 1;
+	switch((int)portalOrientation())
 	{
 		case CPortal::Left:
 		case CPortal::Right:
-			boundRect.setWidth(boundRect.width() + m_captionRect.width() + 2.0);
-			boundRect.setHeight(maxHeight);
-			m_captionRect.setHeight(maxHeight);
+			captionPosition.setY(yOffsetSign*(maxHeight - minHeight)/2.0);
 		break;
 		case CPortal::Top:
 		case CPortal::Bottom:
-			boundRect.setHeight(boundRect.height() + m_captionRect.height() + 2.0);
-			boundRect.setWidth(maxWidth);
-			m_captionRect.setWidth(maxWidth);
+			captionPosition.setX(xOffsetSign*(maxWidth - minWidth)/2.0);
 		break;
 	}
 
-	qreal offsetX = 0.0;
-	qreal offsetY = 0.0;
-	switch ((int)portalOrientation())
-	{
-		case CPortal::Left:
-			offsetX = m_captionRect.width() + 2.0;
-			offsetY = qAbs(boundRect.height() - portalFormRect.height())/2.0;
-		break;
-		case CPortal::Right:
-			offsetY = qAbs(boundRect.height() - portalFormRect.height())/2.0;
-			m_captionRect.moveLeft(portalFormRect.width() + 2.0);
-		break;
-		case CPortal::Top:
-			offsetX = qAbs(boundRect.width() - portalFormRect.width())/2.0;
-			offsetY = m_captionRect.height() + 2.0;
-		break;
-		case CPortal::Bottom:
-			offsetX = qAbs(boundRect.width() - portalFormRect.width())/2.0;
-			m_captionRect.moveTop(portalFormRect.height() + 2.0);
-		break;
-	}
-	QPainterPath captionPath;
-	captionPath.addRect(m_captionRect);
-	m_portalForm.translate(offsetX, offsetY);
-	setLinkPos(QPointF(linkPos().x() + offsetX, linkPos().y() + offsetY));
-
-	return boundRect;
+	return captionPosition;
 }
 
 CPortal::CPortal(QGraphicsItem *parent) : CElement(parent)
@@ -226,9 +216,6 @@ void CPortal::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, Q
 
 	painter->save();
 	painter->setRenderHint(QPainter::Antialiasing);
-
-	if(isCaptionVisible()) painter->drawText(m_captionRect, Qt::AlignCenter, caption());
-
 	painter->setBrush(brush);
 	painter->setPen(pen);
 	painter->drawPath(m_portalForm);

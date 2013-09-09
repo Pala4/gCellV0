@@ -62,7 +62,9 @@ SOURCES += \
     widgets/ccolorlineedit.cpp \
     scheme/link/clinksegment.cpp \
     scheme/link/clinkenv.cpp \
-    scheme/link/csegmentmover.cpp
+    scheme/link/csegmentmover.cpp \
+    scheme/cgrid.cpp \
+    scheme/cbounds.cpp
 
 HEADERS += \
     mainwindow/cmainwindow.h \
@@ -104,4 +106,6 @@ HEADERS += \
     widgets/ccolorlineedit.h \
     scheme/link/clinksegment.h \
     scheme/link/clinkenv.h \
-    scheme/link/csegmentmover.h
+    scheme/link/csegmentmover.h \
+    scheme/cgrid.h \
+    scheme/cbounds.h

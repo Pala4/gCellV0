@@ -32,6 +32,7 @@ private:
 	void calcLink(void);
 protected:
 	virtual QRectF calcBounds(void);
+	virtual QPointF captionEditorPosition(void);
 public:
 	explicit CLink(QGraphicsItem *parent = 0);
 	virtual ~CLink(void);

@@ -7,6 +7,8 @@
 #include <QGraphicsItem>
 #include <QClipboard>
 
+#include "cbounds.h"
+#include "cgrid.h"
 #include "algorithm/calgorithm.h"
 
 class QActionGroup;
@@ -15,72 +17,13 @@ class CScheme;
 class CElementOptionsWgt;
 class CSegmentMover;
 
-class CBounds
-{
-private:
-	QRectF m_bounds;
-public:
-	CBounds(const QRectF &bounds = QRectF());
-
-	const QRectF& bounds(void) const{return m_bounds;}
-	void setBounds(const QRectF &bounds){m_bounds = bounds;}
-
-	bool inBounds(const QPointF &pos) const{return m_bounds.contains(pos);}
-	bool outBounds(const QPointF &pos, const QRectF &itemBoundingRect);
-	QPointF posByBound(const QPointF &newPos, const QRectF &itemBoundingRect);
-	void paint(QPainter *painter);
-};
-
-class CGrid
-{
-private:
-	QColor m_color;
-	QColor m_bkGndColor;
-	int m_step;
-	qreal m_pointSize;
-	QBrush m_bkGndBrush;
-	bool m_align;
-
-	CBounds *m_bounds;
-
-	void initBrush(void);
-public:
-	CGrid(CBounds *bounds = 0) : m_color(Qt::black), m_bkGndColor(Qt::white), m_step(8), m_pointSize(0.0), m_align(true), m_bounds(bounds){initBrush();}
-	CGrid(const QColor &color, const QColor &bkGndColor, const int &step, const qreal &pointSize, const bool &align, CBounds *bounds = 0);
-
-	const QColor& color(void) const{return m_color;}
-	void setColor(const QColor &color){if(m_color == color) return; m_color = color; initBrush();}
-	const QColor& bkGndColor(void) const{return m_bkGndColor;}
-	void setBkGndColor(const QColor &bkGndColor){if(m_bkGndColor == bkGndColor) return; m_bkGndColor = bkGndColor; initBrush();}
-	const int& step(void) const{return m_step;}
-	void setStep(const int  &step){if(m_step == step) return; m_step = step; initBrush();}
-	const qreal& pointSize(void) const{return m_pointSize;}
-	void setPointSize(const qreal &pointSize){if(m_pointSize == pointSize) return; m_pointSize = pointSize; initBrush();}
-	const bool& isAlign(void) const{return m_align;}
-	void setAlign(const bool &align){m_align = align;}
-
-	CBounds* bounds(void){return m_bounds;}
-	void setBounds(CBounds *bounds){m_bounds = bounds;}
-
-	QPointF align(const QPointF &pos);
-	void paint(QPainter *painter);
-};
-
 template<typename Type>
 class CItemMover
 {
 private:
-	CGrid *m_greed;
-	CBounds *m_bounds;
     QMap<QGraphicsItem*, QPointF> m_elementOffsets;
 public:
-	CItemMover(CGrid *greed = 0, CBounds *bounds = 0){m_greed = greed; m_bounds = bounds;}
-
-	CGrid* greed(void) const{return m_greed;}
-	void setGreed(CGrid *greed){m_greed = greed;}
-
-	CBounds* bounds(void){return m_bounds;}
-	void setBounds(CBounds *bounds){m_bounds = bounds;}
+	CItemMover(void){}
 
     bool haveMoved(void){return !m_elementOffsets.isEmpty();}
 
@@ -106,21 +49,7 @@ public:
             if(!item) continue;
             QPointF dp = m_elementOffsets.values().at(ci);
 
-			QPointF newPos = mousePos - dp;
-			if(m_greed) newPos = m_greed->align(newPos);
-			if(m_bounds)
-			{
-				if(m_bounds->outBounds(newPos, item->boundingRect()))
-				{
-					newPos = item->pos();
-				}
-				else
-				{
-					newPos = m_bounds->posByBound(newPos, item->boundingRect());
-				}
-			}
-
-			item->setPos(newPos);
+			item->setPos(mousePos - dp);
         }
     }
 	void release(const QPointF &mousePos)
@@ -162,16 +91,6 @@ class CSchemeEditor : public QGraphicsView
 public:
 	enum TMouseMode{MoveSelectMode, MoveSceneMode, LinkingMode, AddAlgorithmMode};
 private:
-//	QAction *m_acElementOptions;
-//	QAction *m_acCopy;
-//	QAction *m_acCut;
-//	QAction *m_acDelete;
-//	QAction *m_acPaste;
-
-//	QActionGroup *m_generalElementActions;
-//	QActionGroup *m_editActions;
-//	QActionGroup *m_generalEditActions;
-
 	QMenu *m_contextMenu;
 
 	CSchemeEditor::TMouseMode m_mouseMode;
@@ -216,18 +135,14 @@ public:
 				   const int &gridStep, const qreal &gridPointSize,
 				   const bool &gridAlign);
 
-//	QList<QAction*> generalElementActions(void) const;
-//	QList<QAction*> editActions(void) const;
-//	QList<QAction*> generalEditActions(void) const;
-
 	QMenu* contextMenu(void){return m_contextMenu;}
 	void setContextMenu(QMenu *contextMenu){m_contextMenu = contextMenu;}
 
 	void setScheme(CScheme *a_scheme);
 	QList<CElement*> selectedElements(void);
 private slots:
+	void onSchemeElementAdedd(CElement *element);
 	void onSelectionChanged(void);
-//	void onClipBoardChanged(const QClipboard::Mode &mode);
 	void onSchemeRectChanged(const QRectF &rect);
 	void updateTitle(void);
 public slots:

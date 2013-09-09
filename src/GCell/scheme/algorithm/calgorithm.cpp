@@ -23,10 +23,12 @@ void CAlgorithm::registerPortal(CPortal *portal)
 QRectF CAlgorithm::calcBounds(void)
 {
 	prepareGeometryChange();
-	QFontMetricsF fm(captionFont());
+	QRectF elementBounds = CElement::calcBounds();
+
+//	QFontMetricsF fm(captionFont());
 	QRectF innerBound;
-	innerBound.setWidth(fm.boundingRect(caption()).adjusted(-2.0, -2.0, 2.0, 2.0).width());
-	innerBound.setHeight(fm.boundingRect(caption()).adjusted(-2.0, -2.0, 2.0, 2.0).height());
+	innerBound.setWidth(elementBounds./*adjusted(-2.0, -2.0, 2.0, 2.0).*/width());
+	innerBound.setHeight(elementBounds./*adjusted(-2.0, -2.0, 2.0, 2.0).*/height());
 
 	QRectF boundRect;
 	boundRect = innerBound;
@@ -199,7 +201,6 @@ void CAlgorithm::paint(QPainter *painter, const QStyleOptionGraphicsItem *option
 	painter->setRenderHint(QPainter::TextAntialiasing, true);
 	painter->setPen(pen);
 	painter->drawRect(boundingRect());
-	if(isCaptionVisible()) painter->drawText(boundingRect(), Qt::AlignCenter, caption());
 	painter->restore();
 }
 

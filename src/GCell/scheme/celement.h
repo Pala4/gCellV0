@@ -1,6 +1,7 @@
 #ifndef CELEMENT_H
 #define CELEMENT_H
 
+#include <QGraphicsTextItem>
 #include <QGraphicsObject>
 
 #include <QFont>
@@ -8,9 +9,26 @@
 #include "timeframe.h"
 
 class QAction;
+class QGraphicsTextItem;
 
 class CScheme;
 class CElementOptionsWgt;
+class CGrid;
+
+class CGraphicsTextItem : public QGraphicsTextItem
+{
+	Q_OBJECT
+protected:
+	virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
+public:
+	explicit CGraphicsTextItem(const QString &text, QGraphicsItem *parent = 0);
+private slots:
+	void onDocumentContentChanged(void);
+public slots:
+	void setText(const QString &text);
+signals:
+	void textChanged(const QString &text);
+};
 
 class CElement : public QGraphicsObject
 {
@@ -25,20 +43,28 @@ private:
 	QString m_name;
 	QString m_defaultName;
 	int m_nomber;
-	bool m_captionVisible;
 	QFont m_captionFont;
 	CElement::Interactions m_intercations;
 
 	QRectF m_boundingRect;
 
+	bool m_blockCaptionEditorSetText;
+	CGraphicsTextItem *m_captionEditor;
 	QList<QAction*> m_actions;
+
+	CGrid *m_grid;
 protected:
+	friend class CGraphicsTextItem;
 	CScheme* scheme(void);
 	void setInteractions(const CElement::Interactions &interactions){m_intercations = interactions;}
-	virtual QRectF calcBounds(void){return QRectF();}
+	CGraphicsTextItem* captionEditor(void){return m_captionEditor;}
+	virtual QRectF calcBounds(void);
+	virtual QPointF captionEditorPosition(void){return QPointF(0.0, 0.0);}
+	virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
 	virtual void mousePressEvent(QGraphicsSceneMouseEvent *event);
 	virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
 	virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+	virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 public:
 	explicit CElement(QGraphicsItem *parent = 0);
 
@@ -54,8 +80,8 @@ public:
 	void setDefaultName(const QString &defaultName);
 	const int& nomber(void) const{return m_nomber;}
 	void setNomber(const int &nomber){m_nomber = nomber;}
-	const bool& isCaptionVisible(void) const{return m_captionVisible;}
-	void setCaptionVisible(const bool &captionVisible){m_captionVisible = captionVisible; updateGeometry();}
+	bool isCaptionVisible(void) const{return m_captionEditor ? m_captionEditor->isVisible() : false;}
+	void setCaptionVisible(const bool &captionVisible){if(m_captionEditor) m_captionEditor->setVisible(captionVisible);}
 	const QFont& captionFont(void) const{return m_captionFont;}
 	void setCaptionFont(const QFont &captionFont);
 	const CElement::Interactions& intercations(void) const{return m_intercations;}
@@ -64,6 +90,9 @@ public:
 
 	const QList<QAction*>& actions(void) const{return m_actions;}
 	void addAction(QAction *action);
+
+	CGrid* grid(void){return m_grid;}
+	void setGrid(CGrid *grid){m_grid = grid;}
 
 	virtual CElement* createElement(const QString &typeID){Q_UNUSED(typeID) return 0;}
 	CElement* childElement(const QString &id);
@@ -76,8 +105,11 @@ public:
 	virtual void beforeCalc(const qreal &startTime, const qreal &timeStep, const qreal &endTime);
 	virtual void calc(const stTimeLine &timeLine) = 0;
 	virtual void afterCalc(void){}
+private slots:
+	void onCaptionEditorTextChanged(const QString &text);
+	void onNameChanged(const QString &name);
 public slots:
-	virtual void updateGeometry(void){m_boundingRect = calcBounds();}
+	virtual void updateGeometry(void);
 signals:
 	void nameChanged(QString name);
 };

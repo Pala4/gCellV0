@@ -48,18 +48,18 @@ void CLink::calcLink(void)
 			m_path.moveTo(pointsList.at(ci));
 			m_path.lineTo(pointsList.at(ci + 1));
 		}
-		if(isCaptionVisible() && m_linkSegments)
-		{
-			QPointF captionPoint = m_linkSegments->segment(CLinkSegment::Medium)->center();
-			m_path.addText(captionPoint, captionFont(), caption());
-		}
 	}
 	emit formChanged();
 }
 
 QRectF CLink::calcBounds(void)
 {
-	 return shape().controlPointRect().adjusted(-1.0, -1.0, 1.0, 1.0);
+	return shape().controlPointRect().adjusted(-1.0, -1.0, 1.0, 1.0);
+}
+
+QPointF CLink::captionEditorPosition(void)
+{
+	return m_linkSegments ? m_linkSegments->segment(CLinkSegment::Medium)->center() : CElement::captionEditorPosition();
 }
 
 CLink::CLink(QGraphicsItem *parent) : CElement(parent)
@@ -75,8 +75,14 @@ CLink::CLink(QGraphicsItem *parent) : CElement(parent)
 	 m_linkEnv = new CLinkEnv(this);
 	 m_linkSegments = new CLinkSegments(this);
 
+	 if(captionEditor())
+	 {
+		 captionEditor()->setFlag(QGraphicsItem::ItemIsMovable);
+	 }
+
 	 setDefaultName(tr("link"));
 	 setCaptionVisible(false);
+	 setZValue(0.0);
 }
 
 CLink::~CLink(void)
