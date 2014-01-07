@@ -41,7 +41,7 @@ public:
 	 const bool& isNewScheme(void) const{return m_newScheme;}
 	 void setNewScheme(const bool &newScheme){m_newScheme = newScheme;}
 	 const bool& isModified(void) const{return m_modified;}
-	 void setModified(const bool &modified){m_modified = modified;}
+	 void setModified(const bool &modified);
 	 const QString& fileName(void) const{return m_fileName;}
 	 void setFileName(const QString &fileName);
 
@@ -59,6 +59,7 @@ public:
 	 QList<CElement*> fromXMLDom(const QDomDocument &domDoc, stSchemeDesc *schemeDesc = 0);
 private slots:
 	 void onSelectionChanged(void);
+	 void changeSchemeModified(void);
 public slots:
 	 void addElement(CElement *element);
 	 void addElements(const QList<CElement*> &els);
@@ -72,6 +73,7 @@ signals:
 	 void elementAdded(CElement *element);
 	 void fileNameChanged(QString fileName);
 	 void algorithmsSelected(QList<CAlgorithm*> algorithms);
+	 void schemeModified(bool modified);
 };
 
 #endif // CSCHEME_H

@@ -79,7 +79,14 @@ public:
 	const QString& defaultName(void) const{return m_defaultName;}
 	void setDefaultName(const QString &defaultName);
 	const int& nomber(void) const{return m_nomber;}
+<<<<<<< HEAD
+	void setNomber(const int &nomber){m_nomber = nomber; emit nameChanged(name());}
+=======
 	void setNomber(const int &nomber){m_nomber = nomber;}
+<<<<<<< HEAD
+>>>>>>> a1b3f10986557e6b9f1c4305267c0248c98516c9
+=======
+>>>>>>> a1b3f10986557e6b9f1c4305267c0248c98516c9
 	bool isCaptionVisible(void) const{return m_captionEditor ? m_captionEditor->isVisible() : false;}
 	void setCaptionVisible(const bool &captionVisible){if(m_captionEditor) m_captionEditor->setVisible(captionVisible);}
 	const QFont& captionFont(void) const{return m_captionFont;}
@@ -112,6 +119,7 @@ public slots:
 	virtual void updateGeometry(void);
 signals:
 	void nameChanged(QString name);
+	void modified(void);
 };
 Q_DECLARE_OPERATORS_FOR_FLAGS(CElement::Interactions)
 

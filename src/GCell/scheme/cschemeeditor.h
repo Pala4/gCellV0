@@ -144,6 +144,7 @@ private slots:
 	void onSchemeElementAdedd(CElement *element);
 	void onSelectionChanged(void);
 	void onSchemeRectChanged(const QRectF &rect);
+	void onSchemeModified(const bool &modified);
 	void updateTitle(void);
 public slots:
 	void setMouseMode(const CSchemeEditor::TMouseMode &mouseMode);

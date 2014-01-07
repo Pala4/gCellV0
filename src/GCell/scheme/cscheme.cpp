@@ -125,6 +125,13 @@ CScheme::CScheme(QObject *parent) : QGraphicsScene(parent)
 	 connect(this, SIGNAL(selectionChanged()), this, SLOT(onSelectionChanged()));
 }
 
+void CScheme::setModified(const bool &modified)
+{
+	if(m_modified == modified) return;
+	m_modified = modified;
+	emit schemeModified(m_modified);
+}
+
 void CScheme::setFileName(const QString &fileName)
 {
 	 if(m_fileName == fileName) return;
@@ -160,7 +167,7 @@ QList<CElement*> CScheme::selectedElements(void)
 	 return getElements<CElement*, QGraphicsItem*>(selectedItems());
 }
 
-QList<CAlgorithm *> CScheme::selectedAlgorithms(void)
+QList<CAlgorithm*> CScheme::selectedAlgorithms(void)
 {
 	 return getElements<CAlgorithm*, QGraphicsItem*>(selectedItems());
 }
@@ -314,11 +321,32 @@ void CScheme::onSelectionChanged(void)
 	emit algorithmsSelected(getElements<CAlgorithm*, QGraphicsItem*>(selectedItems()));
 }
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+void CScheme::changeSchemeModified(void)
+{
+	setModified(true);
+}
+
+=======
+>>>>>>> a1b3f10986557e6b9f1c4305267c0248c98516c9
+=======
+>>>>>>> a1b3f10986557e6b9f1c4305267c0248c98516c9
 void CScheme::addElement(CElement *element)
 {
 	if(!element) return;
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+	connect(element, SIGNAL(modified()), this, SLOT(changeSchemeModified()));
 	addItem(element);
+	changeSchemeModified();
+=======
+	addItem(element);
+>>>>>>> a1b3f10986557e6b9f1c4305267c0248c98516c9
+=======
+	addItem(element);
+>>>>>>> a1b3f10986557e6b9f1c4305267c0248c98516c9
 
 	emit elementAdded(element);
 }
@@ -395,4 +423,5 @@ void CScheme::deleteSelected(void)
 	 {
 		  if(selElement && (selElement->intercations() & CElement::Deletable)) selElement->deleteLater();
 	 }
+	 if(!selElements.isEmpty()) changeSchemeModified();
 }

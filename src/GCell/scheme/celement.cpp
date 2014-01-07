@@ -59,11 +59,21 @@ void CGraphicsTextItem::onDocumentContentChanged(void)
 
 void CGraphicsTextItem::setText(const QString &text)
 {
+<<<<<<< HEAD
+<<<<<<< HEAD
+	setPlainText(text);
+=======
+=======
+>>>>>>> a1b3f10986557e6b9f1c4305267c0248c98516c9
 	QString oldText = toPlainText();
 
 	setPlainText(text);
 
 	if(oldText != text) emit textChanged(text);
+<<<<<<< HEAD
+>>>>>>> a1b3f10986557e6b9f1c4305267c0248c98516c9
+=======
+>>>>>>> a1b3f10986557e6b9f1c4305267c0248c98516c9
 }
 
 /*!
@@ -141,11 +151,25 @@ CElement::CElement(QGraphicsItem *parent) : QGraphicsObject(parent)
 	m_blockCaptionEditorSetText = false;
 	m_captionEditor = 0;
 	m_grid = 0;
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a1b3f10986557e6b9f1c4305267c0248c98516c9
 
 	m_captionEditor = new CGraphicsTextItem(QString(), this);
 	m_captionEditor->setObjectName(QStringLiteral("captionEditor"));
 	connect(m_captionEditor, SIGNAL(textChanged(QString)), this, SLOT(onCaptionEditorTextChanged(QString)));
 
+<<<<<<< HEAD
+=======
+
+	m_captionEditor = new CGraphicsTextItem(QString(), this);
+	m_captionEditor->setObjectName(QStringLiteral("captionEditor"));
+	connect(m_captionEditor, SIGNAL(textChanged(QString)), this, SLOT(onCaptionEditorTextChanged(QString)));
+
+>>>>>>> a1b3f10986557e6b9f1c4305267c0248c98516c9
+=======
+>>>>>>> a1b3f10986557e6b9f1c4305267c0248c98516c9
 	connect(this, SIGNAL(nameChanged(QString)), this, SLOT(onNameChanged(QString)));
 
 	setInteractions(CElement::AllIntercations);
@@ -259,7 +283,20 @@ void CElement::onCaptionEditorTextChanged(const QString &text)
 void CElement::onNameChanged(const QString &name)
 {
 	Q_UNUSED(name)
+<<<<<<< HEAD
+<<<<<<< HEAD
+	if(m_captionEditor && !m_blockCaptionEditorSetText)
+	{
+		m_captionEditor->blockSignals(true);
+		m_captionEditor->setText(caption());
+		m_captionEditor->blockSignals(false);
+	}
+=======
 	if(m_captionEditor && !m_blockCaptionEditorSetText) m_captionEditor->setText(caption());
+>>>>>>> a1b3f10986557e6b9f1c4305267c0248c98516c9
+=======
+	if(m_captionEditor && !m_blockCaptionEditorSetText) m_captionEditor->setText(caption());
+>>>>>>> a1b3f10986557e6b9f1c4305267c0248c98516c9
 	m_blockCaptionEditorSetText = false;
 	updateGeometry();
 }
@@ -268,4 +305,12 @@ void CElement::updateGeometry(void)
 {
 	m_boundingRect = calcBounds();
 	if(m_captionEditor) m_captionEditor->setPos(captionEditorPosition());
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+	emit modified();
+=======
+>>>>>>> a1b3f10986557e6b9f1c4305267c0248c98516c9
+=======
+>>>>>>> a1b3f10986557e6b9f1c4305267c0248c98516c9
 }

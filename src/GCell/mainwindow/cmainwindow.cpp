@@ -322,6 +322,8 @@ void CMainWindow::writeScheme(CScheme *scheme, const QString &fileName)
 
 	QTextStream(&fileHandler) << scheme->toXMLDom(scheme->elements(), &schemeDesc).toString();
 	fileHandler.close();
+
+	scheme->setModified(false);
 }
 
 void CMainWindow::readScheme(CScheme *scheme, const QString &fileName)
@@ -345,7 +347,11 @@ void CMainWindow::readScheme(CScheme *scheme, const QString &fileName)
 
 void CMainWindow::closeEvent(QCloseEvent *event)
 {
-	if(isAutoSaveLastScheme()) saveScheme();
+	if(isAutoSaveLastScheme())
+	{
+		if(m_scheme && m_scheme->isModified()) saveScheme();
+	}
+
 	if(isAutoSaveDesktop()) saveDesktop("desktop.ini");
 	if(isAutoSaveConfig()) saveConfig("config.ini");
 
