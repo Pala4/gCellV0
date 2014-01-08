@@ -17,6 +17,7 @@
 
 #include "coptionswindow.h"
 #include "datawindow/cdatawindow.h"
+#include "csavemodschemesdlg.h"
 #include "../scheme/algorithmproto/calgorithmproto.h"
 #include "../scheme/algorithmproto/calgorithmprotomng.h"
 #include "calgprotoview.h"
@@ -323,6 +324,7 @@ void CMainWindow::writeScheme(CScheme *scheme, const QString &fileName)
 	QTextStream(&fileHandler) << scheme->toXMLDom(scheme->elements(), &schemeDesc).toString();
 	fileHandler.close();
 
+	scheme->setNewScheme(false);
 	scheme->setModified(false);
 }
 
@@ -343,19 +345,58 @@ void CMainWindow::readScheme(CScheme *scheme, const QString &fileName)
 	QList<CElement*> elements = scheme->fromXMLDom(domDoc, &schemeDesc);
 	scheme->setSceneRect(0.0, 0.0, schemeDesc.width, schemeDesc.height);
 	scheme->addElements(elements);
+
+	scheme->setNewScheme(false);
+	scheme->setModified(false);
+}
+
+bool CMainWindow::saveBeforeClose(void)
+{
+	QList<CScheme*> modSchemes;
+
+	if(m_scheme && m_scheme->isModified()) modSchemes << m_scheme;
+
+	if(!modSchemes.isEmpty())
+	{
+		CSaveModSchemesDlg saveModDlg;
+
+		saveModDlg.setSavedSchemes(modSchemes);
+		int execResult = saveModDlg.exec();
+		switch(execResult)
+		{
+			case QDialog::Accepted:
+			{
+				QList<stSavedScheme> savedSchemes = saveModDlg.savedSchemes();
+				foreach(stSavedScheme savedScheme, savedSchemes)
+				{
+					if(!savedScheme.scheme || !savedScheme.canBeStored) continue;
+
+					saveScheme();//savedScheme.scheme);
+				}
+
+				return true;
+			}
+			case QDialog::Rejected: return false;
+			case CSaveModSchemesDlg::Discarded: return true;
+		}
+	}
+
+	return true;
 }
 
 void CMainWindow::closeEvent(QCloseEvent *event)
 {
-	if(isAutoSaveLastScheme())
+	if(saveBeforeClose())
 	{
-		if(m_scheme && m_scheme->isModified()) saveScheme();
+		if(isAutoSaveDesktop()) saveDesktop("desktop.ini");
+		if(isAutoSaveConfig()) saveConfig("config.ini");
+
+		event->accept();
 	}
-
-	if(isAutoSaveDesktop()) saveDesktop("desktop.ini");
-	if(isAutoSaveConfig()) saveConfig("config.ini");
-
-	QMainWindow::closeEvent(event);
+	else
+	{
+		event->ignore();
+	}
 }
 
 CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
@@ -773,7 +814,6 @@ bool CMainWindow::openScheme(const QString &fileName)
 	{
 		readScheme(m_scheme, schemeName);
 		m_scheme->setFileName(schemeName);
-		m_scheme->setNewScheme(false);
 	}
 
 	return true;

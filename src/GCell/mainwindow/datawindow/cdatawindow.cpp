@@ -2,63 +2,66 @@
 
 #include <QTabWidget>
 #include <QTableView>
+#include <QTreeView>
+#include <QHBoxLayout>
 
 #include "../../scheme/algorithm/calgorithm.h"
 #include "../../scheme/portal/cargument.h"
 #include "../../scheme/portal/cresult.h"
 #include "cdataplot.h"
 #include "cdatatable.h"
+#include "algbuffmodel/calgbuffmodel.h"
 
 /*!
  * \class CDataWindow
  */
 void CDataWindow::addPortal(CPortal *portal)
 {
-	if(!portal) return;
-	if(!portal->buffer()) return;
+//	if(!portal) return;
+//	if(!portal->buffer()) return;
 
-	if(qobject_cast<CArgument*>(portal))
-	{
-		if(m_argDataPlot) m_argDataPlot->addPortal(portal);
-		if(m_argDataTable) m_argDataTable->addPortal(portal);
-	}
-	else if(qobject_cast<CResult*>(portal))
-	{
-		if(m_resDataPlot) m_resDataPlot->addPortal(portal);
-		if(m_resDataTable) m_resDataTable->addPortal(portal);
-	}
+//	if(qobject_cast<CArgument*>(portal))
+//	{
+//		if(m_argDataPlot) m_argDataPlot->addPortal(portal);
+//		if(m_argDataTable) m_argDataTable->addPortal(portal);
+//	}
+//	else if(qobject_cast<CResult*>(portal))
+//	{
+//		if(m_dataPlot) m_dataPlot->addPortal(portal);
+//		if(m_dataTable) m_dataTable->addPortal(portal);
+//	}
 }
 
 void CDataWindow::addArguments(const QList<CPortal*> &arguments)
 {
-	if(m_argDataPlot) m_argDataPlot->addPortals(arguments);
-	if(m_argDataTable) m_argDataTable->addPortals(arguments);
+//	if(m_argDataPlot) m_argDataPlot->addPortals(arguments);
+//	if(m_argDataTable) m_argDataTable->addPortals(arguments);
 }
 
 void CDataWindow::addResults(const QList<CPortal*> &results)
 {
-	if(m_resDataPlot) m_resDataPlot->addPortals(results);
-	if(m_resDataTable) m_resDataTable->addPortals(results);
+	if(m_dataPlot) m_dataPlot->addPortals(results);
+	if(m_dataTable) m_dataTable->addPortals(results);
 }
 
 void CDataWindow::addPortals(const QList<CAlgorithm*> &algorithms)
 {
-	if(algorithms.isEmpty())
-	{
-		if(m_argDataPlot) m_argDataPlot->clearPortals();
-		if(m_argDataTable) m_argDataTable->clearPortals();
-		if(m_resDataPlot) m_resDataPlot->clearPortals();
-		if(m_resDataTable) m_resDataTable->clearPortals();
-	}
-	else
-	{
-		foreach(CAlgorithm *alg, algorithms)
-		{
-			if(!alg) continue;
-			addArguments(alg->argPortals());
-			addResults(alg->resPortals());
-		}
-	}
+//	if(algorithms.isEmpty())
+//	{
+//		if(m_argDataPlot) m_argDataPlot->clearPortals();
+//		if(m_argDataTable) m_argDataTable->clearPortals();
+//		if(m_dataPlot) m_dataPlot->clearPortals();
+//		if(m_dataTable) m_dataTable->clearPortals();
+//	}
+//	else
+//	{
+//		foreach(CAlgorithm *alg, algorithms)
+//		{
+//			if(!alg) continue;
+//			addArguments(alg->argPortals());
+//			addResults(alg->resPortals());
+//		}
+//	}
 }
 
 CDataWindow::CDataWindow(QWidget *parent) : QMainWindow(parent)
@@ -66,55 +69,41 @@ CDataWindow::CDataWindow(QWidget *parent) : QMainWindow(parent)
 	setObjectName(QStringLiteral("CDataWindow"));
 	setWindowFlags(Qt::Dialog);
 
-	m_argResTabs = 0;
-	m_argTabs = 0;
-	m_resTabs = 0;
-    m_argDataPlot = 0;
-    m_argDataTable = 0;
-    m_resDataPlot = 0;
-    m_resDataTable = 0;
+	m_tabWgt = 0;
+	m_dataPlot = 0;
+	m_dataTable = 0;
+	m_algBuffModel = 0;
 
-	m_argResTabs = new QTabWidget();
-	m_argResTabs->setObjectName(QStringLiteral("argResTabs"));
-	setCentralWidget(m_argResTabs);
+	QWidget *wgtMain = new QWidget();
+	setCentralWidget(wgtMain);
 
-	m_argTabs = new QTabWidget();
-	m_argTabs->setObjectName(QStringLiteral("argTabs"));
-	m_argTabs->setWindowTitle(tr("Arguments"));
-	m_argResTabs->addTab(m_argTabs, m_argTabs->windowTitle());
+	QHBoxLayout *hblMain = new QHBoxLayout();
+	wgtMain->setLayout(hblMain);
 
-	m_resTabs = new QTabWidget();
-	m_resTabs->setObjectName("resTabs");
-	m_resTabs->setWindowTitle(tr("Results"));
-	m_argResTabs->addTab(m_resTabs, m_resTabs->windowTitle());
+	QTreeView *algBuffView = new QTreeView();
+	hblMain->addWidget(algBuffView);
 
-    m_argDataPlot = new CDataPlot();
-    m_argDataPlot->setObjectName(QStringLiteral("argDataPlot"));
-    m_argDataPlot->setWindowTitle(tr("Arguments plot"));
-    m_argTabs->addTab(m_argDataPlot, m_argDataPlot->windowTitle());
+	m_tabWgt = new QTabWidget();
+	m_tabWgt->setObjectName(QStringLiteral("tabWgt"));
+	hblMain->addWidget(m_tabWgt, 1);
 
-    m_resDataPlot = new CDataPlot();
-    m_resDataPlot->setObjectName(QStringLiteral("resDataPlot"));
-    m_resDataPlot->setWindowTitle(tr("Results plot"));
-    m_resTabs->addTab(m_resDataPlot, m_resDataPlot->windowTitle());
+	m_dataPlot = new CDataPlot();
+	m_dataPlot->setObjectName(QStringLiteral("dataPlot"));
+	m_dataPlot->setWindowTitle(tr("Plot"));
+	m_tabWgt->addTab(m_dataPlot, m_dataPlot->windowTitle());
 
-    QTableView *argTabView = new QTableView();
-    argTabView->setObjectName(QStringLiteral("argTabView"));
-    argTabView->setWindowTitle("Arguments table");
-    m_argTabs->addTab(argTabView, argTabView->windowTitle());
+	QTableView *tabView = new QTableView();
+	tabView->setObjectName(QStringLiteral("tabView"));
+	tabView->setWindowTitle("Table");
+	m_tabWgt->addTab(tabView, tabView->windowTitle());
 
-    QTableView *resTabView = new QTableView();
-    resTabView->setObjectName(QStringLiteral("resTabView"));
-    resTabView->setWindowTitle("Results table");
-    m_resTabs->addTab(resTabView, resTabView->windowTitle());
+	m_dataTable = new CDataTable(this);
+	m_dataTable->setObjectName(QLatin1String("dataTable"));
+	tabView->setModel(m_dataTable);
 
-    m_argDataTable = new CDataTable(this);
-    m_argDataTable->setObjectName(QLatin1String("argDataTable"));
-    argTabView->setModel(m_argDataTable);
-
-    m_resDataTable = new CDataTable(this);
-    m_resDataTable->setObjectName(QLatin1String("resDataTable"));
-    resTabView->setModel(m_resDataTable);
+	m_algBuffModel = new CAlgBuffModel(this);
+	m_algBuffModel->setObjectName(QStringLiteral("algBuffModel"));
+	algBuffView->setModel(m_algBuffModel);
 }
 
 void CDataWindow::onAlgorithmDestroyed(QObject *objAlgorithm)
@@ -132,47 +121,44 @@ void CDataWindow::onPortalAdded(CPortal *portal)
 
 void CDataWindow::updateViews(void)
 {
-	if(m_argDataPlot) m_argDataPlot->refresh();
-	if(m_argDataTable) m_argDataTable->refresh();
-	if(m_resDataPlot) m_resDataPlot->refresh();
-	if(m_resDataTable) m_resDataTable->refresh();
+	if(m_dataPlot) m_dataPlot->refresh();
+	if(m_dataTable) m_dataTable->refresh();
 }
 
 void CDataWindow::setAlgorithms(const QList<CAlgorithm*> &algorithms)
 {
-	foreach(CAlgorithm *alg, m_algorithms)
-	{
-		if(!qobject_cast<CAlgorithm*>(alg)) continue;
+	if(m_algBuffModel) m_algBuffModel->setAlgorithms(algorithms);
+//	foreach(CAlgorithm *alg, m_algorithms)
+//	{
+//		if(!qobject_cast<CAlgorithm*>(alg)) continue;
 
-		disconnect(alg, SIGNAL(portalAdded(CPortal*)), this, SLOT(onPortalAdded(CPortal*)));
-		disconnect(alg, SIGNAL(destroyed(QObject*)), this, SLOT(onAlgorithmDestroyed(QObject*)));
-	}
-	if(m_argDataPlot) m_argDataPlot->clearPortals();
-	if(m_argDataTable) m_argDataTable->clearPortals();
-	if(m_resDataPlot) m_resDataPlot->clearPortals();
-	if(m_resDataTable) m_resDataTable->clearPortals();
+//		disconnect(alg, SIGNAL(portalAdded(CPortal*)), this, SLOT(onPortalAdded(CPortal*)));
+//		disconnect(alg, SIGNAL(destroyed(QObject*)), this, SLOT(onAlgorithmDestroyed(QObject*)));
+//	}
+//	if(m_argDataPlot) m_argDataPlot->clearPortals();
+//	if(m_argDataTable) m_argDataTable->clearPortals();
+//	if(m_dataPlot) m_dataPlot->clearPortals();
+//	if(m_dataTable) m_dataTable->clearPortals();
 
-	m_algorithms = algorithms;
-	foreach(CAlgorithm *alg, m_algorithms)
-	{
-		if(!qobject_cast<CAlgorithm*>(alg)) continue;
+//	m_algorithms = algorithms;
+//	foreach(CAlgorithm *alg, m_algorithms)
+//	{
+//		if(!qobject_cast<CAlgorithm*>(alg)) continue;
 
-		connect(alg, SIGNAL(portalAdded(CPortal*)), this, SLOT(onPortalAdded(CPortal*)));
-		connect(alg, SIGNAL(destroyed(QObject*)), this, SLOT(onAlgorithmDestroyed(QObject*)));
-	}
-	if(isVisible())
-	{
-		addPortals(m_algorithms);
-		updateViews();
-	}
+//		connect(alg, SIGNAL(portalAdded(CPortal*)), this, SLOT(onPortalAdded(CPortal*)));
+//		connect(alg, SIGNAL(destroyed(QObject*)), this, SLOT(onAlgorithmDestroyed(QObject*)));
+//	}
+//	if(isVisible())
+//	{
+//		addPortals(m_algorithms);
+//		updateViews();
+//	}
 }
 
 void CDataWindow::flushBuffers(void)
 {
-	if(m_argDataPlot) m_argDataPlot->flush();
-	if(m_argDataTable) m_argDataTable->flush();
-	if(m_resDataPlot) m_resDataPlot->flush();
-	if(m_resDataTable) m_resDataTable->flush();
+	if(m_dataPlot) m_dataPlot->flush();
+	if(m_dataTable) m_dataTable->flush();
 }
 
 void CDataWindow::setVisible(bool visible)

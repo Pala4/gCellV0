@@ -404,13 +404,7 @@ void CSchemeEditor::setScheme(CScheme *a_scheme)
 		disconnect(scheme(), SIGNAL(fileNameChanged(QString)), this, SLOT(updateTitle()));
 		disconnect(scheme(), SIGNAL(sceneRectChanged(QRectF)), this, SLOT(onSchemeRectChanged(QRectF)));
 		disconnect(scheme(), SIGNAL(elementAdded(CElement*)), this, SLOT(onSchemeElementAdedd(CElement*)));
-<<<<<<< HEAD
-<<<<<<< HEAD
 		disconnect(scheme(), SIGNAL(schemeModified(bool)), this, SLOT(onSchemeModified(bool)));
-=======
->>>>>>> a1b3f10986557e6b9f1c4305267c0248c98516c9
-=======
->>>>>>> a1b3f10986557e6b9f1c4305267c0248c98516c9
 
 		foreach (CElement *element, scheme()->elements())
 		{
@@ -425,13 +419,7 @@ void CSchemeEditor::setScheme(CScheme *a_scheme)
 		connect(scheme(), SIGNAL(fileNameChanged(QString)), this, SLOT(updateTitle()));
 		connect(scheme(), SIGNAL(sceneRectChanged(QRectF)), this, SLOT(onSchemeRectChanged(QRectF)));
 		connect(scheme(), SIGNAL(elementAdded(CElement*)), this, SLOT(onSchemeElementAdedd(CElement*)));
-<<<<<<< HEAD
-<<<<<<< HEAD
 		connect(scheme(), SIGNAL(schemeModified(bool)), this, SLOT(onSchemeModified(bool)));
-=======
->>>>>>> a1b3f10986557e6b9f1c4305267c0248c98516c9
-=======
->>>>>>> a1b3f10986557e6b9f1c4305267c0248c98516c9
 
 		m_bounds.setBounds(scheme()->sceneRect());
 		foreach (CElement *element, scheme()->elements())
@@ -480,12 +468,14 @@ void CSchemeEditor::onSchemeRectChanged(const QRectF &rect)
 void CSchemeEditor::onSchemeModified(const bool &modified)
 {
 	setWindowModified(modified);
+	updateTitle();
 }
 
 void CSchemeEditor::updateTitle(void)
 {
 	QString title = scheme() ? scheme()->fileName() : QString();
-	setWindowTitle(title + "[*]");
+	title += isWindowModified() ? " *" : QString();
+	setWindowTitle(title);
 
 	emit windowTitleChanged();
 }

@@ -64,7 +64,10 @@ SOURCES += \
     scheme/link/clinkenv.cpp \
     scheme/link/csegmentmover.cpp \
     scheme/cgrid.cpp \
-    scheme/cbounds.cpp
+    scheme/cbounds.cpp \
+    mainwindow/csavemodschemesdlg.cpp \
+    mainwindow/datawindow/algbuffmodel/calgbuffmodelitem.cpp \
+    mainwindow/datawindow/algbuffmodel/calgbuffmodel.cpp
 
 HEADERS += \
     mainwindow/cmainwindow.h \
@@ -108,4 +111,7 @@ HEADERS += \
     scheme/link/clinkenv.h \
     scheme/link/csegmentmover.h \
     scheme/cgrid.h \
-    scheme/cbounds.h
+    scheme/cbounds.h \
+    mainwindow/csavemodschemesdlg.h \
+    mainwindow/datawindow/algbuffmodel/calgbuffmodelitem.h \
+    mainwindow/datawindow/algbuffmodel/calgbuffmodel.h

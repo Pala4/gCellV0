@@ -321,32 +321,18 @@ void CScheme::onSelectionChanged(void)
 	emit algorithmsSelected(getElements<CAlgorithm*, QGraphicsItem*>(selectedItems()));
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 void CScheme::changeSchemeModified(void)
 {
 	setModified(true);
 }
 
-=======
->>>>>>> a1b3f10986557e6b9f1c4305267c0248c98516c9
-=======
->>>>>>> a1b3f10986557e6b9f1c4305267c0248c98516c9
 void CScheme::addElement(CElement *element)
 {
 	if(!element) return;
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 	connect(element, SIGNAL(modified()), this, SLOT(changeSchemeModified()));
 	addItem(element);
 	changeSchemeModified();
-=======
-	addItem(element);
->>>>>>> a1b3f10986557e6b9f1c4305267c0248c98516c9
-=======
-	addItem(element);
->>>>>>> a1b3f10986557e6b9f1c4305267c0248c98516c9
 
 	emit elementAdded(element);
 }

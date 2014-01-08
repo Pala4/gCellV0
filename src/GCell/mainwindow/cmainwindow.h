@@ -88,6 +88,7 @@ private:
 
 	void writeScheme(CScheme *scheme, const QString &fileName);
 	void readScheme(CScheme *scheme, const QString &fileName);
+	bool saveBeforeClose(void);
 protected:
 	virtual void closeEvent(QCloseEvent *event);
 public:
