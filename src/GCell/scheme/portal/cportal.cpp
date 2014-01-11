@@ -292,7 +292,7 @@ void CPortal::clearBuffer(void)
 	m_dataBuffer->clear();
 }
 
-quint64 CPortal::bufferSize(void) const
+int CPortal::bufferSize(void) const
 {
 	if(m_dataBuffer) return m_dataBuffer->size();
 	return 0;

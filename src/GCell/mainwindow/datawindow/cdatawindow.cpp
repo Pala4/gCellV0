@@ -1,67 +1,38 @@
 #include "cdatawindow.h"
 
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QSplitter>
 #include <QTabWidget>
 #include <QTableView>
 #include <QTreeView>
-#include <QHBoxLayout>
+#include <QTimerEvent>
+#include <QToolButton>
+#include <QLabel>
+#include <QSpinBox>
+#include <QPushButton>
 
-#include "../../scheme/algorithm/calgorithm.h"
-#include "../../scheme/portal/cargument.h"
-#include "../../scheme/portal/cresult.h"
 #include "cdataplot.h"
 #include "cdatatable.h"
-#include "algbuffmodel/calgbuffmodel.h"
+#include "algbuffmodel/calgtreemodel.h"
 
 /*!
  * \class CDataWindow
  */
-void CDataWindow::addPortal(CPortal *portal)
+void CDataWindow::timerEvent(QTimerEvent *event)
 {
-//	if(!portal) return;
-//	if(!portal->buffer()) return;
+	if(event->timerId() == m_refreshTimerID)
+	{
+		refresh();
 
-//	if(qobject_cast<CArgument*>(portal))
-//	{
-//		if(m_argDataPlot) m_argDataPlot->addPortal(portal);
-//		if(m_argDataTable) m_argDataTable->addPortal(portal);
-//	}
-//	else if(qobject_cast<CResult*>(portal))
-//	{
-//		if(m_dataPlot) m_dataPlot->addPortal(portal);
-//		if(m_dataTable) m_dataTable->addPortal(portal);
-//	}
-}
-
-void CDataWindow::addArguments(const QList<CPortal*> &arguments)
-{
-//	if(m_argDataPlot) m_argDataPlot->addPortals(arguments);
-//	if(m_argDataTable) m_argDataTable->addPortals(arguments);
-}
-
-void CDataWindow::addResults(const QList<CPortal*> &results)
-{
-	if(m_dataPlot) m_dataPlot->addPortals(results);
-	if(m_dataTable) m_dataTable->addPortals(results);
-}
-
-void CDataWindow::addPortals(const QList<CAlgorithm*> &algorithms)
-{
-//	if(algorithms.isEmpty())
-//	{
-//		if(m_argDataPlot) m_argDataPlot->clearPortals();
-//		if(m_argDataTable) m_argDataTable->clearPortals();
-//		if(m_dataPlot) m_dataPlot->clearPortals();
-//		if(m_dataTable) m_dataTable->clearPortals();
-//	}
-//	else
-//	{
-//		foreach(CAlgorithm *alg, algorithms)
-//		{
-//			if(!alg) continue;
-//			addArguments(alg->argPortals());
-//			addResults(alg->resPortals());
-//		}
-//	}
+		if(m_autoRefreshStopped)
+		{
+			killTimer(m_refreshTimerID);
+			m_refreshTimerID = 0;
+			if(m_autoRefreshToolBt) m_autoRefreshToolBt->setEnabled(true);
+			if(m_autoRefreshIntervalSpBx) m_autoRefreshIntervalSpBx->setEnabled(true);
+		}
+	}
 }
 
 CDataWindow::CDataWindow(QWidget *parent) : QMainWindow(parent)
@@ -69,23 +40,34 @@ CDataWindow::CDataWindow(QWidget *parent) : QMainWindow(parent)
 	setObjectName(QStringLiteral("CDataWindow"));
 	setWindowFlags(Qt::Dialog);
 
+	m_splMain = 0;
 	m_tabWgt = 0;
 	m_dataPlot = 0;
 	m_dataTable = 0;
-	m_algBuffModel = 0;
+	m_algTreeModel = 0;
+	m_autoRefreshStopped = true;
+	m_refreshTimerID = 0;
+	m_autoRefreshToolBt = 0;
+	m_autoRefreshIntervalSpBx = 0;
 
 	QWidget *wgtMain = new QWidget();
 	setCentralWidget(wgtMain);
 
-	QHBoxLayout *hblMain = new QHBoxLayout();
-	wgtMain->setLayout(hblMain);
+	QVBoxLayout *vbl = new QVBoxLayout();
+	wgtMain->setLayout(vbl);
 
-	QTreeView *algBuffView = new QTreeView();
-	hblMain->addWidget(algBuffView);
+	m_splMain = new QSplitter(Qt::Horizontal);
+	vbl->addWidget(m_splMain);
+
+	QTreeView *algTreeView = new QTreeView();
+	m_splMain->addWidget(algTreeView);
 
 	m_tabWgt = new QTabWidget();
 	m_tabWgt->setObjectName(QStringLiteral("tabWgt"));
-	hblMain->addWidget(m_tabWgt, 1);
+	m_splMain->addWidget(m_tabWgt);
+
+	m_splMain->setStretchFactor(0, 1);
+	m_splMain->setStretchFactor(1, 2);
 
 	m_dataPlot = new CDataPlot();
 	m_dataPlot->setObjectName(QStringLiteral("dataPlot"));
@@ -101,76 +83,94 @@ CDataWindow::CDataWindow(QWidget *parent) : QMainWindow(parent)
 	m_dataTable->setObjectName(QLatin1String("dataTable"));
 	tabView->setModel(m_dataTable);
 
-	m_algBuffModel = new CAlgBuffModel(this);
-	m_algBuffModel->setObjectName(QStringLiteral("algBuffModel"));
-	algBuffView->setModel(m_algBuffModel);
+	m_algTreeModel = new CAlgTreeModel(this);
+	m_algTreeModel->setObjectName(QStringLiteral("algBuffModel"));
+	algTreeView->setModel(m_algTreeModel);
+	m_dataPlot->setAlgTreeModel(m_algTreeModel);
+	m_dataTable->setAlgTreeModel(m_algTreeModel);
+
+	QHBoxLayout *hblRefreshCtrls = new QHBoxLayout();
+	vbl->addLayout(hblRefreshCtrls);
+
+	m_autoRefreshToolBt = new QToolButton();
+	m_autoRefreshToolBt->setObjectName(QStringLiteral("autoRefreshToolBt"));
+	m_autoRefreshToolBt->setText(tr("Auto refresh"));
+	m_autoRefreshToolBt->setCheckable(true);
+	m_autoRefreshToolBt->setChecked(true);
+	hblRefreshCtrls->addWidget(m_autoRefreshToolBt);
+
+	m_autoRefreshIntervalSpBx = new QSpinBox();
+	m_autoRefreshIntervalSpBx->setObjectName(QStringLiteral("autoRefreshIntervalSpBx"));
+	m_autoRefreshIntervalSpBx->setRange(1, 10*60*1000/*10 min*/);
+	m_autoRefreshIntervalSpBx->setValue(5);
+	connect(m_autoRefreshToolBt, SIGNAL(clicked(bool)), m_autoRefreshIntervalSpBx, SLOT(setEnabled(bool)));
+	connect(m_autoRefreshToolBt, SIGNAL(toggled(bool)), m_autoRefreshIntervalSpBx, SLOT(setEnabled(bool)));
+	hblRefreshCtrls->addWidget(new QLabel(tr("every")));
+	hblRefreshCtrls->addWidget(m_autoRefreshIntervalSpBx);
+	hblRefreshCtrls->addWidget(new QLabel(tr("ms")));
+
+	QPushButton *pbRefresh = new QPushButton(tr("Refresh"));
+	pbRefresh->setDisabled(m_autoRefreshToolBt->isChecked());
+	connect(pbRefresh, SIGNAL(clicked()), this, SLOT(refresh()));
+	connect(m_autoRefreshToolBt, SIGNAL(clicked(bool)), pbRefresh, SLOT(setDisabled(bool)));
+	connect(m_autoRefreshToolBt, SIGNAL(toggled(bool)), pbRefresh, SLOT(setDisabled(bool)));
+	hblRefreshCtrls->addWidget(pbRefresh);
+	hblRefreshCtrls->addStretch();
 }
 
-void CDataWindow::onAlgorithmDestroyed(QObject *objAlgorithm)
+bool CDataWindow::isAutoRefresh(void)
 {
-	if(!objAlgorithm) return;
-	if(m_algorithms.contains((CAlgorithm*)objAlgorithm)) m_algorithms.removeOne((CAlgorithm*)objAlgorithm);
+	return m_autoRefreshToolBt ? m_autoRefreshToolBt->isChecked() : false;
 }
 
-void CDataWindow::onPortalAdded(CPortal *portal)
+void CDataWindow::setAutoRefresh(const bool &autoRefresh)
 {
-	if(!portal) return;
-	addPortal(portal);
-	updateViews();
+	if(m_autoRefreshToolBt) m_autoRefreshToolBt->setChecked(autoRefresh);
 }
 
-void CDataWindow::updateViews(void)
+int CDataWindow::autoRefreshInterval(void)
 {
-	if(m_dataPlot) m_dataPlot->refresh();
-	if(m_dataTable) m_dataTable->refresh();
+	return m_autoRefreshIntervalSpBx ? m_autoRefreshIntervalSpBx->value() : 5;
+}
+
+void CDataWindow::setAutoRefreshInterval(const int &autoRefreshInterval)
+{
+	if(m_autoRefreshIntervalSpBx) m_autoRefreshIntervalSpBx->setValue(autoRefreshInterval);
 }
 
 void CDataWindow::setAlgorithms(const QList<CAlgorithm*> &algorithms)
 {
-	if(m_algBuffModel) m_algBuffModel->setAlgorithms(algorithms);
-//	foreach(CAlgorithm *alg, m_algorithms)
-//	{
-//		if(!qobject_cast<CAlgorithm*>(alg)) continue;
-
-//		disconnect(alg, SIGNAL(portalAdded(CPortal*)), this, SLOT(onPortalAdded(CPortal*)));
-//		disconnect(alg, SIGNAL(destroyed(QObject*)), this, SLOT(onAlgorithmDestroyed(QObject*)));
-//	}
-//	if(m_argDataPlot) m_argDataPlot->clearPortals();
-//	if(m_argDataTable) m_argDataTable->clearPortals();
-//	if(m_dataPlot) m_dataPlot->clearPortals();
-//	if(m_dataTable) m_dataTable->clearPortals();
-
-//	m_algorithms = algorithms;
-//	foreach(CAlgorithm *alg, m_algorithms)
-//	{
-//		if(!qobject_cast<CAlgorithm*>(alg)) continue;
-
-//		connect(alg, SIGNAL(portalAdded(CPortal*)), this, SLOT(onPortalAdded(CPortal*)));
-//		connect(alg, SIGNAL(destroyed(QObject*)), this, SLOT(onAlgorithmDestroyed(QObject*)));
-//	}
-//	if(isVisible())
-//	{
-//		addPortals(m_algorithms);
-//		updateViews();
-//	}
+	if(m_algTreeModel) m_algTreeModel->setAlgorithms(algorithms);
 }
 
-void CDataWindow::flushBuffers(void)
+void CDataWindow::startAutoRefresh(void)
 {
-	if(m_dataPlot) m_dataPlot->flush();
-	if(m_dataTable) m_dataTable->flush();
+	if(!m_autoRefreshToolBt || !m_autoRefreshToolBt->isChecked()) return;
+	if(!m_autoRefreshStopped) return;
+
+	int refreshInterval = 5;
+	if(m_autoRefreshIntervalSpBx)
+	{
+		refreshInterval = m_autoRefreshIntervalSpBx->value();
+		m_autoRefreshIntervalSpBx->setEnabled(false);
+	}
+	m_autoRefreshToolBt->setEnabled(false);
+
+	m_refreshTimerID = startTimer(refreshInterval);
+	m_autoRefreshStopped = false;
 }
 
-void CDataWindow::setVisible(bool visible)
+void CDataWindow::stopAutoRefresh(void)
 {
-	QMainWindow::setVisible(visible);
-	if(isVisible())
-	{
-		addPortals(m_algorithms);
-		updateViews();
-	}
-	else
-	{
-		addPortals(QList<CAlgorithm*>());
-	}
+	if(!m_autoRefreshToolBt || !m_autoRefreshToolBt->isChecked()) return;
+	if(m_autoRefreshStopped) return;
+	if(m_refreshTimerID == 0) return;
+
+	m_autoRefreshStopped = true;
+}
+
+void CDataWindow::refresh(void)
+{
+	if(m_dataPlot) m_dataPlot->refresh();
+	if(m_dataTable) m_dataTable->refresh();
 }

@@ -64,6 +64,7 @@ private slots:
 public slots:
     void calc(void);
 signals:
+	void calcStarted(void);
 	void calcStopped(void);
 };
 

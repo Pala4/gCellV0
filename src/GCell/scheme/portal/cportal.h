@@ -90,7 +90,7 @@ public:
 	void clearBuffer(void);
 	CDataBuffer* buffer(void){return m_dataBuffer;}
 
-	quint64 bufferSize(void) const;
+	int bufferSize(void) const;
 	void appendBuffer(const stTimeFrame &timeFrame, const qreal &value);
 	virtual stData bufferData(const quint64 &timeFrameIndex);
 	bool isBufferDataExist(const stTimeFrame &frame);

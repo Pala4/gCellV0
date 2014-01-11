@@ -2,22 +2,19 @@
 
 #include <qmath.h>
 
-#include "../../scheme/algorithm/calgorithm.h"
 #include "../../scheme/portal/cportal.h"
-#include "../../scheme/portal/cargument.h"
-#include "../../scheme/portal/cresult.h"
+#include "algbuffmodel/calgtreemodel.h"
 
 /*!
  * \class CDataTable
  */
-quint64 CDataTable::maxBuffSize(void) const
+int CDataTable::maxBuffSize(void) const
 {
-	quint64 maxCount = 0;
+	int maxCount = 0;
 	foreach(CPortal *portal, m_portals)
 	{
 		if(!portal) continue;
-		if(!portal->buffer()) continue;
-		if(portal->buffer()->size() > maxCount) maxCount = portal->buffer()->size();
+		if(portal->bufferSize() > maxCount) maxCount = portal->bufferSize();
 	}
 	return maxCount;
 }
@@ -27,45 +24,7 @@ CDataTable::CDataTable(QObject *parent) : QAbstractTableModel(parent)
 	setObjectName(QStringLiteral("CDataTable"));
 
 	m_maxBuffSize = 0;
-	m_skipUpdatesInterval = 1000;
-	m_skipUpdatesCounter = 0;
-}
-
-void CDataTable::addPortal(CPortal *portal)
-{
-	if(!portal) return;
-	if(!portal->buffer()) return;
-	if(m_portals.contains(portal)) return;
-
-	m_portals << portal;
-	connect(portal->buffer(), SIGNAL(dataAppended(stTimeFrame,stData)), this, SLOT(onBufferDataAppended(stTimeFrame,stData)));
-	connect(portal->buffer(), SIGNAL(cleared()), this, SLOT(refresh()));
-	connect(portal, SIGNAL(destroyed(QObject*)), this, SLOT(onPortalDestroyed(QObject*)));
-}
-
-void CDataTable::addPortals(const QList<CPortal*> &portals)
-{
-	foreach(CPortal *portal, portals)
-	{
-		addPortal(portal);
-	}
-	refresh();
-}
-
-void CDataTable::clearPortals(void)
-{
-	foreach(CPortal *portal, m_portals)
-	{
-		if(!portal) continue;
-		if(portal->buffer())
-		{
-			disconnect(portal->buffer(), SIGNAL(dataAppended(stTimeFrame,stData)), this, SLOT(onBufferDataAppended(stTimeFrame,stData)));
-			disconnect(portal->buffer(), SIGNAL(cleared()), this, SLOT(refresh()));
-		}
-		disconnect(portal, SIGNAL(destroyed(QObject*)), this, SLOT(onPortalDestroyed(QObject*)));
-	}
-	m_portals.clear();
-	refresh();
+	m_algTreeModel = 0;
 }
 
 int CDataTable::rowCount(const QModelIndex &parent) const
@@ -87,7 +46,7 @@ QVariant CDataTable::headerData(int section, Qt::Orientation orientation, int ro
 		case Qt::DisplayRole:
 		{
 			if(orientation == Qt::Horizontal)
-			{				
+			{
 				int sec = qFloor((qreal)section/2.0);
 				if(sec < 0 || m_portals.count() <= sec) break;
 				if(!(section%2))//even
@@ -114,9 +73,7 @@ QVariant CDataTable::data(const QModelIndex &index, int role) const
 	int col = qFloor((qreal)index.column()/2.0);
 	if(col < 0 || col >= m_portals.count()) return QVariant();
 
-	CDataBuffer *buf = m_portals.at(col)->buffer();
-	if(!buf) return QVariant();
-	if((quint64)index.row() >= buf->size()) return QVariant();
+	if(index.row() >= m_portals.at(col)->bufferSize()) return QVariant();
 
 	switch(role)
 	{
@@ -124,11 +81,11 @@ QVariant CDataTable::data(const QModelIndex &index, int role) const
 		{
 			if(!(index.column()&1))//even
 			{
-				return QVariant(buf->data(index.row()).timeFrame.time);
+				return QVariant(m_portals.at(col)->bufferData(index.row()).timeFrame.time);
 			}
 			else//odd
 			{
-				return QVariant(buf->data(index.row()).value);
+				return QVariant(m_portals.at(col)->bufferData(index.row()).value);
 			}
 		}
 		case Qt::TextColorRole: return QVariant(m_portals.at(col)->dataColor());
@@ -137,39 +94,58 @@ QVariant CDataTable::data(const QModelIndex &index, int role) const
 	return QVariant();
 }
 
-void CDataTable::onBufferDataAppended(const stTimeFrame &timeFrame, const stData &data)
+void CDataTable::setAlgTreeModel(CAlgTreeModel *algTreeModel)
 {
-	Q_UNUSED(timeFrame)
-	Q_UNUSED(data)
-
-	if(m_skipUpdatesCounter >= m_skipUpdatesInterval)
+	if(m_algTreeModel && (m_algTreeModel == algTreeModel)) return;
+	if(m_algTreeModel)
 	{
-		refresh();
-		m_skipUpdatesCounter = 0;
+		disconnect(m_algTreeModel, SIGNAL(destroyed()), this, SLOT(onAlgTreeModelDestroyed()));
+		disconnect(m_algTreeModel, SIGNAL(layoutChanged()), this, SLOT(rebuild()));
+		disconnect(m_algTreeModel, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(rebuild()));
+		disconnect(m_algTreeModel, SIGNAL(rowsRemoved(QModelIndex,int,int)), this, SLOT(rebuild()));
+		disconnect(m_algTreeModel, SIGNAL(rowsMoved(QModelIndex,int,int,QModelIndex,int)), this, SLOT(rebuild()));
+		disconnect(m_algTreeModel, SIGNAL(columnsInserted(QModelIndex,int,int)), this, SLOT(rebuild()));
+		disconnect(m_algTreeModel, SIGNAL(columnsRemoved(QModelIndex,int,int)), this, SLOT(rebuild()));
+		disconnect(m_algTreeModel, SIGNAL(columnsMoved(QModelIndex,int,int,QModelIndex,int)), this, SLOT(rebuild()));
+		disconnect(m_algTreeModel, SIGNAL(modelReset()), this, SLOT(rebuild()));
+		disconnect(m_algTreeModel, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)), this, SLOT(rebuild()));
+		disconnect(m_algTreeModel, SIGNAL(headerDataChanged(Qt::Orientation,int,int)), this, SLOT(rebuild()));
 	}
-	else
+	m_algTreeModel = algTreeModel;
+	if(m_algTreeModel)
 	{
-		++m_skipUpdatesCounter;
+		connect(m_algTreeModel, SIGNAL(destroyed()), this, SLOT(onAlgTreeModelDestroyed()));
+		connect(m_algTreeModel, SIGNAL(layoutChanged()), this, SLOT(rebuild()));
+		connect(m_algTreeModel, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(rebuild()));
+		connect(m_algTreeModel, SIGNAL(rowsRemoved(QModelIndex,int,int)), this, SLOT(rebuild()));
+		connect(m_algTreeModel, SIGNAL(rowsMoved(QModelIndex,int,int,QModelIndex,int)), this, SLOT(rebuild()));
+		connect(m_algTreeModel, SIGNAL(columnsInserted(QModelIndex,int,int)), this, SLOT(rebuild()));
+		connect(m_algTreeModel, SIGNAL(columnsRemoved(QModelIndex,int,int)), this, SLOT(rebuild()));
+		connect(m_algTreeModel, SIGNAL(columnsMoved(QModelIndex,int,int,QModelIndex,int)), this, SLOT(rebuild()));
+		connect(m_algTreeModel, SIGNAL(modelReset()), this, SLOT(rebuild()));
+		connect(m_algTreeModel, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)), this, SLOT(rebuild()));
+		connect(m_algTreeModel, SIGNAL(headerDataChanged(Qt::Orientation,int,int)), this, SLOT(rebuild()));
 	}
+	rebuild();
 }
 
-void CDataTable::onPortalDestroyed(QObject *objPortal)
+void CDataTable::onAlgTreeModelDestroyed(void)
 {
-	if(!objPortal) return;
-	CPortal *portal = (CPortal*)objPortal;
-	if(m_portals.contains(portal)) m_portals.removeOne(portal);
+	m_algTreeModel = 0;
+	rebuild();
+}
+
+void CDataTable::rebuild(void)
+{
+	m_portals = QList<CPortal*>();
+	if(m_algTreeModel) m_portals = m_algTreeModel->checkedPortalList();
+
 	refresh();
 }
 
 void CDataTable::refresh(void)
 {
-	m_maxBuffSize = maxBuffSize();
 	emit layoutAboutToBeChanged();
+	m_maxBuffSize = maxBuffSize();
 	emit layoutChanged();
-}
-
-void CDataTable::flush(void)
-{
-	refresh();
-	m_skipUpdatesCounter = 0;
 }

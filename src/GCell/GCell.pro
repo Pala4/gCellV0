@@ -67,7 +67,7 @@ SOURCES += \
     scheme/cbounds.cpp \
     mainwindow/csavemodschemesdlg.cpp \
     mainwindow/datawindow/algbuffmodel/calgbuffmodelitem.cpp \
-    mainwindow/datawindow/algbuffmodel/calgbuffmodel.cpp
+    mainwindow/datawindow/algbuffmodel/calgtreemodel.cpp
 
 HEADERS += \
     mainwindow/cmainwindow.h \
@@ -114,4 +114,4 @@ HEADERS += \
     scheme/cbounds.h \
     mainwindow/csavemodschemesdlg.h \
     mainwindow/datawindow/algbuffmodel/calgbuffmodelitem.h \
-    mainwindow/datawindow/algbuffmodel/calgbuffmodel.h
+    mainwindow/datawindow/algbuffmodel/calgtreemodel.h

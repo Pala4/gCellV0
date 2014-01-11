@@ -161,6 +161,8 @@ void CEngine::calc(void)
 	if(!m_scheme) return;
 	if(!m_framer) return;
 
+	emit calcStarted();
+
     foreach(CElement *element, m_scheme->elements())
     {
 		element->beforeCalc(m_framer->startTime(), m_framer->timeStep(), m_framer->endTime());
@@ -174,5 +176,6 @@ void CEngine::calc(void)
     {
         element->afterCalc();
     }
+
 	emit calcStopped();
 }

@@ -14,6 +14,7 @@
 #include <QDockWidget>
 #include <QStatusBar>
 #include <QLabel>
+#include <QSplitter>
 
 #include "coptionswindow.h"
 #include "datawindow/cdatawindow.h"
@@ -471,7 +472,8 @@ CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
 
 	m_engine = new CEngine(this);
 	m_engine->setObjectName(QStringLiteral("engine"));
-	connect(m_engine, SIGNAL(calcStopped()), m_dataWindow, SLOT(flushBuffers()));
+	connect(m_engine, SIGNAL(calcStarted()), m_dataWindow, SLOT(startAutoRefresh()));
+	connect(m_engine, SIGNAL(calcStopped()), m_dataWindow, SLOT(stopAutoRefresh()));
 
 	QClipboard *clpb = QApplication::clipboard();
 	connect(clpb, SIGNAL(changed(QClipboard::Mode)), this, SLOT(onClipBoardChanged(QClipboard::Mode)));
@@ -901,6 +903,7 @@ void CMainWindow::saveDesktop(const QString &fileName)
 		desk.setValue("DataWindow/geometry", m_dataWindow->saveGeometry());
 		desk.setValue("DataWindow/state", m_dataWindow->saveState());
 		desk.setValue("DataWindow/visible", isDataWindowVisisble());
+		if(m_dataWindow->splitter()) desk.setValue("DataWindow/splitter", m_dataWindow->splitter()->saveState());
 	}
 
 	QString oldSchemeFileName;
@@ -937,6 +940,7 @@ void CMainWindow::restoreDesktop(const QString &fileName)
 		m_dataWindow->restoreGeometry(desk.value("DataWindow/geometry").toByteArray());
 		m_dataWindow->restoreState(desk.value("DataWindow/state").toByteArray());
 		setDataWindowVisible(desk.value("DataWindow/visible").toBool());
+		if(m_dataWindow->splitter()) m_dataWindow->splitter()->restoreState(desk.value("DataWindow/splitter").toByteArray());
 	}
 	restoreGeometry(desk.value("MainWindow/geometry").toByteArray());
 	restoreState(desk.value("MainWindow/state").toByteArray());
@@ -957,6 +961,12 @@ void CMainWindow::saveConfig(const QString &fileName)
 	cfg.setValue("SchemeEditor/gridStep", gridStep());
 	cfg.setValue("SchemeEditor/gridPointSize", gridPointSize());
 	cfg.setValue("SchemeEditor/gridAlign", isGridAlign());
+
+	if(m_dataWindow)
+	{
+		cfg.setValue("DataWindow/autoRefresh", m_dataWindow->isAutoRefresh());
+		cfg.setValue("DataWindow/autoRefreshInterval", m_dataWindow->autoRefreshInterval());
+	}
 
 	if(m_engine)
 	{
@@ -984,6 +994,12 @@ void CMainWindow::restoreConfig(const QString &fileName)
 	setGridStep(cfg.value("SchemeEditor/gridStep", m_gridStep).toInt());
 	setGridPointSize(cfg.value("SchemeEditor/gridPointSize", m_gridPointSize).toDouble());
 	setGridAlign(cfg.value("SchemeEditor/gridAlign", m_gridAlign).toBool());
+
+	if(m_dataWindow)
+	{
+		m_dataWindow->setAutoRefresh(cfg.value("DataWindow/autoRefresh", false).toBool());
+		m_dataWindow->setAutoRefreshInterval(cfg.value("DataWindow/autoRefreshInterval", 5).toInt());
+	}
 
 	if(m_engine)
 	{

@@ -5,37 +5,22 @@
 #include <qwt/qwt_series_data.h>
 #include <qwt/qwt_plot_curve.h>
 
-#include "../../scheme/databuffer/cdatabuffer.h"
-
 class QwtPlotGrid;
 class QwtPlotCurve;
 
 class CPortal;
+class CAlgTreeModel;
 
 class CCurveData : public QwtArraySeriesData<QPointF>
 {
 private:
-	CDataBuffer *m_buffer;
+	CPortal *m_portal;
 public:
-	CCurveData(CDataBuffer *buffer);
+	CCurveData(CPortal *portal);
 
 	virtual QRectF boundingRect(void) const;
 	virtual size_t size(void) const;
 	virtual QPointF sample(size_t index) const;
-
-	void setBuffer(CDataBuffer *buffer);
-};
-
-class CCurve : public QwtPlotCurve
-{
-private:
-	CPortal *m_portal;
-	CCurveData *m_curveData;
-
-	void initConstructor(CPortal *portal);
-public:
-	explicit CCurve(CPortal *portal, const QString &title = QString::null);
-	explicit CCurve(CPortal *portal, const QwtText &title);
 
 	void setPortal(CPortal *portal);
 };
@@ -44,24 +29,20 @@ class CDataPlot : public QwtPlot
 {
 	Q_OBJECT
 private:
-	int m_skipUpdatesInterval;
-	int m_skipUpdatesCounter;
+	CAlgTreeModel *m_algTreeModel;
 	QMap<CPortal*, QwtPlotCurve*> m_portalCurveMap;
 	QwtPlotGrid *m_grid;
 public:
 	explicit CDataPlot(QWidget *parent = 0);
 
-	void addPortal(CPortal *portal);
-	void addPortals(const QList<CPortal*> &portals);
-	void clearPortals(void);
+	virtual QSize minimumSizeHint(void) const{return QSize(0, 0);}
 
-//	virtual QSize minimumSizeHint(void) const{return QSize(0, 0);}
+	CAlgTreeModel* algTreeModel(void){return m_algTreeModel;}
+	void setAlgTreeModel(CAlgTreeModel *algTreeModel);
 private slots:
-	void onBufferDataAppended(const stTimeFrame &timeFrame, const stData &data);
-	void onBufferCleared(void);
-	void onPortalDestroyed(QObject *objPortal);
+	void onAlgTreeModelDestroyed(void);
 public slots:
-	void flush(void);
+	void rebuild(void);
 	void refresh(void);
 };
 
