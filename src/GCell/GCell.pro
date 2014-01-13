@@ -23,6 +23,11 @@ TEMPLATE = app
 
 DESTDIR = $$DEST_DIR
 
+INCLUDEPATH += \
+    scheme \
+    mainwindow \
+    mainwindow/workspace
+
 SOURCES += \
     mainwindow/cmainwindow.cpp \
     algorithms/CSV/CSVIn/ccsvin.cpp \
@@ -67,7 +72,11 @@ SOURCES += \
     scheme/cbounds.cpp \
     mainwindow/csavemodschemesdlg.cpp \
     mainwindow/datawindow/algbuffmodel/calgbuffmodelitem.cpp \
-    mainwindow/datawindow/algbuffmodel/calgtreemodel.cpp
+    mainwindow/datawindow/algbuffmodel/calgtreemodel.cpp \
+    mainwindow/workspace/cdocument.cpp \
+    mainwindow/workspace/cworkspace.cpp \
+    mainwindow/workspace/cschemedocument.cpp \
+    mainwindow/workspace/iview.cpp
 
 HEADERS += \
     mainwindow/cmainwindow.h \
@@ -114,4 +123,8 @@ HEADERS += \
     scheme/cbounds.h \
     mainwindow/csavemodschemesdlg.h \
     mainwindow/datawindow/algbuffmodel/calgbuffmodelitem.h \
-    mainwindow/datawindow/algbuffmodel/calgtreemodel.h
+    mainwindow/datawindow/algbuffmodel/calgtreemodel.h \
+    mainwindow/workspace/cdocument.h \
+    mainwindow/workspace/cworkspace.h \
+    mainwindow/workspace/cschemedocument.h \
+    mainwindow/workspace/iview.h

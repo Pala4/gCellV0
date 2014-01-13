@@ -16,6 +16,7 @@
 #include <QLabel>
 #include <QSplitter>
 
+#include "cworkspace.h"
 #include "coptionswindow.h"
 #include "datawindow/cdatawindow.h"
 #include "csavemodschemesdlg.h"
@@ -32,6 +33,9 @@
 #include "../algorithms/CSV/CSVOut/ccsvout.h"
 #include "../algorithms/TAC/StepExaction/cstepexcitation.h"
 #include "../algorithms/TAC/TransLink/ctranslink.h"
+
+using namespace gcell;
+using namespace mainwindow;
 
 /*!
  * \class CMainWindow
@@ -61,7 +65,7 @@ void CMainWindow::setupActions(void)
 
 	m_acQuit = new QAction(tr("Quit"), this);
 	m_acQuit->setObjectName(QStringLiteral("acQuit"));
-	connect(m_acQuit, SIGNAL(triggered()), QApplication::instance(), SLOT(quit()));
+	connect(m_acQuit, SIGNAL(triggered()), this, SLOT(close()));
 
 	//Edit
 	m_acGrSchemeMouseMode = new QActionGroup(this);
@@ -351,11 +355,24 @@ void CMainWindow::readScheme(CScheme *scheme, const QString &fileName)
 	scheme->setModified(false);
 }
 
-bool CMainWindow::saveBeforeClose(void)
+bool CMainWindow::saveSchemesBeforeClose(const QList<CScheme*> &schemes)
 {
 	QList<CScheme*> modSchemes;
 
-	if(m_scheme && m_scheme->isModified()) modSchemes << m_scheme;
+	foreach(CScheme *scheme, schemes)
+	{
+		if(!scheme) continue;
+
+		if(scheme->isModified() &&
+		   (scheme->isNewScheme() || (!scheme->isNewScheme() && !isAutoSaveLastScheme())))
+		{
+			modSchemes << scheme;
+		}
+		else if(!scheme->isNewScheme() && isAutoSaveLastScheme())
+		{
+			if(scheme->isModified()) saveScheme(scheme);
+		}
+	}
 
 	if(!modSchemes.isEmpty())
 	{
@@ -372,7 +389,7 @@ bool CMainWindow::saveBeforeClose(void)
 				{
 					if(!savedScheme.scheme || !savedScheme.canBeStored) continue;
 
-					saveScheme();//savedScheme.scheme);
+					saveScheme(savedScheme.scheme);
 				}
 
 				return true;
@@ -385,9 +402,14 @@ bool CMainWindow::saveBeforeClose(void)
 	return true;
 }
 
+CScheme* CMainWindow::activeScheme(void)
+{
+	return m_scheme;
+}
+
 void CMainWindow::closeEvent(QCloseEvent *event)
 {
-	if(saveBeforeClose())
+	if(saveSchemesBeforeClose(QList<CScheme*>() << m_scheme))
 	{
 		if(isAutoSaveDesktop()) saveDesktop("desktop.ini");
 		if(isAutoSaveConfig()) saveConfig("config.ini");
@@ -441,7 +463,10 @@ CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
 
 	m_algProtoViewDock = 0;
 
+	//rem it
 	m_workSpaceTabWgt = 0;
+
+	m_workSpace = 0;
 	m_dataWindow = 0;
 	m_algorithmProtoMng = 0;
 	m_algProtoView = 0;
@@ -449,12 +474,19 @@ CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
 	m_scheme = 0;
 	m_engine = 0;
 
+	//rem it
 	m_workSpaceTabWgt = new QTabWidget();
 	m_workSpaceTabWgt->setObjectName(QStringLiteral("workSpaceTabWgt"));
 	setCentralWidget(m_workSpaceTabWgt);
+	//
+
+//	m_workSpace = new workspace::CWorkSpace(this);
+//	m_workSpace->setObjectName(QStringLiteral("workSpace"));
+//	setCentralWidget(m_workSpace);
 
 	m_dataWindow = new CDataWindow(this);
 	m_dataWindow->setObjectName(QStringLiteral("dataWindow"));
+	connect(m_dataWindow, SIGNAL(visibleChanged(bool)), this, SLOT(onDataWindowVisibleChanged(bool)));
 
 	m_algorithmProtoMng = new CAlgorithmProtoMng(this);
 	m_algorithmProtoMng->setObjectName(QStringLiteral("algorithmProtoMng"));
@@ -536,24 +568,24 @@ bool CMainWindow::isDataWindowVisisble(void) const
 
 void CMainWindow::onCursorTriggered(const bool &checked)
 {
-	if(checked && m_schemeEditor) m_schemeEditor->setMouseMode(CSchemeEditor::MoveSelectMode);
+	if(checked && m_schemeEditor) m_schemeEditor->setMouseMode(scheme::CSchemeEditor::MoveSelectMode);
 }
 
 void CMainWindow::onHandTriggered(const bool &checked)
 {
-	if(checked && m_schemeEditor) m_schemeEditor->setMouseMode(CSchemeEditor::MoveSceneMode);
+	if(checked && m_schemeEditor) m_schemeEditor->setMouseMode(scheme::CSchemeEditor::MoveSceneMode);
 }
 
 void CMainWindow::onLinkingTriggered(const bool &checked)
 {
-	if(checked && m_schemeEditor) m_schemeEditor->setMouseMode(CSchemeEditor::LinkingMode);
+	if(checked && m_schemeEditor) m_schemeEditor->setMouseMode(scheme::CSchemeEditor::LinkingMode);
 }
 
 void CMainWindow::onAlgorithmProtoSelected(CAlgorithmProto *selectedProto)
 {
 	if(m_schemeEditor)
 	{
-		if(selectedProto) m_schemeEditor->setMouseMode(CSchemeEditor::AddAlgorithmMode);
+		if(selectedProto) m_schemeEditor->setMouseMode(scheme::CSchemeEditor::AddAlgorithmMode);
 	}
 }
 
@@ -564,15 +596,15 @@ void CMainWindow::onSchemeEditorAddAlgorithmModeFinished(void)
 	{
 		if(m_acCursor && m_acCursor->isChecked())
 		{
-			m_schemeEditor->setMouseMode(CSchemeEditor::MoveSelectMode);
+			m_schemeEditor->setMouseMode(scheme::CSchemeEditor::MoveSelectMode);
 		}
 		else if(m_acHand && m_acHand->isChecked())
 		{
-			m_schemeEditor->setMouseMode(CSchemeEditor::MoveSceneMode);
+			m_schemeEditor->setMouseMode(scheme::CSchemeEditor::MoveSceneMode);
 		}
 		else if(m_acLinking && m_acLinking->isChecked())
 		{
-			m_schemeEditor->setMouseMode(CSchemeEditor::LinkingMode);
+			m_schemeEditor->setMouseMode(scheme::CSchemeEditor::LinkingMode);
 		}
 	}
 }
@@ -741,18 +773,21 @@ void CMainWindow::showOptions(void)
 void CMainWindow::setDataWindowVisible(const bool &visible)
 {
 	if(m_dataWindow) m_dataWindow->setVisible(visible);
+}
 
-	if(m_acDataWindow && (sender() != m_acDataWindow))
-	{
-		m_acDataWindow->setChecked(visible);
-	}
+void CMainWindow::onDataWindowVisibleChanged(const bool &visible)
+{
+	if(m_acDataWindow && m_acDataWindow->isChecked() != visible) m_acDataWindow->setChecked(visible);
 }
 
 void CMainWindow::newScheme(void)
 {
-	if(m_scheme) closeScheme();
+	if(m_scheme)
+	{
+		if(!closeScheme()) return;
+	}
 
-	m_schemeEditor = new CSchemeEditor(this);
+	m_schemeEditor = new scheme::CSchemeEditor(this);
 	m_schemeEditor->setObjectName(QStringLiteral("schemeEditor"));
 	m_schemeEditor->setupGrid(gridColor(), gridBkGndColor(), gridStep(), gridPointSize(), isGridAlign());
 	if(m_schemeEditorContextMenu) m_schemeEditor->setContextMenu(m_schemeEditorContextMenu);
@@ -781,27 +816,33 @@ void CMainWindow::newScheme(void)
 	}
 }
 
-void CMainWindow::saveScheme(void)
+void CMainWindow::saveScheme(CScheme *scheme)
 {
-	if(!m_scheme) return;
-	if(m_scheme->isNewScheme())
+	CScheme *savedScheme = scheme;
+	if(savedScheme == 0) savedScheme = activeScheme();
+	if(savedScheme == 0) return;
+
+	if(savedScheme->isNewScheme())
 	{
-		if(saveSchemeAs()) m_scheme->setNewScheme(false);
+		if(saveSchemeAs(savedScheme)) savedScheme->setNewScheme(false);
 	}
 	else
 	{
-		writeScheme(m_scheme, m_scheme->fileName());
+		writeScheme(savedScheme, savedScheme->fileName());
 	}
 }
 
-bool CMainWindow::saveSchemeAs(void)
+bool CMainWindow::saveSchemeAs(CScheme *scheme)
 {
-	if(!m_scheme) return false;
-	QString fileName = QFileDialog::getSaveFileName(this, "Save as...", m_scheme->fileName());
+	CScheme *savedScheme = scheme;
+	if(savedScheme == 0) savedScheme = activeScheme();
+	if(savedScheme == 0) return false;
+
+	QString fileName = QFileDialog::getSaveFileName(this, "Save as...", savedScheme->fileName());
 	if(fileName.isEmpty()) return false;
 
-	m_scheme->setFileName(fileName);
-	writeScheme(m_scheme, m_scheme->fileName());
+	savedScheme->setFileName(fileName);
+	writeScheme(savedScheme, savedScheme->fileName());
 	return true;
 }
 
@@ -821,10 +862,11 @@ bool CMainWindow::openScheme(const QString &fileName)
 	return true;
 }
 
-void CMainWindow::closeScheme(void)
+bool CMainWindow::closeScheme(void)
 {
 	if(m_scheme)
 	{
+		if(!saveSchemesBeforeClose(QList<CScheme*>() << m_scheme)) return false;
 		m_scheme->deleteLater();
 		m_scheme = 0;
 	}
@@ -863,6 +905,8 @@ void CMainWindow::closeScheme(void)
 		m_schemeEditor->deleteLater();
 		m_schemeEditor = 0;
 	}
+
+	return true;
 }
 
 void CMainWindow::copy(void)

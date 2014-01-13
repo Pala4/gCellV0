@@ -1,5 +1,6 @@
 #include "cdatawindow.h"
 
+#include <QCloseEvent>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QSplitter>
@@ -136,6 +137,12 @@ int CDataWindow::autoRefreshInterval(void)
 void CDataWindow::setAutoRefreshInterval(const int &autoRefreshInterval)
 {
 	if(m_autoRefreshIntervalSpBx) m_autoRefreshIntervalSpBx->setValue(autoRefreshInterval);
+}
+
+void CDataWindow::setVisible(bool visible)
+{
+	QMainWindow::setVisible(visible);
+	emit visibleChanged(visible);
 }
 
 void CDataWindow::setAlgorithms(const QList<CAlgorithm*> &algorithms)

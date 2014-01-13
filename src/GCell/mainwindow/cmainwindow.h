@@ -15,9 +15,20 @@ class CAlgorithmProtoMng;
 class CAlgProtoView;
 class CElement;
 class CAlgorithm;
-class CSchemeEditor;
 class CScheme;
 class CEngine;
+
+namespace gcell {
+
+namespace scheme {
+class CSchemeEditor;
+}
+
+namespace mainwindow {
+
+namespace workspace {
+class CWorkSpace;
+}
 
 class CMainWindow : public QMainWindow
 {
@@ -67,7 +78,10 @@ private:
 
 	QMenu *m_schemeEditorContextMenu;
 
+	//rem it
 	QTabWidget *m_workSpaceTabWgt;
+
+	workspace::CWorkSpace *m_workSpace;
 
 	CDataWindow *m_dataWindow;
 
@@ -75,7 +89,7 @@ private:
 	CAlgProtoView *m_algProtoView;
 	QDockWidget *m_algProtoViewDock;
 
-	CSchemeEditor *m_schemeEditor;
+	scheme::CSchemeEditor *m_schemeEditor;
 	CScheme *m_scheme;
 	CEngine *m_engine;
 
@@ -88,7 +102,9 @@ private:
 
 	void writeScheme(CScheme *scheme, const QString &fileName);
 	void readScheme(CScheme *scheme, const QString &fileName);
-	bool saveBeforeClose(void);
+	bool saveSchemesBeforeClose(const QList<CScheme*> &schemes);
+
+	CScheme* activeScheme(void);
 protected:
 	virtual void closeEvent(QCloseEvent *event);
 public:
@@ -129,12 +145,13 @@ private slots:
 	void calc(void);
 	void showOptions(void);
 	void setDataWindowVisible(const bool &visible);
+	void onDataWindowVisibleChanged(const bool &visible);
 
 	void newScheme(void);
-	void saveScheme(void);
-	bool saveSchemeAs(void);
+	void saveScheme(CScheme *scheme = 0);
+	bool saveSchemeAs(CScheme *scheme = 0);
 	bool openScheme(const QString &fileName = QString());
-	void closeScheme(void);
+	bool closeScheme(void);
 
 	void copy(void);
 	void cut(void);
@@ -148,5 +165,8 @@ private slots:
 	void saveConfig(const QString &fileName);
 	void restoreConfig(const QString &fileName);
 };
+
+}
+}
 
 #endif // CMAINWINDOW_H

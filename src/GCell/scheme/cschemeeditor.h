@@ -7,6 +7,8 @@
 #include <QGraphicsItem>
 #include <QClipboard>
 
+#include "iview.h"
+
 #include "cbounds.h"
 #include "cgrid.h"
 #include "algorithm/calgorithm.h"
@@ -16,6 +18,11 @@ class QActionGroup;
 class CScheme;
 class CElementOptionsWgt;
 class CSegmentMover;
+
+namespace gcell
+{
+namespace scheme
+{
 
 template<typename Type>
 class CItemMover
@@ -80,7 +87,7 @@ public:
     void draw(QPainter *painter);
 };
 
-class CSchemeEditor : public QGraphicsView
+class CSchemeEditor : public QGraphicsView, public mainwindow::workspace::IView
 {
     Q_OBJECT
 	Q_PROPERTY(QColor gridColor READ gridColor WRITE setGridColor)
@@ -159,5 +166,8 @@ signals:
 	void windowTitleChanged(void);
 	void elementsSelected(QList<CElement*> element);
 };
+
+}
+}
 
 #endif // CSCHEMEEDITOR_H

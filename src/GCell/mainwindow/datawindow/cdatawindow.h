@@ -43,10 +43,14 @@ public:
 
 	QSplitter* splitter(void){return m_splMain;}
 public slots:
+	virtual void setVisible(bool visible);
+
 	void setAlgorithms(const QList<CAlgorithm*> &algorithms);
 	void startAutoRefresh(void);
 	void stopAutoRefresh(void);
 	void refresh(void);
+signals:
+	void visibleChanged(bool visible);
 };
 
 #endif // CDATAWINDOW_H
