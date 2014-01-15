@@ -19,7 +19,7 @@ CSchemeDocument::CSchemeDocument(QObject *parent) : CDocument(parent)
 
 //	m_scheme->setAlgorithmProtoMng(m_algorithmProtoMng);
 
-	m_schemeEditor = new scheme::CSchemeEditor();
+    m_schemeEditor = new CSchemeEditor();
 	m_schemeEditor->setObjectName(QStringLiteral("schemeEditor"));
 	m_schemeEditor->setScheme(m_scheme);
 	connect(m_schemeEditor, SIGNAL(destroyed()), this, SLOT(deleteLater()));
@@ -36,5 +36,5 @@ CSchemeDocument::CSchemeDocument(QObject *parent) : CDocument(parent)
 
 IView* CSchemeDocument::view(void)
 {
-	return m_schemeEditor;
+    return 0;//m_schemeEditor;
 }

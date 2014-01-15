@@ -19,11 +19,6 @@ class CScheme;
 class CElementOptionsWgt;
 class CSegmentMover;
 
-namespace gcell
-{
-namespace scheme
-{
-
 template<typename Type>
 class CItemMover
 {
@@ -87,7 +82,7 @@ public:
     void draw(QPainter *painter);
 };
 
-class CSchemeEditor : public QGraphicsView, public mainwindow::workspace::IView
+class CSchemeEditor : public QGraphicsView
 {
     Q_OBJECT
 	Q_PROPERTY(QColor gridColor READ gridColor WRITE setGridColor)
@@ -166,8 +161,5 @@ signals:
 	void windowTitleChanged(void);
 	void elementsSelected(QList<CElement*> element);
 };
-
-}
-}
 
 #endif // CSCHEMEEDITOR_H

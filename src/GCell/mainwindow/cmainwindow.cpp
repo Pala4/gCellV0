@@ -16,7 +16,6 @@
 #include <QLabel>
 #include <QSplitter>
 
-#include "cworkspace.h"
 #include "coptionswindow.h"
 #include "datawindow/cdatawindow.h"
 #include "csavemodschemesdlg.h"
@@ -33,9 +32,6 @@
 #include "../algorithms/CSV/CSVOut/ccsvout.h"
 #include "../algorithms/TAC/StepExaction/cstepexcitation.h"
 #include "../algorithms/TAC/TransLink/ctranslink.h"
-
-using namespace gcell;
-using namespace mainwindow;
 
 /*!
  * \class CMainWindow
@@ -291,12 +287,13 @@ void CMainWindow::setupSchemeEditorContextMenu(void)
 
 	if(m_acElementOptions) m_schemeEditorContextMenu->addAction(m_acElementOptions);
 
-	if(m_schemeEditor && (m_schemeEditor->selectedElements().count() == 1))
+    CSchemeEditor *schemeEditor = activeSchemeEditor();
+    if(schemeEditor && (schemeEditor->selectedElements().count() == 1))
 	{
-		if(!m_schemeEditor->selectedElements().at(0)->actions().isEmpty())
+        if(!schemeEditor->selectedElements().at(0)->actions().isEmpty())
 		{
 			if(!m_schemeEditorContextMenu->isEmpty()) m_schemeEditorContextMenu->addSeparator();
-			m_schemeEditorContextMenu->addActions(m_schemeEditor->selectedElements().at(0)->actions());
+            m_schemeEditorContextMenu->addActions(schemeEditor->selectedElements().at(0)->actions());
 		}
 	}
 	else
@@ -404,12 +401,18 @@ bool CMainWindow::saveSchemesBeforeClose(const QList<CScheme*> &schemes)
 
 CScheme* CMainWindow::activeScheme(void)
 {
-	return m_scheme;
+    return m_activeScheme;
+}
+
+CSchemeEditor* CMainWindow::activeSchemeEditor(void)
+{
+    if(activeScheme() && m_documents.contains(activeScheme())) return m_documents[activeScheme()];
+    return 0;
 }
 
 void CMainWindow::closeEvent(QCloseEvent *event)
 {
-	if(saveSchemesBeforeClose(QList<CScheme*>() << m_scheme))
+    if(saveSchemesBeforeClose(m_documents.keys()))
 	{
 		if(isAutoSaveDesktop()) saveDesktop("desktop.ini");
 		if(isAutoSaveConfig()) saveConfig("config.ini");
@@ -463,26 +466,19 @@ CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
 
 	m_algProtoViewDock = 0;
 
-	//rem it
 	m_workSpaceTabWgt = 0;
-
-	m_workSpace = 0;
 	m_dataWindow = 0;
 	m_algorithmProtoMng = 0;
 	m_algProtoView = 0;
-	m_schemeEditor = 0;
-	m_scheme = 0;
+    m_activeScheme = 0;
 	m_engine = 0;
 
-	//rem it
 	m_workSpaceTabWgt = new QTabWidget();
 	m_workSpaceTabWgt->setObjectName(QStringLiteral("workSpaceTabWgt"));
+    m_workSpaceTabWgt->setTabsClosable(true);
+    connect(m_workSpaceTabWgt, SIGNAL(currentChanged(int)), this, SLOT(onCurrentTabChanged(int)));
+    connect(m_workSpaceTabWgt, SIGNAL(tabCloseRequested(int)), this, SLOT(onTabCloseRequested(int)));
 	setCentralWidget(m_workSpaceTabWgt);
-	//
-
-//	m_workSpace = new workspace::CWorkSpace(this);
-//	m_workSpace->setObjectName(QStringLiteral("workSpace"));
-//	setCentralWidget(m_workSpace);
 
 	m_dataWindow = new CDataWindow(this);
 	m_dataWindow->setObjectName(QStringLiteral("dataWindow"));
@@ -521,44 +517,59 @@ CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
 	restoreDesktop("desktop.ini");
 }
 
+//Must be refact for multy projects
 void CMainWindow::setGridColor(const QColor &gridColor)
 {
 	if(m_gridColor == gridColor) return;
 
 	m_gridColor = gridColor;
-	if(m_schemeEditor) m_schemeEditor->setGridColor(m_gridColor);
+
+    CSchemeEditor *schemeEditor = activeSchemeEditor();
+    if(schemeEditor) schemeEditor->setGridColor(m_gridColor);
 }
 
+//Must be refact for multy projects
 void CMainWindow::setGridBkGndColor(const QColor &gridBkGndColor)
 {
 	if(m_gridBkGndColor == gridBkGndColor) return;
 
 	m_gridBkGndColor = gridBkGndColor;
-	if(m_schemeEditor) m_schemeEditor->setGridBkGndColor(m_gridBkGndColor);
+
+    CSchemeEditor *schemeEditor = activeSchemeEditor();
+    if(schemeEditor) schemeEditor->setGridBkGndColor(m_gridBkGndColor);
 }
 
+//Must be refact for multy projects
 void CMainWindow::setGridStep(const int &gridStep)
 {
 	if(m_gridStep == gridStep) return;
 
 	m_gridStep = gridStep;
-	if(m_schemeEditor) m_schemeEditor->setGridStep(m_gridStep);
+
+    CSchemeEditor *schemeEditor = activeSchemeEditor();
+    if(schemeEditor) schemeEditor->setGridStep(m_gridStep);
 }
 
+//Must be refact for multy projects
 void CMainWindow::setGridPointSize(const qreal &gridPointSize)
 {
 	if(m_gridPointSize == gridPointSize) return;
 
 	m_gridPointSize = gridPointSize;
-	if(m_schemeEditor) m_schemeEditor->setGridPointSize(gridPointSize);
+
+    CSchemeEditor *schemeEditor = activeSchemeEditor();
+    if(schemeEditor) schemeEditor->setGridPointSize(gridPointSize);
 }
 
+//Must be refact for multy projects
 void CMainWindow::setGridAlign(const bool &gridAlign)
 {
 	if(m_gridAlign == gridAlign) return;
 
 	m_gridAlign = gridAlign;
-	if(m_schemeEditor) m_schemeEditor->setGridAlign(m_gridAlign);
+
+    CSchemeEditor *schemeEditor = activeSchemeEditor();
+    if(schemeEditor) schemeEditor->setGridAlign(m_gridAlign);
 }
 
 bool CMainWindow::isDataWindowVisisble(void) const
@@ -566,45 +577,56 @@ bool CMainWindow::isDataWindowVisisble(void) const
 	return m_dataWindow ? m_dataWindow->isVisible() : false;
 }
 
+//Must be refact for multy projects
 void CMainWindow::onCursorTriggered(const bool &checked)
 {
-	if(checked && m_schemeEditor) m_schemeEditor->setMouseMode(scheme::CSchemeEditor::MoveSelectMode);
+    CSchemeEditor *schemeEditor = activeSchemeEditor();
+    if(checked && schemeEditor) schemeEditor->setMouseMode(CSchemeEditor::MoveSelectMode);
 }
 
+//Must be refact for multy projects
 void CMainWindow::onHandTriggered(const bool &checked)
 {
-	if(checked && m_schemeEditor) m_schemeEditor->setMouseMode(scheme::CSchemeEditor::MoveSceneMode);
+    CSchemeEditor *schemeEditor = activeSchemeEditor();
+    if(checked && schemeEditor) schemeEditor->setMouseMode(CSchemeEditor::MoveSceneMode);
 }
 
+//Must be refact for multy projects
 void CMainWindow::onLinkingTriggered(const bool &checked)
 {
-	if(checked && m_schemeEditor) m_schemeEditor->setMouseMode(scheme::CSchemeEditor::LinkingMode);
+    CSchemeEditor *schemeEditor = activeSchemeEditor();
+    if(checked && schemeEditor) schemeEditor->setMouseMode(CSchemeEditor::LinkingMode);
 }
 
+//Must be refact for multy projects
 void CMainWindow::onAlgorithmProtoSelected(CAlgorithmProto *selectedProto)
 {
-	if(m_schemeEditor)
+    CSchemeEditor *schemeEditor = activeSchemeEditor();
+    if(schemeEditor)
 	{
-		if(selectedProto) m_schemeEditor->setMouseMode(scheme::CSchemeEditor::AddAlgorithmMode);
+        if(selectedProto) schemeEditor->setMouseMode(CSchemeEditor::AddAlgorithmMode);
 	}
 }
 
+//Must be refact for multy projects
 void CMainWindow::onSchemeEditorAddAlgorithmModeFinished(void)
 {
 	if(m_algorithmProtoMng && m_algorithmProtoMng->selectedAlgorithmProto()) m_algorithmProtoMng->setSelectedAlgorithmProto(0);
-	if(m_schemeEditor)
+
+    CSchemeEditor *schemeEditor = activeSchemeEditor();
+    if(schemeEditor)
 	{
 		if(m_acCursor && m_acCursor->isChecked())
 		{
-			m_schemeEditor->setMouseMode(scheme::CSchemeEditor::MoveSelectMode);
+            schemeEditor->setMouseMode(CSchemeEditor::MoveSelectMode);
 		}
 		else if(m_acHand && m_acHand->isChecked())
 		{
-			m_schemeEditor->setMouseMode(scheme::CSchemeEditor::MoveSceneMode);
+            schemeEditor->setMouseMode(CSchemeEditor::MoveSceneMode);
 		}
 		else if(m_acLinking && m_acLinking->isChecked())
 		{
-			m_schemeEditor->setMouseMode(scheme::CSchemeEditor::LinkingMode);
+            schemeEditor->setMouseMode(CSchemeEditor::LinkingMode);
 		}
 	}
 }
@@ -629,12 +651,14 @@ void CMainWindow::onAlgProtosViewDockTopLevelChanged(const bool &topLevel)
 	if(topLevel && m_algProtoView) m_algProtoView->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
 }
 
+//Must be refact for multy projects
 void CMainWindow::onSchemeEditorWindowTitleChanged(void)
 {
-	if(m_schemeEditor && m_workSpaceTabWgt)
+    CSchemeEditor *schemeEditor = activeSchemeEditor(); //must be a snder()
+    if(schemeEditor && m_workSpaceTabWgt)
 	{
-		int tabIndex = m_workSpaceTabWgt->indexOf(m_schemeEditor);
-		if(tabIndex >= 0) m_workSpaceTabWgt->setTabText(tabIndex, m_schemeEditor->windowTitle());
+        int tabIndex = m_workSpaceTabWgt->indexOf(schemeEditor);
+        if(tabIndex >= 0) m_workSpaceTabWgt->setTabText(tabIndex, schemeEditor->windowTitle());
 	}
 }
 
@@ -693,7 +717,7 @@ void CMainWindow::onClipBoardChanged(const QClipboard::Mode &mode)
 		int errCol = 0;
 		if(domDoc.setContent(clpb->mimeData()->html(), &errMsg, &errLine, &errCol))
 		{
-			if(m_scheme && m_scheme->checkXMLSchemeFormat(domDoc))
+            if(activeScheme() && activeScheme()->checkXMLSchemeFormat(domDoc))
 			{
 				if(m_acPaste)
 				{
@@ -702,7 +726,39 @@ void CMainWindow::onClipBoardChanged(const QClipboard::Mode &mode)
 				}
 			}
 		}
-	}
+    }
+}
+
+void CMainWindow::onCurrentTabChanged(const int &currentTabIndex)
+{
+    if(currentTabIndex < 0)
+    {
+
+    }
+    else
+    {
+        if(m_workSpaceTabWgt)
+        {
+            CSchemeEditor *schemeEditor = qobject_cast<CSchemeEditor*>(m_workSpaceTabWgt->currentWidget());
+            if(schemeEditor) m_activeScheme = m_documents.key(schemeEditor, 0);
+        }
+    }
+}
+
+void CMainWindow::onTabCloseRequested(const int &tabIndex)
+{
+    if(m_workSpaceTabWgt)
+    {
+        CSchemeEditor *schemeEditor = qobject_cast<CSchemeEditor*>(m_workSpaceTabWgt->widget(tabIndex));
+        if(schemeEditor)
+        {
+            CScheme *scheme = m_documents.key(schemeEditor, 0);
+            if(scheme)
+            {
+                closeScheme(scheme);
+            }
+        }
+    }
 }
 
 void CMainWindow::calc(void)
@@ -710,6 +766,7 @@ void CMainWindow::calc(void)
 	if(m_engine) m_engine->calc();
 }
 
+//Must be refact for multy projects
 void CMainWindow::showOptions(void)
 {
 	COptionsWindow optWnd(this);
@@ -724,12 +781,12 @@ void CMainWindow::showOptions(void)
 	optWnd.setGridPointSize(gridPointSize());
 	optWnd.setGridAlign(isGridAlign());
 
-	if(m_scheme)
+    if(activeScheme())
 	{
-		optWnd.setSchemeWidhet(m_scheme->sceneRect().width());
-		optWnd.setSchemeHeight(m_scheme->sceneRect().height());
+        optWnd.setSchemeWidhet(activeScheme()->sceneRect().width());
+        optWnd.setSchemeHeight(activeScheme()->sceneRect().height());
 	}
-	if(optWnd.schemeTab()) optWnd.schemeTab()->setEnabled((m_scheme));
+    if(optWnd.schemeTab()) optWnd.schemeTab()->setEnabled((activeScheme()));
 
 	if(m_engine && m_engine->framer())
 	{
@@ -754,9 +811,9 @@ void CMainWindow::showOptions(void)
 			setGridPointSize(optWnd.gridPointSize());
 			setGridAlign(optWnd.isGridAlign());
 
-			if(m_scheme)
+            if(activeScheme())
 			{
-				m_scheme->setSceneRect(0.0, 0.0, optWnd.schemeWidth(), optWnd.schemeHeight());
+                activeScheme()->setSceneRect(0.0, 0.0, optWnd.schemeWidth(), optWnd.schemeHeight());
 			}
 
 			if(m_engine && m_engine->framer())
@@ -780,40 +837,43 @@ void CMainWindow::onDataWindowVisibleChanged(const bool &visible)
 	if(m_acDataWindow && m_acDataWindow->isChecked() != visible) m_acDataWindow->setChecked(visible);
 }
 
-void CMainWindow::newScheme(void)
+//Must be refact for multy projects
+CScheme* CMainWindow::newScheme(void)
 {
-	if(m_scheme)
-	{
-		if(!closeScheme()) return;
-	}
+    CSchemeEditor *schemeEditor = new CSchemeEditor(this);
+    schemeEditor->setObjectName(QStringLiteral("schemeEditor"));
+    schemeEditor->setupGrid(gridColor(), gridBkGndColor(), gridStep(), gridPointSize(), isGridAlign());
+    if(m_schemeEditorContextMenu) schemeEditor->setContextMenu(m_schemeEditorContextMenu);
+    connect(schemeEditor, SIGNAL(addAlgorithmModeFinished()), this, SLOT(onSchemeEditorAddAlgorithmModeFinished()));
+    connect(schemeEditor, SIGNAL(windowTitleChanged()), this, SLOT(onSchemeEditorWindowTitleChanged()));
+    connect(schemeEditor, SIGNAL(elementsSelected(QList<CElement*>)), this, SLOT(onSchemeEditorElementsSelected(QList<CElement*>)));
 
-	m_schemeEditor = new scheme::CSchemeEditor(this);
-	m_schemeEditor->setObjectName(QStringLiteral("schemeEditor"));
-	m_schemeEditor->setupGrid(gridColor(), gridBkGndColor(), gridStep(), gridPointSize(), isGridAlign());
-	if(m_schemeEditorContextMenu) m_schemeEditor->setContextMenu(m_schemeEditorContextMenu);
-	connect(m_schemeEditor, SIGNAL(addAlgorithmModeFinished()), this, SLOT(onSchemeEditorAddAlgorithmModeFinished()));
-	connect(m_schemeEditor, SIGNAL(windowTitleChanged()), this, SLOT(onSchemeEditorWindowTitleChanged()));
-	connect(m_schemeEditor, SIGNAL(elementsSelected(QList<CElement*>)), this, SLOT(onSchemeEditorElementsSelected(QList<CElement*>)));
-	if(m_workSpaceTabWgt) m_workSpaceTabWgt->addTab(m_schemeEditor, m_schemeEditor->windowTitle());
+    CScheme* scheme = new CScheme(this);
+    scheme->setObjectName(QStringLiteral("scheme"));
+    scheme->setSceneRect(0.0, 0.0, 2000.0, 2000.0);
+    scheme->setNewScheme(true);
+    scheme->setAlgorithmProtoMng(m_algorithmProtoMng);
+    schemeEditor->setScheme(scheme);
+    connect(scheme, SIGNAL(destroyed(QObject*)), this, SLOT(onSchemeDestroyed(QObject*)));
+    if(m_dataWindow)
+    {
+        connect(scheme, SIGNAL(algorithmsSelected(QList<CAlgorithm*>)), m_dataWindow, SLOT(setAlgorithms(QList<CAlgorithm*>)));
+    }
 
-	m_scheme = new CScheme(this);
-	m_scheme->setObjectName(QStringLiteral("scheme"));
-	m_scheme->setSceneRect(0.0, 0.0, 2000.0, 2000.0);
-	m_scheme->setNewScheme(true);
-	m_scheme->setAlgorithmProtoMng(m_algorithmProtoMng);
-	m_schemeEditor->setScheme(m_scheme);
+    m_documents[scheme] = schemeEditor;
+    if(m_workSpaceTabWgt)
+    {
+        m_workSpaceTabWgt->addTab(schemeEditor, schemeEditor->windowTitle());
+        m_workSpaceTabWgt->setCurrentWidget(schemeEditor);
+    }
+    return scheme;
 
-	if(m_engine) m_engine->setScheme(m_scheme);
+//	if(m_engine) m_engine->setScheme(scheme);
 
-	if(m_acCursor) m_acCursor->setEnabled(true);
-	if(m_acHand) m_acHand->setEnabled(true);
-	if(m_acLinking) m_acLinking->setEnabled(true);
-	if(m_acCalc) m_acCalc->setEnabled(true);
-	if(m_dataWindow)
-	{
-		connect(m_scheme, SIGNAL(algorithmsSelected(QList<CAlgorithm*>)), m_dataWindow, SLOT(setAlgorithms(QList<CAlgorithm*>)));
-		m_dataWindow->setAlgorithms(m_scheme->selectedAlgorithms());
-	}
+//	if(m_acCursor) m_acCursor->setEnabled(true);
+//	if(m_acHand) m_acHand->setEnabled(true);
+//	if(m_acLinking) m_acLinking->setEnabled(true);
+//	if(m_acCalc) m_acCalc->setEnabled(true);
 }
 
 void CMainWindow::saveScheme(CScheme *scheme)
@@ -846,94 +906,121 @@ bool CMainWindow::saveSchemeAs(CScheme *scheme)
 	return true;
 }
 
+//Must be refact for multy projects
 bool CMainWindow::openScheme(const QString &fileName)
 {
 	QString schemeName = fileName;
 	if(schemeName.isEmpty()) schemeName = QFileDialog::getOpenFileName(this, "Open");
 	if(!QFile::exists(schemeName)) return false;
 
-	newScheme();
-	if(m_scheme)
+    CScheme *scheme = newScheme();
+    if(scheme)
 	{
-		readScheme(m_scheme, schemeName);
-		m_scheme->setFileName(schemeName);
+        readScheme(scheme, schemeName);
+        scheme->setFileName(schemeName);
 	}
 
 	return true;
 }
 
-bool CMainWindow::closeScheme(void)
+//Must be refact for multy projects
+bool CMainWindow::closeScheme(CScheme *scheme)
 {
-	if(m_scheme)
+    CScheme *closedScheme = scheme;
+    if(closedScheme == 0) closedScheme = activeScheme();
+    if(closedScheme == 0) return false;
+
+    if(closedScheme)
 	{
-		if(!saveSchemesBeforeClose(QList<CScheme*>() << m_scheme)) return false;
-		m_scheme->deleteLater();
-		m_scheme = 0;
-	}
-	if(m_acCursor) m_acCursor->setEnabled(false);
-	if(m_acHand) m_acHand->setEnabled(false);
-	if(m_acLinking) m_acLinking->setEnabled(false);
-	if(m_acEditSep) m_acEditSep->setVisible(false);
-	if(m_acCopy)
-	{
-		m_acCopy->setEnabled(false);
-		m_acCopy->setVisible(false);
-	}
-	if(m_acCut)
-	{
-		m_acCut->setEnabled(false);
-		m_acCut->setVisible(false);
-	}
-	if(m_acDelete)
-	{
-		m_acDelete->setEnabled(false);
-		m_acDelete->setVisible(false);
-	}
-	if(m_acPaste)
-	{
-		m_acPaste->setEnabled(false);
-		m_acPaste->setVisible(false);
-	}
-	if(m_acCalc) m_acCalc->setEnabled(false);
-	if(m_acElementOptions)
-	{
-		m_acElementOptions->setEnabled(false);
-		m_acElementOptions->setVisible(false);
-	}
-	if(m_schemeEditor)
-	{
-		m_schemeEditor->deleteLater();
-		m_schemeEditor = 0;
+        if(!saveSchemesBeforeClose(QList<CScheme*>() << closedScheme)) return false;
+        closedScheme->deleteLater();
 	}
 
-	return true;
+//    if(m_acCursor) m_acCursor->setEnabled(false);
+//	if(m_acHand) m_acHand->setEnabled(false);
+//	if(m_acLinking) m_acLinking->setEnabled(false);
+//	if(m_acEditSep) m_acEditSep->setVisible(false);
+//	if(m_acCopy)
+//	{
+//		m_acCopy->setEnabled(false);
+//		m_acCopy->setVisible(false);
+//	}
+//	if(m_acCut)
+//	{
+//		m_acCut->setEnabled(false);
+//		m_acCut->setVisible(false);
+//	}
+//	if(m_acDelete)
+//	{
+//		m_acDelete->setEnabled(false);
+//		m_acDelete->setVisible(false);
+//	}
+//	if(m_acPaste)
+//	{
+//		m_acPaste->setEnabled(false);
+//		m_acPaste->setVisible(false);
+//	}
+//	if(m_acCalc) m_acCalc->setEnabled(false);
+//	if(m_acElementOptions)
+//	{
+//		m_acElementOptions->setEnabled(false);
+//		m_acElementOptions->setVisible(false);
+//	}
+//	if(m_schemeEditor)
+//	{
+//		m_schemeEditor->deleteLater();
+//		m_schemeEditor = 0;
+//	}
+
+    return true;
 }
 
+void CMainWindow::onSchemeDestroyed(QObject *objScheme)
+{
+    CScheme *scheme = (CScheme*)objScheme;
+    if(m_documents.contains(scheme))
+    {
+        if(m_documents[scheme]) m_documents[scheme]->deleteLater();
+        m_documents.remove(scheme);
+    }
+}
+
+//Must be refact for multy projects
 void CMainWindow::copy(void)
 {
-	if(m_schemeEditor) m_schemeEditor->copySelected();
+    CSchemeEditor *schemeEditor = activeSchemeEditor();
+    if(schemeEditor) schemeEditor->copySelected();
 }
 
+//Must be refact for multy projects
 void CMainWindow::cut(void)
 {
-	if(m_schemeEditor) m_schemeEditor->cutSelected();
+    CSchemeEditor *schemeEditor = activeSchemeEditor();
+    if(schemeEditor) schemeEditor->cutSelected();
 }
 
+//Must be refact for multy projects
 void CMainWindow::del(void)
 {
-	if(m_schemeEditor) m_schemeEditor->deleteSelected();
+    CSchemeEditor *schemeEditor = activeSchemeEditor();
+    if(schemeEditor) schemeEditor->deleteSelected();
 }
 
+//Must be refact for multy projects
 void CMainWindow::paste(void)
 {
-	if(m_schemeEditor) m_schemeEditor->pasteSelected();
+    CSchemeEditor *schemeEditor = activeSchemeEditor();
+    if(schemeEditor) schemeEditor->pasteSelected();
 }
 
+//Must be refact for multy projects
 void CMainWindow::elementOptions(void)
 {
-	if(m_schemeEditor) m_schemeEditor->showElementOptions();
+    CSchemeEditor *schemeEditor = activeSchemeEditor();
+    if(schemeEditor) schemeEditor->showElementOptions();
 }
 
+//Must be refact for multy projects
 void CMainWindow::saveDesktop(const QString &fileName)
 {
 	if(fileName.isEmpty()) return;
@@ -950,17 +1037,19 @@ void CMainWindow::saveDesktop(const QString &fileName)
 		if(m_dataWindow->splitter()) desk.setValue("DataWindow/splitter", m_dataWindow->splitter()->saveState());
 	}
 
-	QString oldSchemeFileName;
-	if(m_scheme)
+    QStringList oldSchemeFileList;
+    foreach(CScheme *scheme, m_documents.keys())
 	{
-		if(!m_scheme->isNewScheme() && !m_scheme->fileName().isEmpty())
+        if(!scheme) continue;
+        if(!scheme->isNewScheme() && !scheme->fileName().isEmpty())
 		{
-			oldSchemeFileName = m_scheme->fileName();
+            oldSchemeFileList << scheme->fileName();
 		}
 	}
-	desk.setValue("MainWindow/Old scheme", oldSchemeFileName);
+    desk.setValue("MainWindow/Old schemes", oldSchemeFileList);
 }
 
+//Must be refact for multy projects
 void CMainWindow::restoreDesktop(const QString &fileName)
 {
 	if(fileName.isEmpty()) return;
@@ -969,10 +1058,10 @@ void CMainWindow::restoreDesktop(const QString &fileName)
 	bool openResult = false;
 	if(isAutoLoadLastScheme())
 	{
-		QString oldSchemeFileName = desk.value("MainWindow/Old scheme", QString()).toString();
-		if(!oldSchemeFileName.isEmpty())
+        QStringList oldSchemeFileList = desk.value("MainWindow/Old schemes", QString()).toStringList();
+        foreach(QString schemeFileName, oldSchemeFileList)
 		{
-			openResult = openScheme(oldSchemeFileName);
+            openResult = openScheme(schemeFileName);
 		}
 	}
 	if(!openResult)
@@ -990,6 +1079,7 @@ void CMainWindow::restoreDesktop(const QString &fileName)
 	restoreState(desk.value("MainWindow/state").toByteArray());
 }
 
+//Must be refact for multy projects
 void CMainWindow::saveConfig(const QString &fileName)
 {
 	if(fileName.isEmpty()) return;
@@ -1023,6 +1113,7 @@ void CMainWindow::saveConfig(const QString &fileName)
 	}
 }
 
+//Must be refact for multy projects
 void CMainWindow::restoreConfig(const QString &fileName)
 {
 	if(fileName.isEmpty()) return;

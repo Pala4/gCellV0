@@ -16,19 +16,8 @@ class CAlgProtoView;
 class CElement;
 class CAlgorithm;
 class CScheme;
-class CEngine;
-
-namespace gcell {
-
-namespace scheme {
 class CSchemeEditor;
-}
-
-namespace mainwindow {
-
-namespace workspace {
-class CWorkSpace;
-}
+class CEngine;
 
 class CMainWindow : public QMainWindow
 {
@@ -78,10 +67,7 @@ private:
 
 	QMenu *m_schemeEditorContextMenu;
 
-	//rem it
 	QTabWidget *m_workSpaceTabWgt;
-
-	workspace::CWorkSpace *m_workSpace;
 
 	CDataWindow *m_dataWindow;
 
@@ -89,8 +75,12 @@ private:
 	CAlgProtoView *m_algProtoView;
 	QDockWidget *m_algProtoViewDock;
 
-	scheme::CSchemeEditor *m_schemeEditor;
-	CScheme *m_scheme;
+//    CSchemeEditor *m_schemeEditor;
+//	CScheme *m_scheme;
+
+    CScheme *m_activeScheme;
+    QMap<CScheme*, CSchemeEditor*> m_documents;
+
 	CEngine *m_engine;
 
 	void setupActions(void);
@@ -105,6 +95,7 @@ private:
 	bool saveSchemesBeforeClose(const QList<CScheme*> &schemes);
 
 	CScheme* activeScheme(void);
+    CSchemeEditor* activeSchemeEditor(void);
 protected:
 	virtual void closeEvent(QCloseEvent *event);
 public:
@@ -141,17 +132,20 @@ private slots:
 	void onSchemeEditorWindowTitleChanged(void);
 	void onSchemeEditorElementsSelected(const QList<CElement*> &elements);
 	void onClipBoardChanged(const QClipboard::Mode &mode);
+    void onCurrentTabChanged(const int &currentTabIndex);
+    void onTabCloseRequested(const int &tabIndex);
 
 	void calc(void);
 	void showOptions(void);
 	void setDataWindowVisible(const bool &visible);
 	void onDataWindowVisibleChanged(const bool &visible);
 
-	void newScheme(void);
+    CScheme* newScheme(void);
 	void saveScheme(CScheme *scheme = 0);
 	bool saveSchemeAs(CScheme *scheme = 0);
 	bool openScheme(const QString &fileName = QString());
-	bool closeScheme(void);
+    bool closeScheme(CScheme *scheme = 0);
+    void onSchemeDestroyed(QObject *objScheme);
 
 	void copy(void);
 	void cut(void);
@@ -165,8 +159,5 @@ private slots:
 	void saveConfig(const QString &fileName);
 	void restoreConfig(const QString &fileName);
 };
-
-}
-}
 
 #endif // CMAINWINDOW_H

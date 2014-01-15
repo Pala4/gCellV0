@@ -15,9 +15,6 @@
 #include "link/clink.h"
 #include "link/csegmentmover.h"
 
-using namespace gcell;
-using namespace scheme;
-
 /*!
  * \class CSelector
  */
@@ -323,7 +320,7 @@ void CSchemeEditor::drawForeground(QPainter *painter, const QRectF &rect)
 	}
 }
 
-CSchemeEditor::CSchemeEditor(QWidget *parent) : QGraphicsView(parent), mainwindow::workspace::IView()
+CSchemeEditor::CSchemeEditor(QWidget *parent) : QGraphicsView(parent)
 {
 	setObjectName(QStringLiteral("CSchemeView"));
 
