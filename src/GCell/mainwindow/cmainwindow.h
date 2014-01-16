@@ -58,7 +58,7 @@ private:
 	QAction *m_acDelete;
 	QAction *m_acPaste;
 	QAction *m_acDataWindow;
-	QAction *m_acCalc;
+    QAction *m_acCalcActiveScheme;
 	QAction *m_acOptions;
 	QAction *m_acElementOptions;
 
@@ -135,7 +135,7 @@ private slots:
     void onCurrentTabChanged(const int &currentTabIndex);
     void onTabCloseRequested(const int &tabIndex);
 
-	void calc(void);
+    void calcActiveScheme(void);
 	void showOptions(void);
 	void setDataWindowVisible(const bool &visible);
 	void onDataWindowVisibleChanged(const bool &visible);
