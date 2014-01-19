@@ -3,6 +3,8 @@
 
 #include <QGraphicsScene>
 
+#include "cobjectitem.h"
+
 #include <QtXml/QDomDocument>
 
 class QAction;
@@ -20,7 +22,7 @@ struct stSchemeDesc
 	qreal height;
 };
 
-class CScheme : public QGraphicsScene
+class CScheme : public QGraphicsScene, public CObjectItem
 {
 	 Q_OBJECT
 private:
@@ -36,6 +38,8 @@ private:
 	 CElement* readElementFromXML(const QDomDocument &domDoc, const QDomElement &domElElement, CElement *parentElement = 0);
 public:
 	 explicit CScheme(QObject *parent = 0);
+
+     QObjectList childrenObjects();
 
 	 QString id(void){return QString("Scheme");}
 	 const bool& isNewScheme(void) const{return m_newScheme;}

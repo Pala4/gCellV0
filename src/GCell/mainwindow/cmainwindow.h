@@ -19,6 +19,10 @@ class CScheme;
 class CSchemeEditor;
 class CEngine;
 
+//Remove that code after testing CObjectModel
+class CObjectModel;
+//
+
 class CMainWindow : public QMainWindow
 {
 	Q_OBJECT
@@ -75,13 +79,14 @@ private:
 	CAlgProtoView *m_algProtoView;
 	QDockWidget *m_algProtoViewDock;
 
-//    CSchemeEditor *m_schemeEditor;
-//	CScheme *m_scheme;
-
     CScheme *m_activeScheme;
     QMap<CScheme*, CSchemeEditor*> m_documents;
 
 	CEngine *m_engine;
+
+    //Remove that code after testing CObjectModel
+    CObjectModel *m_objModel;
+    //
 
 	void setupActions(void);
 	void setupMainMenu(void);

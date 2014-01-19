@@ -245,7 +245,7 @@ CElement* CAlgorithm::createElement(const QString &typeID)
 
 void CAlgorithm::calc(const stTimeLine &timeLine)
 {
-	foreach(CArgument *arg, arguments())
+    foreach(CArgument *arg, arguments())
 	{
 		if(!arg) continue;
 		if(!arg->isUsed()) continue;

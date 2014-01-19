@@ -157,7 +157,7 @@ CPortal::CPortal(QGraphicsItem *parent) : CElement(parent)
 	setFlag(QGraphicsItem::ItemSendsScenePositionChanges);
 }
 
-QString CPortal::caption(void) const
+QString CPortal::caption()
 {
 	return captionPrefix() + CElement::caption() + captionPostfix();
 }

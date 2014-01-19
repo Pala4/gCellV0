@@ -1,6 +1,8 @@
 #include "celement.h"
 
 #include <QAction>
+#include <QCoreApplication>
+#include <QChildEvent>
 #include <QPainter>
 #include <QTextCursor>
 #include <QTextDocument>
@@ -40,7 +42,8 @@ QVariant CGraphicsTextItem::itemChange(QGraphicsItem::GraphicsItemChange change,
 	return QGraphicsTextItem::itemChange(change, value);
 }
 
-CGraphicsTextItem::CGraphicsTextItem(const QString &text, QGraphicsItem *parent) : QGraphicsTextItem(text, parent)
+CGraphicsTextItem::CGraphicsTextItem(const QString &text, QGraphicsItem *parent)
+    : QGraphicsTextItem(text, parent), CObjectItem()
 {
 	setObjectName("CGraphicsTextItem");
 
@@ -49,7 +52,28 @@ CGraphicsTextItem::CGraphicsTextItem(const QString &text, QGraphicsItem *parent)
 	setFlag(QGraphicsItem::ItemIsMovable, false);
 	setFlag(QGraphicsItem::ItemIsSelectable);
 	setFlag(QGraphicsItem::ItemStacksBehindParent);
-	setTextInteractionFlags(Qt::NoTextInteraction);
+    setTextInteractionFlags(Qt::NoTextInteraction);
+}
+
+QObject* CGraphicsTextItem::parentObject()
+{
+    if (parentItem() == nullptr)
+        return scene();
+
+    return dynamic_cast<QGraphicsObject*>(parentItem());
+}
+
+QObjectList CGraphicsTextItem::childrenObjects()
+{
+    QObjectList resultChildren;
+
+    foreach (QGraphicsItem *child, childItems()) {
+        QGraphicsObject *childObject = dynamic_cast<QGraphicsObject*>(child);
+        if (childObject)
+            resultChildren << childObject;
+    }
+
+    return resultChildren;
 }
 
 void CGraphicsTextItem::onDocumentContentChanged(void)
@@ -102,34 +126,75 @@ void CElement::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 QVariant CElement::itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value)
 {
-	switch((int)change)
-	{
-		case QGraphicsItem::ItemPositionChange:
-			if(m_grid)
-			{
-				QPointF newPos = value.toPointF();
-				newPos = m_grid->align(newPos);
-				if(m_grid->bounds())
-				{
-					if(m_grid->bounds()->isOutBounds(newPos, boundingRect()))
-					{
-						newPos = pos();
-					}
-					else
-					{
-						newPos = m_grid->bounds()->posByBound(newPos, boundingRect());
-					}
-				}
-				if(newPos != pos())	emit modified();
-				return QVariant(newPos);
-			}
-		break;
-	}
+    switch(change)
+    {
+    case QGraphicsItem::ItemPositionChange:
+        if (m_grid != nullptr) {
+            QPointF newPos = value.toPointF();
+            newPos = m_grid->align(newPos);
+            if (m_grid->bounds() != nullptr) {
+                if (m_grid->bounds()->isOutBounds(newPos, boundingRect())) {
+                    newPos = pos();
+                } else {
+                    newPos = m_grid->bounds()->posByBound(newPos, boundingRect());
+                }
+            }
+
+            if (newPos != pos())
+                emit modified();
+
+            return QVariant(newPos);
+        }
+        break;
+    case QGraphicsItem::ItemSceneChange:
+    {
+        QGraphicsScene *newScene = value.value<QGraphicsScene*>();
+        if ((newScene == nullptr) && (scene() != nullptr)) {
+            if (parentItem() == nullptr) {
+                QChildEvent childEvent(QEvent::ChildRemoved, this);
+                QCoreApplication::sendEvent(scene(), &childEvent);
+            }
+        }
+        break;
+    }
+    case QGraphicsItem::ItemSceneHasChanged:
+    {
+        QGraphicsScene *newScene = value.value<QGraphicsScene*>();
+        if (newScene != nullptr) {
+            if (parentItem() == nullptr) {
+                QChildEvent childEvent(QEvent::ChildAdded, this);
+                QCoreApplication::sendEvent(newScene, &childEvent);
+            }
+        }
+        break;
+    }
+    case QGraphicsItem::ItemParentChange:
+    {
+        QGraphicsObject *newParent = dynamic_cast<QGraphicsObject*>(value.value<QGraphicsItem*>());
+        QGraphicsObject *oldParent = dynamic_cast<QGraphicsObject*>(parentItem());
+        if ((newParent == nullptr) && (oldParent != nullptr)) {
+            QChildEvent childEvent(QEvent::ChildRemoved, this);
+            QCoreApplication::sendEvent(oldParent, &childEvent);
+        }
+        break;
+    }
+    case QGraphicsItem::ItemParentHasChanged:
+    {
+        QGraphicsObject *newParent = dynamic_cast<QGraphicsObject*>(value.value<QGraphicsItem*>());
+        if (newParent != nullptr) {
+            QChildEvent childEvent(QEvent::ChildAdded, this);
+            QCoreApplication::sendEvent(newParent, &childEvent);
+        }
+        break;
+    }
+    default:
+        break;
+    }
 
 	return QGraphicsObject::itemChange(change, value);
 }
 
-CElement::CElement(QGraphicsItem *parent) : QGraphicsObject(parent)
+CElement::CElement(QGraphicsItem *parent) : QGraphicsObject(parent), CObjectItem()
 {
 	setObjectName(QStringLiteral("CElement"));
 
@@ -148,14 +213,35 @@ CElement::CElement(QGraphicsItem *parent) : QGraphicsObject(parent)
 	setInteractions(CElement::AllIntercations);
 	setFlag(QGraphicsItem::ItemIsSelectable, true);
 	setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
-	setZValue(1000.0);
+	setZValue(1000.0);    
 }
 
 void CElement::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
 	Q_UNUSED(option)
 	Q_UNUSED(widget)
-	painter->setFont(captionFont());
+    painter->setFont(captionFont());
+}
+
+QObject* CElement::parentObject()
+{
+    if (parentItem() == nullptr)
+        return scene();
+
+    return dynamic_cast<QGraphicsObject*>(parentItem());
+}
+
+QObjectList CElement::childrenObjects()
+{
+    QObjectList resultChildren;
+
+    foreach (QGraphicsItem *child, childItems()) {
+        QGraphicsObject *childObject = dynamic_cast<QGraphicsObject*>(child);
+        if (childObject)
+            resultChildren << childObject;
+    }
+
+    return resultChildren;
 }
 
 QString CElement::id(void)
@@ -196,25 +282,29 @@ void CElement::setCaptionFont(const QFont &captionFont)
 	updateGeometry();
 }
 
-QString CElement::caption(void) const
+QString CElement::caption()
 {
-	if(name().isEmpty()) return QString("%1_%2").arg(defaultName()).arg(nomber());
+    if (name().isEmpty())
+        return QString("%1_%2").arg(defaultName()).arg(nomber());
+
 	return name();
 }
 
 void CElement::addAction(QAction *action)
 {
-	if(!action || m_actions.contains(action)) return;
+    if (!action || m_actions.contains(action))
+        return;
 
 	m_actions << action;
 }
 
 CElement* CElement::childElement(const QString &id)
 {
-	foreach(CElement *chel, childElements())
-	{
-		if(chel->id() == id) return chel;
+    foreach (CElement *chel, childElements()) {
+        if (chel->id() == id)
+            return chel;
 	}
+
 	return 0;
 }
 

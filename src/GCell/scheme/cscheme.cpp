@@ -112,7 +112,7 @@ CElement* CScheme::readElementFromXML(const QDomDocument &domDoc, const QDomElem
 	 return el;
 }
 
-CScheme::CScheme(QObject *parent) : QGraphicsScene(parent)
+CScheme::CScheme(QObject *parent) : QGraphicsScene(parent), CObjectItem()
 {
 	 setObjectName(QStringLiteral("CScheme"));
 
@@ -122,7 +122,20 @@ CScheme::CScheme(QObject *parent) : QGraphicsScene(parent)
 
 	 m_algProtoMng = 0;
 
-	 connect(this, SIGNAL(selectionChanged()), this, SLOT(onSelectionChanged()));
+     connect(this, SIGNAL(selectionChanged()), this, SLOT(onSelectionChanged()));
+}
+
+QObjectList CScheme::childrenObjects()
+{
+    QObjectList resultObjectList;
+
+    foreach (QGraphicsItem *item, items()) {
+        QGraphicsObject *grObject = dynamic_cast<QGraphicsObject*>(item);
+        if ((grObject != nullptr) && (grObject->parentItem() == nullptr))
+            resultObjectList << grObject;
+    }
+
+    return resultObjectList;
 }
 
 void CScheme::setModified(const bool &modified)

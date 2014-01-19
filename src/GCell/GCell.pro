@@ -24,6 +24,7 @@ TEMPLATE = app
 DESTDIR = $$DEST_DIR
 
 INCLUDEPATH += \
+    objectmodel \
     scheme \
     mainwindow \
     mainwindow/workspace
@@ -76,7 +77,9 @@ SOURCES += \
     mainwindow/workspace/cdocument.cpp \
     mainwindow/workspace/cworkspace.cpp \
     mainwindow/workspace/cschemedocument.cpp \
-    mainwindow/workspace/iview.cpp
+    mainwindow/workspace/iview.cpp \
+    objectmodel/cobjectitem.cpp \
+    objectmodel/cobjectmodel.cpp
 
 HEADERS += \
     mainwindow/cmainwindow.h \
@@ -127,4 +130,6 @@ HEADERS += \
     mainwindow/workspace/cdocument.h \
     mainwindow/workspace/cworkspace.h \
     mainwindow/workspace/cschemedocument.h \
-    mainwindow/workspace/iview.h
+    mainwindow/workspace/iview.h \
+    objectmodel/cobjectitem.h \
+    objectmodel/cobjectmodel.h

@@ -4,6 +4,8 @@
 #include <QGraphicsTextItem>
 #include <QGraphicsObject>
 
+#include "cobjectitem.h"
+
 #include <QFont>
 
 #include "timeframe.h"
@@ -15,13 +17,16 @@ class CScheme;
 class CElementOptionsWgt;
 class CGrid;
 
-class CGraphicsTextItem : public QGraphicsTextItem
+class CGraphicsTextItem : public QGraphicsTextItem, public CObjectItem
 {
 	Q_OBJECT
 protected:
 	virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 public:
 	explicit CGraphicsTextItem(const QString &text, QGraphicsItem *parent = 0);
+
+    QObject* parentObject();
+    QObjectList childrenObjects();
 private slots:
 	void onDocumentContentChanged(void);
 public slots:
@@ -30,7 +35,7 @@ signals:
 	void textChanged(const QString &text);
 };
 
-class CElement : public QGraphicsObject
+class CElement : public QGraphicsObject, public CObjectItem
 {
 	Q_OBJECT
 	Q_PROPERTY(int nomber READ nomber WRITE setNomber)
@@ -71,6 +76,9 @@ public:
 	virtual QRectF boundingRect(void) const{return m_boundingRect;}
 	virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
+    QObject* parentObject();
+    QObjectList childrenObjects();
+
 	QString typeID(void){return metaObject()->className();}
 
 	QString id(void);
@@ -86,7 +94,7 @@ public:
 	void setCaptionFont(const QFont &captionFont);
 	const CElement::Interactions& intercations(void) const{return m_intercations;}
 
-	virtual QString caption(void) const;
+    QString caption();
 
 	const QList<QAction*>& actions(void) const{return m_actions;}
 	void addAction(QAction *action);

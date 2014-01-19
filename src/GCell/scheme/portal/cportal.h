@@ -53,7 +53,7 @@ protected:
 public:
 	explicit CPortal(QGraphicsItem *parent = 0);
 
-	virtual QString caption(void) const;
+    virtual QString caption();
 	const QString& captionPrefix(void) const{return m_captionPrefix;}
 	void setCaptionPrefix(const QString &captionPrefix);
 	const QString& captionPostfix(void) const{return m_captionPostfix;}

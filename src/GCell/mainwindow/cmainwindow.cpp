@@ -16,14 +16,18 @@
 #include <QLabel>
 #include <QSplitter>
 
+#include <QTreeView>
+#include "cobjectmodel.h"
+
 #include "coptionswindow.h"
 #include "datawindow/cdatawindow.h"
 #include "csavemodschemesdlg.h"
-#include "../scheme/algorithmproto/calgorithmproto.h"
-#include "../scheme/algorithmproto/calgorithmprotomng.h"
+#include "elementlistutil.h"
+#include "algorithmproto/calgorithmproto.h"
+#include "algorithmproto/calgorithmprotomng.h"
 #include "calgprotoview.h"
-#include "../scheme/cscheme.h"
-#include "../scheme/cschemeeditor.h"
+#include "cscheme.h"
+#include "cschemeeditor.h"
 #include "../engine/cengine.h"
 #include "../engine/ctimeframegenerator.h"
 #include "../algorithms/General/Amp/camp.h"
@@ -538,6 +542,14 @@ CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
     connect(clpb, SIGNAL(changed(QClipboard::Mode)),
             this, SLOT(onClipBoardChanged(QClipboard::Mode)));
 
+    //Remove that code after testing CObjectModel
+    m_objModel = nullptr;
+    m_objModel = new CObjectModel(this);
+    QTreeView *treeView = new QTreeView();
+    treeView->setModel(m_objModel);
+    treeView->show();
+    //
+
     setupActions();
     setupMainMenu();
     setupToolBars();
@@ -749,6 +761,9 @@ void CMainWindow::onSchemeEditorElementsSelected(const QList<CElement*> &element
     }
 
     setupSchemeEditorContextMenu();
+
+    if (m_dataWindow)
+        m_dataWindow->setAlgorithms(getElements<CAlgorithm*, CElement*>(elements));
 }
 
 void CMainWindow::onClipBoardChanged(const QClipboard::Mode &mode)
@@ -917,7 +932,6 @@ void CMainWindow::onDataWindowVisibleChanged(const bool &visible)
         m_acDataWindow->setChecked(visible);
 }
 
-//Must be refact for multy projects
 CScheme* CMainWindow::newScheme(void)
 {
     CSchemeEditor *schemeEditor = new CSchemeEditor(this);
@@ -940,19 +954,26 @@ CScheme* CMainWindow::newScheme(void)
     scheme->setAlgorithmProtoMng(m_algorithmProtoMng);
     schemeEditor->setScheme(scheme);
     connect(scheme, SIGNAL(destroyed(QObject*)), this, SLOT(onSchemeDestroyed(QObject*)));
-    if (m_dataWindow) {
-        connect(scheme, SIGNAL(algorithmsSelected(QList<CAlgorithm*>)),
-                m_dataWindow, SLOT(setAlgorithms(QList<CAlgorithm*>)));
-    }
 
     m_documents[scheme] = schemeEditor;
     if (m_workSpaceTabWgt) {
         m_workSpaceTabWgt->addTab(schemeEditor, schemeEditor->windowTitle());
         m_workSpaceTabWgt->setCurrentWidget(schemeEditor);
     }
-    return scheme;
 
-    //	if(m_engine) m_engine->setScheme(scheme);
+    //Remove that code after testing CObjectModel
+    if (m_objModel != nullptr) {
+        QObjectList schemeObjectList;
+        foreach (CScheme *scheme, m_documents.keys()) {
+            if (scheme != nullptr)
+                schemeObjectList << scheme;
+        }
+
+        m_objModel->setRoots(schemeObjectList);
+    }
+    //
+
+    return scheme;
 }
 
 void CMainWindow::saveScheme(CScheme *scheme)
@@ -988,7 +1009,6 @@ bool CMainWindow::saveSchemeAs(CScheme *scheme)
     return true;
 }
 
-//Must be refact for multy projects
 bool CMainWindow::openScheme(const QString &fileName)
 {
     QString schemeName = fileName;
@@ -1105,7 +1125,8 @@ void CMainWindow::restoreDesktop(const QString &fileName)
     QSettings desk(fileName, QSettings::IniFormat);
     bool openResult = false;
     if (isAutoLoadLastScheme()) {
-        QStringList oldSchemeFileList = desk.value("MainWindow/Old schemes", QString()).toStringList();
+        QStringList oldSchemeFileList =
+                desk.value("MainWindow/Old schemes", QString()).toStringList();
         foreach (QString schemeFileName, oldSchemeFileList)
             openResult = openScheme(schemeFileName);
     }
@@ -1174,7 +1195,9 @@ void CMainWindow::restoreConfig(const QString &fileName)
 
     if (m_dataWindow) {
         m_dataWindow->setAutoRefresh(cfg.value("DataWindow/autoRefresh", false).toBool());
-        m_dataWindow->setAutoRefreshInterval(cfg.value("DataWindow/autoRefreshInterval", 5).toInt());
+
+        int autoRefreshInterval = cfg.value("DataWindow/autoRefreshInterval", 5).toInt();
+        m_dataWindow->setAutoRefreshInterval(autoRefreshInterval);
     }
 
     if (m_engine) {
