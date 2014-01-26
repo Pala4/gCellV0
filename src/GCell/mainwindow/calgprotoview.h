@@ -21,7 +21,8 @@ private:
 
 	Qt::Orientation m_orientation;
 public:
-	explicit CAlgProtoGroupWidget(const Qt::Orientation &orientation = Qt::Vertical, QWidget *parent = 0);
+    explicit CAlgProtoGroupWidget(const Qt::Orientation &orientation = Qt::Vertical,
+                                  QWidget *parent = 0);
 
 	const Qt::Orientation& orientation(void) const{return m_orientation;}
 	void setOrientation(const Qt::Orientation &orientation);
@@ -49,10 +50,11 @@ private:
 	void init(void);
 public:
 	explicit CAlgProtoView(QWidget *parent = 0);
-	explicit CAlgProtoView(CAlgorithmProtoMng *algProtoMng, const Qt::Orientation &orientation = Qt::Vertical, QWidget *parent = 0);
+    explicit CAlgProtoView(CAlgorithmProtoMng *algProtoMng,
+                           const Qt::Orientation &orientation = Qt::Vertical, QWidget *parent = 0);
 
 	const QString& defaultGroupName(void) const{return m_defaultGroupName;}
-	void setDefaultGroupName(const QString &defaultGroupName){m_defaultGroupName = defaultGroupName;}
+    void setDefaultGroupName(const QString &defaultGroupName);
 
 	CAlgorithmProtoMng* algProtoMng(void){return m_algProtoMng;}
 	void setAlgProtoMng(CAlgorithmProtoMng *algProtoMng);

@@ -4,8 +4,6 @@
 #include <QGraphicsTextItem>
 #include <QGraphicsObject>
 
-#include "cobjectitem.h"
-
 #include <QFont>
 
 #include "timeframe.h"
@@ -17,16 +15,13 @@ class CScheme;
 class CElementOptionsWgt;
 class CGrid;
 
-class CGraphicsTextItem : public QGraphicsTextItem, public CObjectItem
+class CGraphicsTextItem : public QGraphicsTextItem
 {
 	Q_OBJECT
 protected:
 	virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 public:
 	explicit CGraphicsTextItem(const QString &text, QGraphicsItem *parent = 0);
-
-    QObject* parentObject();
-    QObjectList childrenObjects();
 private slots:
 	void onDocumentContentChanged(void);
 public slots:
@@ -35,7 +30,7 @@ signals:
 	void textChanged(const QString &text);
 };
 
-class CElement : public QGraphicsObject, public CObjectItem
+class CElement : public QGraphicsObject
 {
 	Q_OBJECT
 	Q_PROPERTY(int nomber READ nomber WRITE setNomber)
@@ -75,9 +70,6 @@ public:
 
 	virtual QRectF boundingRect(void) const{return m_boundingRect;}
 	virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
-
-    QObject* parentObject();
-    QObjectList childrenObjects();
 
 	QString typeID(void){return metaObject()->className();}
 

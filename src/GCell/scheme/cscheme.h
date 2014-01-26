@@ -22,7 +22,7 @@ struct stSchemeDesc
 	qreal height;
 };
 
-class CScheme : public QGraphicsScene, public CObjectItem
+class CScheme : public QGraphicsScene
 {
 	 Q_OBJECT
 private:
@@ -32,38 +32,38 @@ private:
 
 	 CAlgorithmProtoMng *m_algProtoMng;
 
-	 QDomElement variantToDomElement(QDomDocument domDoc, const QString &name, const QVariant &value);
+     QDomElement variantToDomElement(QDomDocument domDoc, const QString &name,
+                                     const QVariant &value);
 	 QVariant domElementToVariant(const QDomElement &domElement);
 	 void writeElementToXML(QDomDocument &doc, QDomElement &domElParent, CElement *element);
-	 CElement* readElementFromXML(const QDomDocument &domDoc, const QDomElement &domElElement, CElement *parentElement = 0);
+     CElement* readElementFromXML(const QDomDocument &domDoc, const QDomElement &domElElement,
+                                  CElement *parentElement = 0);
 public:
 	 explicit CScheme(QObject *parent = 0);
 
-     QObjectList childrenObjects();
-
-	 QString id(void){return QString("Scheme");}
-	 const bool& isNewScheme(void) const{return m_newScheme;}
+     QString id(){return QString("Scheme");}
+     const bool& isNewScheme() const{return m_newScheme;}
 	 void setNewScheme(const bool &newScheme){m_newScheme = newScheme;}
-	 const bool& isModified(void) const{return m_modified;}
+     const bool& isModified() const{return m_modified;}
 	 void setModified(const bool &modified);
-	 const QString& fileName(void) const{return m_fileName;}
+     const QString& fileName() const{return m_fileName;}
 	 void setFileName(const QString &fileName);
 
-	 void setAlgorithmProtoMng(CAlgorithmProtoMng *algorithmProtoMng){m_algProtoMng = algorithmProtoMng;}
+     void setAlgorithmProtoMng(CAlgorithmProtoMng *algorithmProtoMng);
 	 CElement* createElement(const QString &typeID);
 	 QList<CElement*> elements(const QString &typeID = QString());
-	 QList<CElement*> selectedElements(void);
-	 QList<CAlgorithm*> selectedAlgorithms(void);
+     QList<CElement*> selectedElements();
+     QList<CAlgorithm*> selectedAlgorithms();
 	 CElement* element(const QString &id);
-	 QList<CAlgorithm*> algorithms(void);
-	 QList<CLink*> links(void);
+     QList<CAlgorithm*> algorithms();
+     QList<CLink*> links();
 
 	 bool checkXMLSchemeFormat(const QDomDocument &domDoc);
 	 QDomDocument toXMLDom(const QList<CElement*> &elements, stSchemeDesc *schemeDesc = 0);
 	 QList<CElement*> fromXMLDom(const QDomDocument &domDoc, stSchemeDesc *schemeDesc = 0);
 private slots:
-	 void onSelectionChanged(void);
-	 void changeSchemeModified(void);
+     void onSelectionChanged();
+     void changeSchemeModified();
 public slots:
 	 void addElement(CElement *element);
 	 void addElements(const QList<CElement*> &els);
@@ -72,7 +72,7 @@ public slots:
 	 void addAlgorithm(CAlgorithm *algorithm, const QPointF &pos);
 	 void addLink(const QString &firstPortalID, const QString &secondPortalID);
 	 void addLink(CPortal *firstPortal, CPortal *secondPortal);
-	 void deleteSelected(void);
+     void deleteSelected();
 signals:
 	 void elementAdded(CElement *element);
 	 void fileNameChanged(QString fileName);

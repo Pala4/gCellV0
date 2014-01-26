@@ -19,10 +19,6 @@ class CScheme;
 class CSchemeEditor;
 class CEngine;
 
-//Remove that code after testing CObjectModel
-class CObjectModel;
-//
-
 class CMainWindow : public QMainWindow
 {
 	Q_OBJECT
@@ -84,10 +80,6 @@ private:
 
 	CEngine *m_engine;
 
-    //Remove that code after testing CObjectModel
-    CObjectModel *m_objModel;
-    //
-
 	void setupActions(void);
 	void setupMainMenu(void);
 	void setupToolBars(void);
@@ -111,9 +103,9 @@ public:
 	const bool& isAutoSaveDesktop(void) const{return m_autoSaveDesktop;}
 	void setAutoSaveDesktop(const bool &autoSaveDesktop){m_autoSaveDesktop = autoSaveDesktop;}
 	const bool& isAutoSaveLastScheme(void) const{return m_autoSaveLastScheme;}
-	void setAutoSaveLastScheme(const bool &autoSaveLastScheme){m_autoSaveLastScheme = autoSaveLastScheme;}
+    void setAutoSaveLastScheme(const bool &autoSaveLastScheme);
 	const bool& isAutoLoadLastScheme(void) const{return m_autoLoadLastScheme;}
-	void setAutoLoadLastScheme(const bool &autoLoadLastScheme){m_autoLoadLastScheme = autoLoadLastScheme;}
+    void setAutoLoadLastScheme(const bool &autoLoadLastScheme);
 	const QColor& gridColor(void) const{return m_gridColor;}
 	void setGridColor(const QColor &gridColor);
 	const QColor& gridBkGndColor(void) const{return m_gridBkGndColor;}

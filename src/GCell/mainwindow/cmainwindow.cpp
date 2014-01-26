@@ -16,9 +16,6 @@
 #include <QLabel>
 #include <QSplitter>
 
-#include <QTreeView>
-#include "cobjectmodel.h"
-
 #include "coptionswindow.h"
 #include "datawindow/cdatawindow.h"
 #include "csavemodschemesdlg.h"
@@ -542,14 +539,6 @@ CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
     connect(clpb, SIGNAL(changed(QClipboard::Mode)),
             this, SLOT(onClipBoardChanged(QClipboard::Mode)));
 
-    //Remove that code after testing CObjectModel
-    m_objModel = nullptr;
-    m_objModel = new CObjectModel(this);
-    QTreeView *treeView = new QTreeView();
-    treeView->setModel(m_objModel);
-    treeView->show();
-    //
-
     setupActions();
     setupMainMenu();
     setupToolBars();
@@ -559,6 +548,16 @@ CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
 
     restoreConfig("config.ini");
     restoreDesktop("desktop.ini");
+}
+
+void CMainWindow::setAutoSaveLastScheme(const bool &autoSaveLastScheme)
+{
+    m_autoSaveLastScheme = autoSaveLastScheme;
+}
+
+void CMainWindow::setAutoLoadLastScheme(const bool &autoLoadLastScheme)
+{
+    m_autoLoadLastScheme = autoLoadLastScheme;
 }
 
 void CMainWindow::setGridColor(const QColor &gridColor)
@@ -960,18 +959,6 @@ CScheme* CMainWindow::newScheme(void)
         m_workSpaceTabWgt->addTab(schemeEditor, schemeEditor->windowTitle());
         m_workSpaceTabWgt->setCurrentWidget(schemeEditor);
     }
-
-    //Remove that code after testing CObjectModel
-    if (m_objModel != nullptr) {
-        QObjectList schemeObjectList;
-        foreach (CScheme *scheme, m_documents.keys()) {
-            if (scheme != nullptr)
-                schemeObjectList << scheme;
-        }
-
-        m_objModel->setRoots(schemeObjectList);
-    }
-    //
 
     return scheme;
 }

@@ -20,15 +20,15 @@ private:
 	qreal m_portalMargin;
 
 	void registerPortal(CPortal *portal);
-	virtual QRectF calcBounds(void);
-	void placePortals(void);
+    virtual QRectF calcBounds();
+    void placePortals();
 protected:
 	void removePortal(const QString &id);
 	void addArgument(CArgument *arg);
 	CArgument* addArgument(const QString &name);
 	void addResult(CResult *res);
 	CResult* addResult(const QString &name);
-	void clearResults(void);
+    void clearResults();
 
 	virtual void proced(const stTimeLine &timeLine) = 0;
 public:
@@ -37,11 +37,11 @@ public:
 	virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
 	CResult* result(const QString &id);
-	QList<CPortal*> portals(void);
-	QList<CPortal*> argPortals(void);
-	QList<CPortal*> resPortals(void);
-	QList<CArgument*> arguments(void){return m_arguments.values();}
-	QList<CResult*> results(void){return m_results.values();}
+    QList<CPortal*> portals();
+    QList<CPortal*> argPortals();
+    QList<CPortal*> resPortals();
+    QList<CArgument*> arguments(){return m_arguments.values();}
+    QList<CResult*> results(){return m_results.values();}
 
 	virtual CElement* createElement(const QString &typeID);
 
@@ -49,9 +49,10 @@ public:
 private slots:
 	void onPortalDestroyed(QObject *objPortal);
 public slots:
-	virtual void updateGeometry(void);
+    virtual void updateGeometry();
 signals:
 	void portalAdded(CPortal *portal);
+    void portalRemoved(QObject *objPortal);
 };
 
 #endif // CALGORITHM_H

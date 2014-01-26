@@ -43,7 +43,7 @@ QVariant CGraphicsTextItem::itemChange(QGraphicsItem::GraphicsItemChange change,
 }
 
 CGraphicsTextItem::CGraphicsTextItem(const QString &text, QGraphicsItem *parent)
-    : QGraphicsTextItem(text, parent), CObjectItem()
+    : QGraphicsTextItem(text, parent)
 {
 	setObjectName("CGraphicsTextItem");
 
@@ -53,27 +53,6 @@ CGraphicsTextItem::CGraphicsTextItem(const QString &text, QGraphicsItem *parent)
 	setFlag(QGraphicsItem::ItemIsSelectable);
 	setFlag(QGraphicsItem::ItemStacksBehindParent);
     setTextInteractionFlags(Qt::NoTextInteraction);
-}
-
-QObject* CGraphicsTextItem::parentObject()
-{
-    if (parentItem() == nullptr)
-        return scene();
-
-    return dynamic_cast<QGraphicsObject*>(parentItem());
-}
-
-QObjectList CGraphicsTextItem::childrenObjects()
-{
-    QObjectList resultChildren;
-
-    foreach (QGraphicsItem *child, childItems()) {
-        QGraphicsObject *childObject = dynamic_cast<QGraphicsObject*>(child);
-        if (childObject)
-            resultChildren << childObject;
-    }
-
-    return resultChildren;
 }
 
 void CGraphicsTextItem::onDocumentContentChanged(void)
@@ -194,7 +173,7 @@ QVariant CElement::itemChange(QGraphicsItem::GraphicsItemChange change, const QV
 	return QGraphicsObject::itemChange(change, value);
 }
 
-CElement::CElement(QGraphicsItem *parent) : QGraphicsObject(parent), CObjectItem()
+CElement::CElement(QGraphicsItem *parent) : QGraphicsObject(parent)
 {
 	setObjectName(QStringLiteral("CElement"));
 
@@ -221,27 +200,6 @@ void CElement::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, 
 	Q_UNUSED(option)
 	Q_UNUSED(widget)
     painter->setFont(captionFont());
-}
-
-QObject* CElement::parentObject()
-{
-    if (parentItem() == nullptr)
-        return scene();
-
-    return dynamic_cast<QGraphicsObject*>(parentItem());
-}
-
-QObjectList CElement::childrenObjects()
-{
-    QObjectList resultChildren;
-
-    foreach (QGraphicsItem *child, childItems()) {
-        QGraphicsObject *childObject = dynamic_cast<QGraphicsObject*>(child);
-        if (childObject)
-            resultChildren << childObject;
-    }
-
-    return resultChildren;
 }
 
 QString CElement::id(void)
