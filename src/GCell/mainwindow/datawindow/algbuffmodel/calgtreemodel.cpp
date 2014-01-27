@@ -1,77 +1,73 @@
 #include "calgtreemodel.h"
 
 #include "calgbuffmodelitem.h"
-#include "../../../scheme/algorithm/calgorithm.h"
+#include "algorithm/calgorithm.h"
+#include "cscheme.h"
 
 QList<CPortal*> CAlgTreeModel::getCheckedPortalsRecurrence(QStandardItem *item)
 {
-	QList<CPortal*> checkedPortals;
-	CAlgBuffModelItem *algBItem = dynamic_cast<CAlgBuffModelItem*>(item);
-	if(!algBItem) return checkedPortals;
+    QList<CPortal*> checkedPortals;
+    CAlgBuffModelItem *algBItem = dynamic_cast<CAlgBuffModelItem*>(item);
+    if (algBItem == nullptr)
+        return checkedPortals;
 
-	if(algBItem->type() == CAlgBuffModelItem::Portal)
-	{
-		if(algBItem->portal() &&
-		   algBItem->checkState() == Qt::Checked)
-		{
-			checkedPortals << algBItem->portal();
-		}
-	}
-	else
-	{
-		for(int childIndex = 0; childIndex < algBItem->rowCount(); ++childIndex)
-		{
-			checkedPortals << getCheckedPortalsRecurrence(algBItem->child(childIndex));
-		}
-	}
+    if (algBItem->type() == CAlgBuffModelItem::Portal) {
+        if (algBItem->portal() && (algBItem->checkState() == Qt::Checked))
+            checkedPortals << algBItem->portal();
+    } else {
+        for (int childIndex = 0; childIndex < algBItem->rowCount(); ++childIndex)
+            checkedPortals << getCheckedPortalsRecurrence(algBItem->child(childIndex));
+    }
 
-	return checkedPortals;
+    return checkedPortals;
 }
 
 CAlgTreeModel::CAlgTreeModel(QObject *parent) : QStandardItemModel(parent)
 {
-	setObjectName(QStringLiteral("CAlgBuffModel"));
+    setObjectName(QStringLiteral("CAlgBuffModel"));
 }
 
 QList<CPortal*> CAlgTreeModel::checkedPortalList(void)
 {
-	QList<CPortal*> checkedPortals;
-	for(int rowIndex = 0; rowIndex < rowCount(); ++rowIndex)
-	{
-		checkedPortals << getCheckedPortalsRecurrence(item(rowIndex));
-	}
-	return checkedPortals;
+    QList<CPortal*> checkedPortals;
+    for (int rowIndex = 0; rowIndex < rowCount(); ++rowIndex)
+        checkedPortals << getCheckedPortalsRecurrence(item(rowIndex));
+
+    return checkedPortals;
 }
 
 void CAlgTreeModel::onItemChanged(QStandardItem *item, const int &role)
 {
-	CAlgBuffModelItem *algBItem = dynamic_cast<CAlgBuffModelItem*>(item);
-	if(!algBItem) return;
+    CAlgBuffModelItem *algBItem = dynamic_cast<CAlgBuffModelItem*>(item);
+    if(algBItem == nullptr)
+        return;
 
-	switch(role)
-	{
-		case Qt::CheckStateRole:
-		{
-			CPortal *portal = algBItem->portal();
-			if(!portal) return;
+    switch (role) {
+    case Qt::CheckStateRole:
+    {
+        CPortal *portal = algBItem->portal();
+        if (portal == nullptr)
+            return;
 
-			emit portalChecked(portal, (algBItem->checkState() == Qt::Checked));
-		}
-		break;
-	}
+        emit portalChecked(portal, (algBItem->checkState() == Qt::Checked));
+        break;
+    }
+    }
 }
 
-void CAlgTreeModel::setAlgorithms(const QList<CAlgorithm*> &algs)
+void CAlgTreeModel::setSchemes(const QList<CScheme*> &schemes)
 {
-	clear();
+    clear();
 
-	foreach(CAlgorithm *alg, algs)
-	{
-		if(!alg) continue;
-		if(alg->arguments().isEmpty() && alg->results().isEmpty()) continue;
+    foreach (CScheme *scheme, schemes) {
+        if (scheme == nullptr)
+            continue;
+        if (scheme->algorithms().isEmpty())
+            continue;
 
-		CAlgBuffModelItem *algItem = new CAlgBuffModelItem(alg);
-		connect(algItem, SIGNAL(itemChanged(QStandardItem*,int)), this, SLOT(onItemChanged(QStandardItem*,int)));
-		appendRow(algItem);
-	}
+        CAlgBuffModelItem *schemeItem = new CAlgBuffModelItem(scheme);
+        connect(schemeItem, SIGNAL(itemChanged(QStandardItem*,int)),
+                this, SLOT(onItemChanged(QStandardItem*,int)));
+        appendRow(schemeItem);
+    }
 }

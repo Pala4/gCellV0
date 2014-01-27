@@ -22,16 +22,17 @@
  */
 void CDataWindow::timerEvent(QTimerEvent *event)
 {
-	if(event->timerId() == m_refreshTimerID)
-	{
+    if (event->timerId() == m_refreshTimerID) {
 		refresh();
 
-		if(m_autoRefreshStopped)
-		{
+        if (m_autoRefreshStopped) {
 			killTimer(m_refreshTimerID);
 			m_refreshTimerID = 0;
-			if(m_autoRefreshToolBt) m_autoRefreshToolBt->setEnabled(true);
-			if(m_autoRefreshIntervalSpBx) m_autoRefreshIntervalSpBx->setEnabled(true);
+
+            if (m_autoRefreshToolBt != nullptr)
+                m_autoRefreshToolBt->setEnabled(true);
+            if (m_autoRefreshIntervalSpBx != nullptr)
+                m_autoRefreshIntervalSpBx->setEnabled(true);
 		}
 	}
 }
@@ -41,15 +42,15 @@ CDataWindow::CDataWindow(QWidget *parent) : QMainWindow(parent)
 	setObjectName(QStringLiteral("CDataWindow"));
 	setWindowFlags(Qt::Dialog);
 
-	m_splMain = 0;
-	m_tabWgt = 0;
-	m_dataPlot = 0;
-	m_dataTable = 0;
-	m_algTreeModel = 0;
+    m_splMain = nullptr;
+    m_tabWgt = nullptr;
+    m_dataPlot = nullptr;
+    m_dataTable = nullptr;
+    m_algTreeModel = nullptr;
 	m_autoRefreshStopped = true;
 	m_refreshTimerID = 0;
-	m_autoRefreshToolBt = 0;
-	m_autoRefreshIntervalSpBx = 0;
+    m_autoRefreshToolBt = nullptr;
+    m_autoRefreshIntervalSpBx = nullptr;
 
 	QWidget *wgtMain = new QWidget();
 	setCentralWidget(wgtMain);
@@ -104,8 +105,10 @@ CDataWindow::CDataWindow(QWidget *parent) : QMainWindow(parent)
 	m_autoRefreshIntervalSpBx->setObjectName(QStringLiteral("autoRefreshIntervalSpBx"));
 	m_autoRefreshIntervalSpBx->setRange(1, 10*60*1000/*10 min*/);
 	m_autoRefreshIntervalSpBx->setValue(5);
-	connect(m_autoRefreshToolBt, SIGNAL(clicked(bool)), m_autoRefreshIntervalSpBx, SLOT(setEnabled(bool)));
-	connect(m_autoRefreshToolBt, SIGNAL(toggled(bool)), m_autoRefreshIntervalSpBx, SLOT(setEnabled(bool)));
+    connect(m_autoRefreshToolBt, SIGNAL(clicked(bool)),
+            m_autoRefreshIntervalSpBx, SLOT(setEnabled(bool)));
+    connect(m_autoRefreshToolBt, SIGNAL(toggled(bool)),
+            m_autoRefreshIntervalSpBx, SLOT(setEnabled(bool)));
 	hblRefreshCtrls->addWidget(new QLabel(tr("every")));
 	hblRefreshCtrls->addWidget(m_autoRefreshIntervalSpBx);
 	hblRefreshCtrls->addWidget(new QLabel(tr("ms")));
@@ -121,22 +124,24 @@ CDataWindow::CDataWindow(QWidget *parent) : QMainWindow(parent)
 
 bool CDataWindow::isAutoRefresh(void)
 {
-	return m_autoRefreshToolBt ? m_autoRefreshToolBt->isChecked() : false;
+    return (m_autoRefreshToolBt != nullptr) ? m_autoRefreshToolBt->isChecked() : false;
 }
 
 void CDataWindow::setAutoRefresh(const bool &autoRefresh)
 {
-	if(m_autoRefreshToolBt) m_autoRefreshToolBt->setChecked(autoRefresh);
+    if (m_autoRefreshToolBt != nullptr)
+        m_autoRefreshToolBt->setChecked(autoRefresh);
 }
 
 int CDataWindow::autoRefreshInterval(void)
 {
-	return m_autoRefreshIntervalSpBx ? m_autoRefreshIntervalSpBx->value() : 5;
+    return (m_autoRefreshIntervalSpBx != nullptr) ? m_autoRefreshIntervalSpBx->value() : 5;
 }
 
 void CDataWindow::setAutoRefreshInterval(const int &autoRefreshInterval)
 {
-	if(m_autoRefreshIntervalSpBx) m_autoRefreshIntervalSpBx->setValue(autoRefreshInterval);
+    if (m_autoRefreshIntervalSpBx != nullptr)
+        m_autoRefreshIntervalSpBx->setValue(autoRefreshInterval);
 }
 
 void CDataWindow::setVisible(bool visible)
@@ -145,19 +150,21 @@ void CDataWindow::setVisible(bool visible)
 	emit visibleChanged(visible);
 }
 
-void CDataWindow::setAlgorithms(const QList<CAlgorithm*> &algorithms)
+void CDataWindow::setSchemes(const QList<CScheme*> &schemes)
 {
-	if(m_algTreeModel) m_algTreeModel->setAlgorithms(algorithms);
+    if (m_algTreeModel)
+        m_algTreeModel->setSchemes(schemes);
 }
 
 void CDataWindow::startAutoRefresh(void)
 {
-	if(!m_autoRefreshToolBt || !m_autoRefreshToolBt->isChecked()) return;
-	if(!m_autoRefreshStopped) return;
+    if ((m_autoRefreshToolBt == nullptr) || !m_autoRefreshToolBt->isChecked())
+        return;
+    if (!m_autoRefreshStopped)
+        return;
 
 	int refreshInterval = 5;
-	if(m_autoRefreshIntervalSpBx)
-	{
+    if (m_autoRefreshIntervalSpBx != nullptr) {
 		refreshInterval = m_autoRefreshIntervalSpBx->value();
 		m_autoRefreshIntervalSpBx->setEnabled(false);
 	}
@@ -169,15 +176,20 @@ void CDataWindow::startAutoRefresh(void)
 
 void CDataWindow::stopAutoRefresh(void)
 {
-	if(!m_autoRefreshToolBt || !m_autoRefreshToolBt->isChecked()) return;
-	if(m_autoRefreshStopped) return;
-	if(m_refreshTimerID == 0) return;
+    if ((m_autoRefreshToolBt == nullptr) || !m_autoRefreshToolBt->isChecked())
+        return;
+    if (m_autoRefreshStopped)
+        return;
+    if (m_refreshTimerID == 0)
+        return;
 
 	m_autoRefreshStopped = true;
 }
 
 void CDataWindow::refresh(void)
 {
-	if(m_dataPlot) m_dataPlot->refresh();
-	if(m_dataTable) m_dataTable->refresh();
+    if (m_dataPlot != nullptr)
+        m_dataPlot->refresh();
+    if (m_dataTable != nullptr)
+        m_dataTable->refresh();
 }

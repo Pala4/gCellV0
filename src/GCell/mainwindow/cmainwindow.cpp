@@ -762,7 +762,7 @@ void CMainWindow::onSchemeEditorElementsSelected(const QList<CElement*> &element
     setupSchemeEditorContextMenu();
 
     if (m_dataWindow)
-        m_dataWindow->setAlgorithms(getElements<CAlgorithm*, CElement*>(elements));
+        m_dataWindow->setSchemes(m_documents.keys());
 }
 
 void CMainWindow::onClipBoardChanged(const QClipboard::Mode &mode)

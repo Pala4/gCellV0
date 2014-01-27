@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QStandardItem>
 
+class CScheme;
 class CAlgorithm;
 class CPortal;
 
@@ -11,11 +12,13 @@ class CAlgBuffModelItem : public QObject, public QStandardItem
 {
 	Q_OBJECT
 public:
-	enum AlgBuffModelItemType{Algorithm = QStandardItem::UserType + 1,
+    enum AlgBuffModelItemType{Scheme = QStandardItem::UserType + 1,
+                              Algorithm,
 							  PortalNodeName,
 							  Portal,
 							  NoType};
 private:
+    CScheme *m_scheme;
 	CAlgorithm *m_alg;
 	CPortal *m_portal;
 	CAlgBuffModelItem::AlgBuffModelItemType m_itemType;
@@ -23,8 +26,10 @@ private:
 	void initCAlgBuffModelItem(void);
 	void addRow(CAlgBuffModelItem *item);
 public:
-	CAlgBuffModelItem(CAlgorithm *alg, QObject *parent = 0);
-	CAlgBuffModelItem(const QList<CPortal*> &portals, const QString &groupName, QObject *parent = 0);
+    CAlgBuffModelItem(CScheme *scheme, QObject *parent = 0);
+    CAlgBuffModelItem(CAlgorithm *alg, QObject *parent = 0);
+    CAlgBuffModelItem(const QList<CPortal*> &portals, const QString &groupName,
+                      QObject *parent = 0);
 	CAlgBuffModelItem(CPortal *portal, QObject *parent = 0);
 
 	virtual int type(void) const{return m_itemType;}

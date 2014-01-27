@@ -3,7 +3,7 @@
 
 #include <QStandardItemModel>
 
-class CAlgorithm;
+class CScheme;
 class CPortal;
 
 class CAlgTreeModel : public QStandardItemModel
@@ -18,7 +18,7 @@ public:
 private slots:
 	void onItemChanged(QStandardItem *item, const int &role);
 public slots:
-	void setAlgorithms(const QList<CAlgorithm*> &algs);
+    void setSchemes(const QList<CScheme*> &schemes);
 signals:
 	void portalChecked(CPortal *portal, bool checked);
 };

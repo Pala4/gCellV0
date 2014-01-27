@@ -9,6 +9,7 @@ class QToolButton;
 class QSpinBox;
 
 class CAlgorithm;
+class CScheme;
 class CDataPlot;
 class CDataTable;
 class CAlgTreeModel;
@@ -45,7 +46,7 @@ public:
 public slots:
 	virtual void setVisible(bool visible);
 
-	void setAlgorithms(const QList<CAlgorithm*> &algorithms);
+    void setSchemes(const QList<CScheme*> &schemes);
 	void startAutoRefresh(void);
 	void stopAutoRefresh(void);
 	void refresh(void);
