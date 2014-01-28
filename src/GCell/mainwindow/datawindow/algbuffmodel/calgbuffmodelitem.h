@@ -18,27 +18,87 @@ public:
 							  Portal,
 							  NoType};
 private:
-    CScheme *m_scheme;
-	CAlgorithm *m_alg;
-	CPortal *m_portal;
 	CAlgBuffModelItem::AlgBuffModelItemType m_itemType;
-
-	void initCAlgBuffModelItem(void);
-	void addRow(CAlgBuffModelItem *item);
+protected:
+    void setItemType(const CAlgBuffModelItem::AlgBuffModelItemType &itemType);
 public:
-    CAlgBuffModelItem(CScheme *scheme, QObject *parent = 0);
-    CAlgBuffModelItem(CAlgorithm *alg, QObject *parent = 0);
-    CAlgBuffModelItem(const QList<CPortal*> &portals, const QString &groupName,
-                      QObject *parent = 0);
-	CAlgBuffModelItem(CPortal *portal, QObject *parent = 0);
+    explicit CAlgBuffModelItem(QObject *parent = 0);
 
-	virtual int type(void) const{return m_itemType;}
+    virtual int type() const{return m_itemType;}
 	virtual void setData(const QVariant &value, int role = Qt::UserRole + 1);
 
-	CAlgorithm* alg(void){return m_alg;}
-	CPortal* portal(void){return m_portal;}
+    void addRow(CAlgBuffModelItem *item);
+    void clear();
+public slots:
+    void changeText(const QString &newText);
 signals:
 	void itemChanged(QStandardItem *item, int role);
+};
+
+class CGroupItem : public CAlgBuffModelItem
+{
+    Q_OBJECT
+private:
+    QString m_name;
+public:
+    explicit CGroupItem(const QString &name, QObject *parent = 0);
+
+    const QString& name() const{return m_name;}
+};
+
+class CSchemeItem : public CAlgBuffModelItem
+{
+    Q_OBJECT
+private:
+    CScheme *m_scheme;
+
+    bool contains(CAlgorithm *alg);
+    int indexOf(CAlgorithm *alg);
+public:
+    explicit CSchemeItem(CScheme *scheme, QObject *parent = 0);
+
+    CScheme* scheme(){return m_scheme;}
+
+    void addAlgs(const QList<CAlgorithm*> &algs);
+    void addAlg(CAlgorithm *alg);
+    void remAlgs(const QList<CAlgorithm*> &algs = QList<CAlgorithm*>());
+    void remAlg(CAlgorithm *alg);
+private slots:
+    void onSelectionChanged();
+};
+
+class CAlgItem : public CAlgBuffModelItem
+{
+    Q_OBJECT
+private:
+    CAlgorithm *m_alg;
+    CGroupItem *m_argGroup;
+    CGroupItem *m_resGroup;
+
+    bool contains(CGroupItem *group, CPortal *portal);
+    int indexOf(CGroupItem *group, CPortal *portal);
+public:
+    explicit CAlgItem(CAlgorithm *alg, QObject *parent = 0);
+
+    CAlgorithm* alg(){return m_alg;}
+
+    void addPortals(CGroupItem *group, const QList<CPortal*> &portals);
+    void addPortal(CGroupItem *group, CPortal *portal);
+    void remPortals(CGroupItem *group, const QList<CPortal*> &portals = QList<CPortal*>());
+    void remPortal(CGroupItem *group, CPortal *portal);
+private slots:
+    void onPortalAdded(CPortal *portal);
+};
+
+class CPortalItem : public CAlgBuffModelItem
+{
+    Q_OBJECT
+private:
+    CPortal *m_portal;
+public:
+    explicit CPortalItem(CPortal *portal, QObject *parent = 0);
+
+    CPortal* portal(){return m_portal;}
 };
 
 #endif // CALGBUFFMODELITEM_H

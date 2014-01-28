@@ -47,6 +47,7 @@ public slots:
 	virtual void setVisible(bool visible);
 
     void setSchemes(const QList<CScheme*> &schemes);
+    void addScheme(CScheme *scheme);
 	void startAutoRefresh(void);
 	void stopAutoRefresh(void);
 	void refresh(void);

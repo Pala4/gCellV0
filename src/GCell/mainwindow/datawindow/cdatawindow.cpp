@@ -41,6 +41,7 @@ CDataWindow::CDataWindow(QWidget *parent) : QMainWindow(parent)
 {
 	setObjectName(QStringLiteral("CDataWindow"));
 	setWindowFlags(Qt::Dialog);
+    setWindowTitle(tr("Data window"));
 
     m_splMain = nullptr;
     m_tabWgt = nullptr;
@@ -62,6 +63,7 @@ CDataWindow::CDataWindow(QWidget *parent) : QMainWindow(parent)
 	vbl->addWidget(m_splMain);
 
 	QTreeView *algTreeView = new QTreeView();
+    algTreeView->setHeaderHidden(true);
 	m_splMain->addWidget(algTreeView);
 
 	m_tabWgt = new QTabWidget();
@@ -154,6 +156,12 @@ void CDataWindow::setSchemes(const QList<CScheme*> &schemes)
 {
     if (m_algTreeModel)
         m_algTreeModel->setSchemes(schemes);
+}
+
+void CDataWindow::addScheme(CScheme *scheme)
+{
+    if (m_algTreeModel)
+        m_algTreeModel->addScheme(scheme);
 }
 
 void CDataWindow::startAutoRefresh(void)

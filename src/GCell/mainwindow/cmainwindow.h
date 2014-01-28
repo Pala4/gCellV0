@@ -75,6 +75,7 @@ private:
 	CAlgProtoView *m_algProtoView;
 	QDockWidget *m_algProtoViewDock;
 
+    int m_schemeCounter;
     CScheme *m_activeScheme;
     QMap<CScheme*, CSchemeEditor*> m_documents;
 
@@ -137,7 +138,7 @@ private slots:
 	void setDataWindowVisible(const bool &visible);
 	void onDataWindowVisibleChanged(const bool &visible);
 
-    CScheme* newScheme(void);
+    CScheme* newScheme();
 	void saveScheme(CScheme *scheme = 0);
 	bool saveSchemeAs(CScheme *scheme = 0);
 	bool openScheme(const QString &fileName = QString());

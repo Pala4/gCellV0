@@ -12,14 +12,31 @@ QList<CPortal*> CAlgTreeModel::getCheckedPortalsRecurrence(QStandardItem *item)
         return checkedPortals;
 
     if (algBItem->type() == CAlgBuffModelItem::Portal) {
-        if (algBItem->portal() && (algBItem->checkState() == Qt::Checked))
-            checkedPortals << algBItem->portal();
+        CPortalItem *portalItem = qobject_cast<CPortalItem*>(algBItem);
+        if ((portalItem != nullptr)
+                && (portalItem->portal() != nullptr)
+                && (portalItem->checkState() == Qt::Checked)) {
+            checkedPortals << portalItem->portal();
+        }
     } else {
         for (int childIndex = 0; childIndex < algBItem->rowCount(); ++childIndex)
             checkedPortals << getCheckedPortalsRecurrence(algBItem->child(childIndex));
     }
 
     return checkedPortals;
+}
+
+bool CAlgTreeModel::isContains(CScheme *scheme)
+{
+    for (int row = 0; row < rowCount(); ++row) {
+        CSchemeItem *schemeItem = dynamic_cast<CSchemeItem*>(item(row));
+        if ((schemeItem != nullptr)
+                && (schemeItem->scheme() != nullptr)
+                && (schemeItem->scheme() == scheme)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 CAlgTreeModel::CAlgTreeModel(QObject *parent) : QStandardItemModel(parent)
@@ -45,11 +62,10 @@ void CAlgTreeModel::onItemChanged(QStandardItem *item, const int &role)
     switch (role) {
     case Qt::CheckStateRole:
     {
-        CPortal *portal = algBItem->portal();
-        if (portal == nullptr)
-            return;
+        CPortalItem *portalItem = qobject_cast<CPortalItem*>(algBItem);
+        if ((portalItem != nullptr) && (portalItem->portal() != nullptr))
+            emit portalChecked(portalItem->portal(), (portalItem->checkState() == Qt::Checked));
 
-        emit portalChecked(portal, (algBItem->checkState() == Qt::Checked));
         break;
     }
     }
@@ -60,14 +76,19 @@ void CAlgTreeModel::setSchemes(const QList<CScheme*> &schemes)
     clear();
 
     foreach (CScheme *scheme, schemes) {
-        if (scheme == nullptr)
-            continue;
-        if (scheme->algorithms().isEmpty())
-            continue;
-
-        CAlgBuffModelItem *schemeItem = new CAlgBuffModelItem(scheme);
-        connect(schemeItem, SIGNAL(itemChanged(QStandardItem*,int)),
-                this, SLOT(onItemChanged(QStandardItem*,int)));
-        appendRow(schemeItem);
+        addScheme(scheme);
     }
+}
+
+void CAlgTreeModel::addScheme(CScheme *scheme)
+{
+    if (scheme == nullptr)
+        return;
+    if (isContains(scheme))
+        return;
+
+    CAlgBuffModelItem *schemeItem = new CSchemeItem(scheme, this);
+    connect(schemeItem, SIGNAL(itemChanged(QStandardItem*,int)),
+            this, SLOT(onItemChanged(QStandardItem*,int)));
+    appendRow(schemeItem);
 }

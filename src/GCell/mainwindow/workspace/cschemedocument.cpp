@@ -11,7 +11,7 @@ CSchemeDocument::CSchemeDocument(QObject *parent) : CDocument(parent)
 {
 	setObjectName(QStringLiteral("CSchemeDocument"));
 
-	m_scheme = new CScheme(this);
+    m_scheme = new CScheme(0, this);
 	m_scheme->setObjectName(QStringLiteral("scheme"));
 	m_scheme->setSceneRect(0.0, 0.0, 2000.0, 2000.0);
 	m_scheme->setNewScheme(true);

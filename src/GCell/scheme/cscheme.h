@@ -39,7 +39,7 @@ private:
      CElement* readElementFromXML(const QDomDocument &domDoc, const QDomElement &domElElement,
                                   CElement *parentElement = 0);
 public:
-	 explicit CScheme(QObject *parent = 0);
+     explicit CScheme(const int &nomber, QObject *parent = 0);
 
      QString id(){return QString("Scheme");}
      const bool& isNewScheme() const{return m_newScheme;}

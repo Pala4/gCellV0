@@ -116,13 +116,13 @@ CElement* CScheme::readElementFromXML(const QDomDocument &domDoc, const QDomElem
     return el;
 }
 
-CScheme::CScheme(QObject *parent) : QGraphicsScene(parent)
+CScheme::CScheme(const int &nomber, QObject *parent) : QGraphicsScene(parent)
 {
     setObjectName(QStringLiteral("CScheme"));
 
     m_newScheme = false;
     m_modified = false;
-    m_fileName = QStringLiteral("scheme.scm");
+    m_fileName = QStringLiteral("scheme_%1.scm").arg(nomber);
 
     m_algProtoMng = nullptr;
 
