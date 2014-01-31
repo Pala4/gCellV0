@@ -2,43 +2,98 @@
 
 #include <qmath.h>
 
+#include <assert.h>
+#include <iostream>
+
 #include "ctimeframegenerator.h"
-#include "../scheme/cscheme.h"
-#include "../scheme/algorithm/calgorithm.h"
-#include "../scheme/algorithm/cdatasource.h"
-#include "../scheme/portal/cresult.h"
-#include "../scheme/portal/cargument.h"
-#include "../scheme/link/clink.h"
-#include "../scheme/elementlistutil.h"
+#include "cscheme.h"
+#include "algorithm/calgorithm.h"
+#include "algorithm/cdatasource.h"
+#include "portal/cresult.h"
+#include "portal/cargument.h"
+#include "link/clink.h"
+#include "elementlistutil.h"
 
 /*!
  * \class CTraceData
  */
+void CTraceData::setDataSources(const std::vector<CDataSource*> &dataSources)
+{
+    m_dataSources = dataSources;
+}
+
+bool CTraceData::isInspected(CAlgorithm *algorithm)
+{
+    if (algorithm == nullptr) {
+        std::cout << "Warning: argument <algorithm> is null in ["
+                  << __FILE__ << ":" << __LINE__ << "]";
+        return false;
+    }
+
+    return (std::find(m_inspectedAlgorithms.begin(), m_inspectedAlgorithms.end(), algorithm)
+            != m_inspectedAlgorithms.end());
+}
+
 void CTraceData::addInspectedAlgorithm(CAlgorithm *algorithm)
 {
-	if(!algorithm) return;
-	if(m_inspectedAlgorithms.contains(algorithm)) return;
+    if (algorithm == nullptr) {
+        std::cout << "Warning: argument <algorithm> is null in ["
+                  << __FILE__ << ":" << __LINE__ << "]";
+        return;
+    }
 
-	m_inspectedAlgorithms << algorithm;
+    if (std::find(m_inspectedAlgorithms.begin(), m_inspectedAlgorithms.end(), algorithm)
+            != m_inspectedAlgorithms.end()) {
+        return;
+    }
+    m_inspectedAlgorithms.push_back(algorithm);
 }
 
 void CTraceData::removeInspectedAlgorithm(CAlgorithm *algorithm)
 {
-	if(!algorithm) return;
-	if(!m_inspectedAlgorithms.contains(algorithm)) return;
+    if (algorithm == nullptr) {
+        std::cout << "Warning: argument <algorithm> is null in ["
+                  << __FILE__ << ":" << __LINE__ << "]";
+        return;
+    }
 
-	m_inspectedAlgorithms.removeOne(algorithm);
+    if (std::find(m_inspectedAlgorithms.begin(), m_inspectedAlgorithms.end(), algorithm)
+            == m_inspectedAlgorithms.end()) {
+        return;
+    }
+    int idx = std::find(m_inspectedAlgorithms.begin(), m_inspectedAlgorithms.end(), algorithm)
+            - m_inspectedAlgorithms.begin();
+    m_inspectedAlgorithms.erase(m_inspectedAlgorithms.begin() + idx);
+}
+
+bool CTraceData::isLoopBackPortal(CPortal *portal)
+{
+    if (portal == nullptr) {
+        std::cout << "Warning: argument <portal> is null in ["
+                  << __FILE__ << ":" << __LINE__ << "]";
+        return false;
+    }
+
+    return (std::find(m_loopBackPortals.begin(), m_loopBackPortals.end(), portal)
+            != m_loopBackPortals.end());
 }
 
 void CTraceData::addLoopBackPortal(CPortal *portal)
 {
-	if(!portal) return;
-	if(m_loopBackPortals.contains(portal)) return;
+    if (portal == nullptr) {
+        std::cout << "Warning: argument <portal> is null in ["
+                  << __FILE__ << ":" << __LINE__ << "]";
+        return;
+    }
 
-	m_loopBackPortals << portal;
+    if (std::find(m_loopBackPortals.begin(), m_loopBackPortals.end(), portal)
+            != m_loopBackPortals.end()) {
+        return;
+    }
+    m_loopBackPortals.push_back(portal);
 }
 
-void CTraceData::release(void)
+void CTraceData::release()
 {
 	clearDataSources();
 	clearInspectedAlgorithm();
@@ -50,67 +105,89 @@ void CTraceData::release(void)
  */
 void CEngine::traceArgument(CArgument *argument)
 {
-	if(!argument) return;
-	if(m_traceData.isLoopBackPortal(argument)) return;
+    if (argument == nullptr) {
+        std::cout << "Warning: argument <argument> is null in ["
+                  << __FILE__ << ":" << __LINE__ << "]";
+        return;
+    }
 
+    if (m_traceData.isLoopBackPortal(argument))
+        return;
 	CAlgorithm *alg = dynamic_cast<CAlgorithm*>(argument->parentItem());
-	if(m_traceData.isInspected(alg))
-	{
+    if (m_traceData.isInspected(alg)) {
 		m_traceData.addLoopBackPortal(argument);
 		argument->setLoopBackPortal(true);
 		return;
 	}
-	if(alg) traceAlgorithm(alg);
+    if (alg != nullptr)
+        traceAlgorithm(alg);
 }
 
 void CEngine::traceLink(CLink *link)
 {
-	if(!link) return;
-	traceArgument(dynamic_cast<CArgument*>(link->argument()));
+    if (link == nullptr) {
+        std::cout << "Warning: argument <link> is null in ["
+                  << __FILE__ << ":" << __LINE__ << "]";
+        return;
+    }
+
+    traceArgument(link->argument());
 }
 
 void CEngine::traceResult(CResult *result)
 {
-	if(!result) return;
-	foreach(CLink* link, result->links())
-	{
-		if(!link) continue;
-		traceLink(link);
+    if (result == nullptr) {
+        std::cout << "Warning: argument <result> is null in ["
+                  << __FILE__ << ":" << __LINE__ << "]";
+        return;
+    }
+
+    for (CLink *link : result->links().toVector().toStdVector()) {
+        if (link != nullptr)
+            traceLink(link);
 	}
 }
 
 void CEngine::traceAlgorithm(CAlgorithm *algorithm)
 {
-	if(!algorithm) return;
-	m_traceData.addInspectedAlgorithm(algorithm);
-	QList<CResult*> ress = getElements<CResult*, CPortal*>(algorithm->portals());
-	foreach(CResult *res, ress)
-	{
-		if(!res) continue;
-		traceResult(res);
+    if (algorithm == nullptr) {
+        std::cout << "Warning: argument <algorithm> is null in ["
+                  << __FILE__ << ":" << __LINE__ << "]";
+        return;
+    }
+
+    m_traceData.addInspectedAlgorithm(algorithm);
+    for (CResult *res : algorithm->results().toVector().toStdVector()) {
+        if (res != nullptr)
+            traceResult(res);
 	}
 	m_traceData.removeInspectedAlgorithm(algorithm);
 }
 
-void CEngine::traceScheme(void)
+void CEngine::traceScheme(CScheme *scheme)
 {
-	if(!m_scheme) return;
+    if (scheme == nullptr) {
+        std::cout << "Warning: argument <scheme> is null in ["
+                  << __FILE__ << ":" << __LINE__ << "]";
+        return;
+    }
 
-	m_traceData.setDataSources(getElements<CDataSource*, QGraphicsItem*>(m_scheme->items()));
-	foreach(CDataSource *ds, m_traceData.dataSources())
-	{
-		if(!ds) continue;
-		QList<CArgument*> args = getElements<CArgument*, CPortal*>(ds->portals());
-		foreach(CArgument *arg, args)
-		{
-			if(!arg) continue;
-			m_traceData.addLoopBackPortal(arg);
-			arg->setLoopBackPortal(true);
-		}
-	}
-	foreach(CDataSource *ds, m_traceData.dataSources())
-	{
-		if(ds) traceAlgorithm(ds);
+    std::vector<CDataSource*> dataSources =
+            getElements<CDataSource*, QGraphicsItem*>(scheme->items()).toVector().toStdVector();
+    m_traceData.setDataSources(dataSources);
+    for (CDataSource *ds : m_traceData.dataSources()) {
+        if (ds != nullptr) {
+            for (CArgument *arg : ds->arguments().toVector().toStdVector()) {
+                if (arg == nullptr) {
+                    m_traceData.addLoopBackPortal(arg);
+                    arg->setLoopBackPortal(true);
+                }
+            }
+        }
+    }
+    for (CDataSource *ds : m_traceData.dataSources()) {
+        if(ds != nullptr)
+            traceAlgorithm(ds);
 	}
 }
 
@@ -118,64 +195,44 @@ CEngine::CEngine(QObject *parent) : QObject(parent)
 {
     setObjectName(QStringLiteral("CEngine"));
 
-	m_framer = 0;
-    m_scheme = 0;
-
 	m_framer = new CTimeFrameGenerator(0.0, 0.01, 10.0, this);
 	m_framer->setObjectName(QStringLiteral("framer"));
 	connect(m_framer, SIGNAL(newTimeFrame(stTimeLine)), this, SLOT(onNewTimeFrame(stTimeLine)));
 }
 
-void CEngine::setScheme(CScheme *scheme)
-{
-    if(m_scheme && (m_scheme == scheme)) return;
-
-    if(m_scheme)
-    {
-        disconnect(m_scheme, SIGNAL(destroyed()), this, SLOT(onSchemeDestroyed()));
-    }
-
-    m_scheme = scheme;
-
-    if(m_scheme)
-    {
-        connect(m_scheme, SIGNAL(destroyed()), this, SLOT(onSchemeDestroyed()));
-	}
-}
-
 void CEngine::onNewTimeFrame(const stTimeLine &timeLine)
 {
-	foreach(CDataSource *ds, m_traceData.dataSources())
-	{
-		if(ds) ds->calc(timeLine);
+    for (CDataSource *ds : m_traceData.dataSources()) {
+        if (ds != nullptr)
+            ds->calc(timeLine);
 	}
 }
 
-void CEngine::onSchemeDestroyed(void)
+void CEngine::calc(CScheme *scheme)
 {
-    m_scheme = 0;
-}
+    if (scheme == nullptr) {
+        std::cout << "Warning: argument <scheme> is null in ["
+                  << __FILE__ << ":" << __LINE__ << "]";
+        return;
+    }
 
-void CEngine::calc(void)
-{
-	if(!m_scheme) return;
-	if(!m_framer) return;
+    assert(m_framer != nullptr);
 
 	emit calcStarted();
 
-    foreach(CElement *element, m_scheme->elements())
-    {
-		element->beforeCalc(m_framer->startTime(), m_framer->timeStep(), m_framer->endTime());
+    for (CElement *element : scheme->elements().toVector().toStdVector()) {
+        if (element != nullptr)
+            element->beforeCalc(m_framer->startTime(), m_framer->timeStep(), m_framer->endTime());
     }
-	traceScheme();
 
+    traceScheme(scheme);
 	m_framer->start();
 
 	m_traceData.release();
-    foreach(CElement *element, m_scheme->elements())
-    {
-        element->afterCalc();
+    for (CElement *element : scheme->elements().toVector().toStdVector()) {
+        if (element != nullptr)
+            element->afterCalc();
     }
 
-	emit calcStopped();
+    emit calcStopped();
 }

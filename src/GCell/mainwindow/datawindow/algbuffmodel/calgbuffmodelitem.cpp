@@ -19,6 +19,14 @@ CAlgBuffModelItem::CAlgBuffModelItem(QObject *parent) : QObject(parent), QStanda
     setSelectable(false);
 }
 
+CAlgBuffModelItem::~CAlgBuffModelItem()
+{
+    //A bit of crutches, because
+    //QStandardItemModel don't update their views when the item is destroyed
+    if (model() != nullptr)
+        model()->takeRow(row());
+}
+
 void CAlgBuffModelItem::setData(const QVariant &value, int role)
 {
 	QStandardItem::setData(value, role);

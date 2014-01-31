@@ -139,6 +139,12 @@ void CMainWindow::setupActions(void)
     m_acCalcActiveScheme->setEnabled(false);
     connect(m_acCalcActiveScheme, SIGNAL(triggered()), this, SLOT(calcActiveScheme()));
 
+    //Calc all schemes
+    m_acCalcAllSchemes = new QAction(tr("Calc all schemes"), this);
+    m_acCalcAllSchemes->setObjectName(QStringLiteral("acCalcAllSchemes"));
+    m_acCalcAllSchemes->setEnabled(false);
+    connect(m_acCalcAllSchemes, SIGNAL(triggered()), this, SLOT(calcAllSchemes()));
+
     //Options
     m_acOptions = new QAction(tr("Options..."), this);
     m_acOptions->setObjectName(QStringLiteral("acOptions"));
@@ -198,6 +204,8 @@ void CMainWindow::setupMainMenu(void)
     QMenu *calcMenu = menuBar()->addMenu(tr("&Calculate"));
     if (m_acCalcActiveScheme != nullptr)
         calcMenu->addAction(m_acCalcActiveScheme);
+    if (m_acCalcAllSchemes != nullptr)
+        calcMenu->addAction(m_acCalcAllSchemes);
 
     //	menuBar()->addMenu(tr("&Algorithms"));
 
@@ -268,6 +276,8 @@ void CMainWindow::setupToolBars(void)
         m_viewToolBarsMenu->addAction(tbCalc->toggleViewAction());
     if (m_acCalcActiveScheme != nullptr)
         tbCalc->addAction(m_acCalcActiveScheme);
+    if (m_acCalcAllSchemes != nullptr)
+        tbCalc->addAction(m_acCalcAllSchemes);
 
     //Options
     QToolBar *tbOptions = addToolBar(tr("Options"));
@@ -484,6 +494,7 @@ CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
     m_acPaste = nullptr;
     m_acDataWindow = nullptr;
     m_acCalcActiveScheme = nullptr;
+    m_acCalcAllSchemes = nullptr;
     m_acOptions = nullptr;
     m_acElementOptions = nullptr;
 
@@ -814,6 +825,8 @@ void CMainWindow::onCurrentTabChanged(const int &currentTabIndex)
         m_acLinking->setEnabled(enableActions);
     if (m_acCalcActiveScheme != nullptr)
         m_acCalcActiveScheme->setEnabled(enableActions);
+    if (m_acCalcAllSchemes != nullptr)
+        m_acCalcAllSchemes->setEnabled(enableActions);
 
     if (!enableActions) {
         if (m_acEditSep != nullptr)
@@ -856,10 +869,16 @@ void CMainWindow::onTabCloseRequested(const int &tabIndex)
 
 void CMainWindow::calcActiveScheme(void)
 {
-    if ((m_engine != nullptr) && (activeScheme() != nullptr)) {
-        m_engine->setScheme(activeScheme());
-        m_engine->calc();
-    }
+    Q_ASSERT(m_engine != nullptr);
+
+    m_engine->calc(activeScheme());
+}
+
+void CMainWindow::calcAllSchemes()
+{
+    Q_ASSERT(m_engine != nullptr);
+
+//    m_engine->calc(m_documents.keys().toVector().toStdVector());
 }
 
 void CMainWindow::showOptions(void)

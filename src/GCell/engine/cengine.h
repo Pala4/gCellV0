@@ -3,7 +3,9 @@
 
 #include <QObject>
 
-#include "../scheme/timeframe.h"
+#include <vector>
+
+#include "timeframe.h"
 
 class CScheme;
 class CAlgorithm;
@@ -17,26 +19,26 @@ class CTimeFrameGenerator;
 class CTraceData
 {
 private:
-	QList<CDataSource*> m_dataSources;
-	QList<CAlgorithm*> m_inspectedAlgorithms;
-	QList<CPortal*> m_loopBackPortals;
+    std::vector<CDataSource*> m_dataSources;
+    std::vector<CAlgorithm*> m_inspectedAlgorithms;
+    std::vector<CPortal*> m_loopBackPortals;
 public:
-	CTraceData(void){}
+    CTraceData(){}
 
-	void setDataSources(const QList<CDataSource*> &dataSources){m_dataSources.clear(); m_dataSources = dataSources;}
-	const QList<CDataSource*>& dataSources(void) const{return m_dataSources;}
-	void clearDataSources(void){m_dataSources.clear();}
+    void setDataSources(const std::vector<CDataSource*> &dataSources);
+    const std::vector<CDataSource*>& dataSources() const{return m_dataSources;}
+    void clearDataSources(){m_dataSources.clear();}
 
-	bool isInspected(CAlgorithm *algorithm){if(!algorithm) return false; return m_inspectedAlgorithms.contains(algorithm);}
+    bool isInspected(CAlgorithm *algorithm);
 	void addInspectedAlgorithm(CAlgorithm *algorithm);
 	void removeInspectedAlgorithm(CAlgorithm *algorithm);
-	void clearInspectedAlgorithm(void){m_inspectedAlgorithms.clear();}
+    void clearInspectedAlgorithm(){m_inspectedAlgorithms.clear();}
 
-	bool isLoopBackPortal(CPortal *portal){if(!portal) return false; return m_loopBackPortals.contains(portal);}
+    bool isLoopBackPortal(CPortal *portal);
 	void addLoopBackPortal(CPortal *portal);
-	void clearLoopBackPortals(void){m_loopBackPortals.clear();}
+    void clearLoopBackPortals(){m_loopBackPortals.clear();}
 
-	void release(void);
+    void release();
 };
 
 class CEngine : public QObject
@@ -45,24 +47,20 @@ class CEngine : public QObject
 private:
 	CTimeFrameGenerator *m_framer;
 	CTraceData m_traceData;
-    CScheme *m_scheme;
 
 	void traceArgument(CArgument *argument);
 	void traceLink(CLink *link);
 	void traceResult(CResult *result);
 	void traceAlgorithm(CAlgorithm *algorithm);
-	void traceScheme(void);
+    void traceScheme(CScheme *scheme);
 public:
     explicit CEngine(QObject *parent = 0);
 
 	CTimeFrameGenerator* framer(void){return m_framer;}
-    CScheme* scheme(void){return m_scheme;}
-    void setScheme(CScheme *scheme);
 private slots:
 	void onNewTimeFrame(const stTimeLine &timeLine);
-    void onSchemeDestroyed(void);
 public slots:
-    void calc(void);
+    void calc(CScheme *scheme);
 signals:
 	void calcStarted(void);
 	void calcStopped(void);
