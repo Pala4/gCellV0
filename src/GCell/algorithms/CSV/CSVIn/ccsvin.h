@@ -1,7 +1,7 @@
 #ifndef CCSVIN_H
 #define CCSVIN_H
 
-#include "../../../scheme/algorithm/cdatasource.h"
+#include "algorithm/cdatasource.h"
 
 class CCSVInOptionShit;
 
@@ -16,21 +16,26 @@ private:
 	CCSVInOptionShit *m_optShit;
     QMap<int, QString> m_resultDataMapping;
 protected:
-	virtual void proced(const stTimeLine &timeLine);
+    void proced(const unsigned long long &ullTFIndex, const long double &ldblTimeFrame,
+                const long double &ldblStartTime, const long double &ldblTimeStep,
+                const long double &ldblEndTime);
 public:
-	Q_INVOKABLE explicit CCSVIn(QGraphicsItem *parent = 0);
+    Q_INVOKABLE explicit CCSVIn(QGraphicsItem *parent = nullptr);
 
-	const QString& fileName(void) const{return m_fileName;}
+    const QString& fileName() const{return m_fileName;}
 	void setFileName(const QString &fileName){m_fileName = fileName;}
-    QByteArray resultDataMapping(void);
+    QByteArray resultDataMapping();
     void setResultDataMapping(QByteArray resultDataMapping);
 
-    QList<int> dataIndexes(void) const{return m_resultDataMapping.keys();}
+    QList<int> dataIndexes() const{return m_resultDataMapping.keys();}
 
-	virtual CElementOptionsWgt* optionsWidget(QWidget *parentWidget);
-	virtual void acceptOptions(CElementOptionsWgt *optWgt);
-    virtual void beforeCalc(void);
-    virtual void afterCalc(void);
+    CElementOptionsWgt* optionsWidget(QWidget *parentWidget);
+    void acceptOptions(CElementOptionsWgt *optWgt);
+    void beforeCalc(const long double &ldblStartTime, const long double &ldblTimeStep,
+                    const long double &ldblEndTime);
+    void afterCalc(const unsigned long long &ullTFCount, const long double &ldblLastFrame,
+                   const long double &ldblStartTime, const long double &ldblTimeStep,
+                   const long double &ldblEndTime);
 };
 
 #endif // CCSVIN_H

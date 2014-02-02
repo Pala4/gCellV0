@@ -6,12 +6,12 @@
 class CCSVOut : public CDataReceiver
 {
     Q_OBJECT
-private:
-	CArgument *arg;
 protected:
-	virtual void proced(const stTimeLine &timeLine);
+    void proced(const unsigned long long &ullTFIndex, const long double &ldblTimeFrame,
+                const long double &ldblStartTime, const long double &ldblTimeStep,
+                const long double &ldblEndTime);
 public:
-    Q_INVOKABLE explicit CCSVOut(QGraphicsItem *parent = 0);
+    Q_INVOKABLE explicit CCSVOut(QGraphicsItem *parent = nullptr);
 };
 
 #endif // CCSVOUT_H

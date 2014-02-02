@@ -151,7 +151,7 @@ void CAlgorithm::addArgument(CArgument *arg)
 {
     if(arg == nullptr) return;
 
-	arg->setPortalOrientation(CPortal::Left);
+    arg->setPortalOrientation(CPortal::Left);
 	arg->setNomber(generateNomber<CArgument*, CArgument*>(m_arguments.values()));
 	m_arguments[arg->id()] = arg;
 	registerPortal(arg);
@@ -170,7 +170,7 @@ void CAlgorithm::addResult(CResult *res)
 {
     if(res == nullptr) return;
 
-	res->setPortalOrientation(CPortal::Right);
+    res->setPortalOrientation(CPortal::Right);
     res->setDataColor(QColor(qRound(qrand()*255.0/RAND_MAX),
                              qRound(qrand()*255.0/RAND_MAX),
                              qRound(qrand()*255.0/RAND_MAX), 180));
@@ -264,20 +264,24 @@ CElement* CAlgorithm::createElement(const QString &typeID)
     return nullptr;
 }
 
-void CAlgorithm::calc(const stTimeLine &timeLine)
+void CAlgorithm::calc(const unsigned long long &ullTFIndex, const long double &ldblTimeFrame,
+                      const long double &ldblStartTime, const long double &ldblTimeStep,
+                      const long double &ldblEndTime)
 {
     foreach (CArgument *arg, arguments()) {
         if (arg == nullptr)
             continue;
         if (!arg->isUsed())
             continue;
-        if (!arg->isLoopBackPortal() && !arg->isBufferDataExist(timeLine.timeFrame))
+        if (!arg->isLoopBackPortal() && !arg->isBufferDataExist(ullTFIndex))
             return;
 	}
-	proced(timeLine);
+
+    proced(ullTFIndex, ldblTimeFrame, ldblStartTime, ldblTimeStep, ldblEndTime);
+
     foreach (CResult *res, results()) {
         if (res != nullptr)
-            res->calc(timeLine);
+            res->calc(ullTFIndex, ldblTimeFrame, ldblStartTime, ldblTimeStep, ldblEndTime);
 	}
 }
 

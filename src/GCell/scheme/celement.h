@@ -6,8 +6,6 @@
 
 #include <QFont>
 
-#include "timeframe.h"
-
 class QAction;
 class QGraphicsTextItem;
 
@@ -102,9 +100,14 @@ public:
 	virtual void acceptOptions(CElementOptionsWgt *optWgt);
 
 	virtual bool reIndexing(const QList<CElement*> &elements){Q_UNUSED(elements) return true;}
-	virtual void beforeCalc(const qreal &startTime, const qreal &timeStep, const qreal &endTime);
-	virtual void calc(const stTimeLine &timeLine) = 0;
-	virtual void afterCalc(void){}
+    virtual void beforeCalc(const long double &ldblStartTime, const long double &ldblTimeStep,
+                            const long double &ldblEndTime);
+    virtual void calc(const unsigned long long &ullTFIndex, const long double &ldblTimeFrame,
+                      const long double &ldblStartTime, const long double &ldblTimeStep,
+                      const long double &ldblEndTime) = 0;
+    virtual void afterCalc(const unsigned long long &ullTFCount, const long double &ldblLastFrame,
+                           const long double &ldblStartTime, const long double &ldblTimeStep,
+                           const long double &ldblEndTime);
 private slots:
 	void onCaptionEditorTextChanged(const QString &text);
 	void onNameChanged(const QString &name);

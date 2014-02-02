@@ -1,0 +1,32 @@
+#include "ctreadtask.h"
+
+#include "cscheme.h"
+#include "cengine.h"
+
+//Until this class 
+CTreadTask::CTreadTask(CScheme *scheme)
+{
+    m_pScheme = scheme;
+    m_pEngine = nullptr;
+}
+
+void CTreadTask::setScheme(CScheme *scheme)
+{
+    if ((m_pScheme != nullptr) && (m_pScheme == scheme))
+        return;
+    
+    m_pScheme == scheme;
+}
+
+void CTreadTask::run()
+{
+    if (m_pEngine == nullptr) {
+        m_pEngine = new CEngine(this);
+        m_pEngine->setObjectName(QStringLiteral("engine"));
+    } else {
+        //msg: because engine was created in another thread
+        return;
+    }
+    
+    m_pEngine->calc(m_pScheme);
+}

@@ -31,57 +31,59 @@ private:
     static QPainterPath shapeFromPath(const QPainterPath &path, const QPen &pen);
 	void calcLink(void);
 protected:
-	virtual QRectF calcBounds(void);
-	virtual QPointF captionEditorPosition(void);
+    QRectF calcBounds();
+    QPointF captionEditorPosition();
 public:
-	explicit CLink(QGraphicsItem *parent = 0);
-	virtual ~CLink(void);
+    explicit CLink(QGraphicsItem *parent = nullptr);
+    virtual ~CLink();
 
-	const qreal& distFromPortal(void) const{return m_distFromPortal;}
+    const qreal& distFromPortal() const{return m_distFromPortal;}
 	void setDistFromPortal(const qreal &distFromPortal);
-	QPointF firstPos(void);
-	CPortal::TPortalOrientation firstOrientation(void);
-	QRectF firstFigure(void);
-	QPointF secondPos(void);
-	CPortal::TPortalOrientation secondOrientation(void);
-	QRectF secondFigure(void);
+    QPointF firstPos();
+    CPortal::TPortalOrientation firstOrientation();
+    QRectF firstFigure();
+    QPointF secondPos();
+    CPortal::TPortalOrientation secondOrientation();
+    QRectF secondFigure();
 
-	virtual QPainterPath shape(void) const;
-	virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    QPainterPath shape() const;
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
-	QString resultID(void);
+    QString resultID();
 	void setResultID(const QString &resultID);
-	QString argumentID(void);
+    QString argumentID();
 	void setArgumentID(const QString &argumentID);
 
-	const QPointF firstOffset(void) const;
+    const QPointF firstOffset() const;
 	void setFirstOffset(const QPointF &firstOffset);
-	const QPointF medOffset(void) const;
+    const QPointF medOffset() const;
 	void setMedOffset(const QPointF &medOffset);
-	const QPointF secondOffset(void) const;
+    const QPointF secondOffset() const;
 	void setSecondOffset(const QPointF &secondOffset);
 
-	CResult* result(void){return m_result;}
-	CArgument* argument(void){return m_argument;}
+    CResult* result(){return m_result;}
+    CArgument* argument(){return m_argument;}
 	void setResult(CResult *result);
 	void setArgument(CArgument *argument);
 
-	QList<CPortal*> portals(void);
+    QList<CPortal*> portals();
 
-	CLinkEnv* linkEnv(void){return m_linkEnv;}
-	CLinkSegments* linkSegments(void){return m_linkSegments;}
+    CLinkEnv* linkEnv(){return m_linkEnv;}
+    CLinkSegments* linkSegments(){return m_linkSegments;}
 
-	virtual bool reIndexing(const QList<CElement*> &elements);
+    bool reIndexing(const QList<CElement*> &elements);
 
-	virtual void calc(const stTimeLine &timeLine);
+    void calc(const unsigned long long &ullTFIndex, const long double &ldblTimeFrame,
+              const long double &ldblStartTime, const long double &ldblTimeStep,
+              const long double &ldblEndTime);
 private slots:
 	void onResultDataColorChanged(const QColor &dataColor);
-	void onResultDestroyed(QObject *objResult);
-	void onArgumentDestroyed(QObject *objArgument);
+    void onResultDestroyed();
+    void onArgumentDestroyed();
 public slots:
-	virtual void updateGeometry(void);
+    void updateGeometry();
 signals:
-	void formChanged(void);
+    void formChanged();
 };
 Q_DECLARE_METATYPE(QPointF)
 

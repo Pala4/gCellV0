@@ -31,8 +31,11 @@ size_t CCurveData::size(void) const
 
 QPointF CCurveData::sample(size_t index) const
 {
-	if(!m_portal) return QwtArraySeriesData::sample(index);
-	return QPointF(m_portal->bufferData(index).timeFrame.time, m_portal->bufferData(index).value);
+    if (m_portal == nullptr)
+        return QwtArraySeriesData::sample(index);
+
+    return QPointF(m_portal->bufferData(index).ldblTimeFrame,
+                   m_portal->bufferData(index).ldblValue);
 }
 
 void CCurveData::setPortal(CPortal *portal)

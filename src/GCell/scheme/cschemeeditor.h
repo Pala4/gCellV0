@@ -7,8 +7,6 @@
 #include <QGraphicsItem>
 #include <QClipboard>
 
-#include "iview.h"
-
 #include "cbounds.h"
 #include "cgrid.h"
 #include "algorithm/calgorithm.h"

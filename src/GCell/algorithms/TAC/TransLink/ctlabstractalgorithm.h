@@ -3,8 +3,7 @@
 
 #include <QVector>
 
-#include "../../../scheme/timeframe.h"
-#include "../../../scheme/databuffer/cdatabuffer.h"
+#include "databuffer/cdatabuffer.h"
 
 class CTLAbstractAlgorithm
 {
@@ -14,26 +13,32 @@ private:
 	QVector<qreal> *m_nomFactors;
 	QVector<qreal> *m_denomFactors;
 
-	void init(void);
+    void init();
 protected:
-	virtual void prepare(const qreal &startTime, const qreal &timeStep, const qreal &endTime);
-	virtual stData doCalc(const stTimeLine &timeLine, const QVector<stData> &x, const QVector<stData> &y) = 0;
+    virtual void prepare(const long double &ldblStartTime, const long double &ldblTimeStep,
+                         const long double &ldblEndTime);
+    virtual stData doCalc(const unsigned long long &ullTFIndex, const long double &ldblTimeFrame,
+                          const QVector<stData> &x, const QVector<stData> &y) = 0;
 public:
-	CTLAbstractAlgorithm(void);
+    CTLAbstractAlgorithm();
 	CTLAbstractAlgorithm(const QString &methodName);
-	CTLAbstractAlgorithm(const QString &methodName, QVector<qreal> *nomFactors, QVector<qreal> *denomFactors);
+    CTLAbstractAlgorithm(const QString &methodName, QVector<qreal> *nomFactors,
+                         QVector<qreal> *denomFactors);
 	virtual ~CTLAbstractAlgorithm(void){}
 
-	const QString& methodName(void) const{return m_methodName;}
+    const QString& methodName() const{return m_methodName;}
 	void setMethodName(const QString &methodName){m_methodName = methodName;}
-	QVector<qreal>* nomFactors(void){return m_nomFactors;}
+    QVector<qreal>* nomFactors(){return m_nomFactors;}
 	void setNomFactors(QVector<qreal> *nomFactors){m_nomFactors = nomFactors;}
-	QVector<qreal>* denomFactors(void){return m_denomFactors;}
+    QVector<qreal>* denomFactors(){return m_denomFactors;}
 	void setDenomFactors(QVector<qreal> *denomFactors){m_denomFactors = denomFactors;}
 
-	void update(const qreal &startTime, const qreal &timeStep, const qreal &endTime);
-	stData calculate(const stTimeLine &timeLine,
-					 const QVector<stData> &x, const QVector<stData> &y);
+    void update(const long double &ldblStartTime, const long double &ldblTimeStep,
+                const long double &ldblEndTime);
+    stData calculate(const unsigned long long &ullTFIndex, const long double &ldblTimeFrame,
+                     const long double &ldblStartTime, const long double &ldblTimeStep,
+                     const long double &ldblEndTime, const QVector<stData> &x,
+                     const QVector<stData> &y);
 };
 
 #endif // CTLABSTRACTALGORITHM_H

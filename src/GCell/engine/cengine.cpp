@@ -5,7 +5,6 @@
 #include <assert.h>
 #include <iostream>
 
-#include "ctimeframegenerator.h"
 #include "cscheme.h"
 #include "algorithm/calgorithm.h"
 #include "algorithm/cdatasource.h"
@@ -191,23 +190,6 @@ void CEngine::traceScheme(CScheme *scheme)
 	}
 }
 
-CEngine::CEngine(QObject *parent) : QObject(parent)
-{
-    setObjectName(QStringLiteral("CEngine"));
-
-	m_framer = new CTimeFrameGenerator(0.0, 0.01, 10.0, this);
-	m_framer->setObjectName(QStringLiteral("framer"));
-	connect(m_framer, SIGNAL(newTimeFrame(stTimeLine)), this, SLOT(onNewTimeFrame(stTimeLine)));
-}
-
-void CEngine::onNewTimeFrame(const stTimeLine &timeLine)
-{
-    for (CDataSource *ds : m_traceData.dataSources()) {
-        if (ds != nullptr)
-            ds->calc(timeLine);
-	}
-}
-
 void CEngine::calc(CScheme *scheme)
 {
     if (scheme == nullptr) {
@@ -216,23 +198,32 @@ void CEngine::calc(CScheme *scheme)
         return;
     }
 
-    assert(m_framer != nullptr);
-
-	emit calcStarted();
+    long double ldblStartTime = 0.0L;
+    long double ldblTimeStep = 0.01L;
+    long double ldblEndTime = 100.0L;
 
     for (CElement *element : scheme->elements().toVector().toStdVector()) {
         if (element != nullptr)
-            element->beforeCalc(m_framer->startTime(), m_framer->timeStep(), m_framer->endTime());
+            element->beforeCalc(ldblStartTime, ldblTimeStep, ldblEndTime);
     }
 
     traceScheme(scheme);
-	m_framer->start();
+    unsigned long long ullTFIndex = 0;
+    long double ldblTimeFrame = ldblStartTime;
+    while (ldblTimeFrame <= ldblEndTime) {
+        for (CDataSource *ds : m_traceData.dataSources()) {
+            if (ds != nullptr)
+                ds->calc(ullTFIndex, ldblTimeFrame, ldblStartTime, ldblTimeStep, ldblEndTime);
+        }
 
+        ++ullTFIndex;
+        ldblTimeFrame += ldblTimeStep;
+    }
+    unsigned long long ullTFCount = (ullTFIndex == 0) ? 0 : ullTFIndex + 1;
 	m_traceData.release();
+
     for (CElement *element : scheme->elements().toVector().toStdVector()) {
         if (element != nullptr)
-            element->afterCalc();
+            element->afterCalc(ullTFCount, ldblTimeFrame, ldblStartTime, ldblTimeStep, ldblEndTime);
     }
-
-    emit calcStopped();
 }

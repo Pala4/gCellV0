@@ -4,21 +4,22 @@
 #include <QObject>
 
 #include <QVector>
-#include <QPointF>
-
-#include "../timeframe.h"
 
 struct stData
 {
-	stTimeFrame timeFrame;
-	qreal value;
+    long double ldblTimeFrame;
+    long double ldblValue;
 
-	stData(void){value = 0.0;}
-	stData(const stTimeFrame &a_frame, const qreal &a_value){timeFrame = a_frame, value = a_value;}
+    stData() : ldblTimeFrame(0.0L), ldblValue(0.0L){}
+    stData(const long double &a_ldblTimeFrame, const long double &a_ldblValue)
+    {
+        ldblTimeFrame = a_ldblTimeFrame;
+        ldblValue = a_ldblValue;
+    }
 
 	bool operator ==(const stData &other) const
 	{
-		return ((timeFrame == other.timeFrame) && (value == other.value));
+        return ((ldblTimeFrame == other.ldblTimeFrame) && (ldblValue == other.ldblValue));
 	}
 };
 
@@ -30,21 +31,18 @@ private:
 public:
 	explicit CDataBuffer(QObject *parent = 0);
 
-	const QVector<stData>& data(void) const{return m_data;}
-	stData data(const int &index) const;
-	stData last(void) const;
-	void append(const stTimeFrame &timeFrame, const qreal &value);
-	QVector<stTimeFrame> frames(const qreal &value) const;
-	QVector<qreal> values(const stTimeFrame &frame) const;
-	quint64 size(void) const{return m_data.count();}
-	bool isEmpty(void) const{return m_data.isEmpty();}
-	bool contains(const int &index) const;
-	bool containsFrame(const stTimeFrame &frame);
-	bool containsValue(const qreal &value);
-	void clear(void);
-signals:
-	void dataAppended(stTimeFrame timeFrame, stData data);
-	void cleared(void);
+    const QVector<stData>& data() const{return m_data;}
+    stData data(const unsigned long long &ullTFIndex) const;
+    stData last() const;
+    void append(const long double &ldblTimeFrame, const long double &ldblValue);
+    QVector<long double> frames(const long double &ldblValue) const;
+    QVector<long double> values(const long double &ldblFrame) const;
+    unsigned long long size() const{return (unsigned long long)m_data.count();}
+    bool isEmpty() const{return m_data.isEmpty();}
+    bool contains(const unsigned long long &ullTFIndex) const;
+    bool containsFrame(const long double &ldblFrame);
+    bool containsValue(const long double &ldblValue);
+    void clear();
 };
 
 #endif // CDATABUFFER_H

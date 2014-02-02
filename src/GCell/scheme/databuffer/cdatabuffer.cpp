@@ -5,72 +5,76 @@ CDataBuffer::CDataBuffer(QObject *parent) : QObject(parent)
 	setObjectName(QStringLiteral("CDataBuffer"));
 }
 
-stData CDataBuffer::data(const int &index) const
+stData CDataBuffer::data(const unsigned long long &ullTFIndex) const
 {
-	if(index < 0 || index >= m_data.count()) return stData();
-	return m_data.at(index);
+    if (ullTFIndex >= (unsigned long long)m_data.count())
+        return stData();
+
+    return m_data.at((int)ullTFIndex);
 }
 
-stData CDataBuffer::last(void) const
+stData CDataBuffer::last() const
 {
-	if(m_data.isEmpty()) return stData();
+    if (m_data.isEmpty())
+        return stData();
+
 	return m_data.last();
 }
 
-void CDataBuffer::append(const stTimeFrame &timeFrame, const qreal &value)
+void CDataBuffer::append(const long double &ldblTimeFrame, const long double &ldblValue)
 {
-	stData data(timeFrame, value);
+    stData data(ldblTimeFrame, ldblValue);
 	m_data.append(data);
-	emit dataAppended(timeFrame, data);
 }
 
-QVector<stTimeFrame> CDataBuffer::frames(const qreal &value) const
+QVector<long double> CDataBuffer::frames(const long double &ldblValue) const
 {
-	QVector<stTimeFrame> resFrames;
-	foreach(stData data, m_data)
-	{
-		if(data.value == value) resFrames << data.timeFrame;
+    QVector<long double> resFrames;
+    foreach (stData data, m_data) {
+        if (data.ldblValue == ldblValue)
+            resFrames << data.ldblTimeFrame;
 	}
+
 	return resFrames;
 }
 
-QVector<qreal> CDataBuffer::values(const stTimeFrame &frame) const
+QVector<long double> CDataBuffer::values(const long double &ldblFrame) const
 {
-	QVector<qreal> resVals;
-	foreach(stData data, m_data)
-	{
-		if(data.timeFrame == frame) resVals << data.value;
+    QVector<long double> resVals;
+    foreach (stData data, m_data) {
+        if (data.ldblTimeFrame == ldblFrame)
+            resVals << data.ldblValue;
 	}
+
 	return resVals;
 }
 
-bool CDataBuffer::contains(const int &index) const
+bool CDataBuffer::contains(const unsigned long long &ullTFIndex) const
 {
-	if(index < 0 || index >= m_data.count()) return false;
-	return true;
+    return (ullTFIndex < (unsigned long long)m_data.count());
 }
 
-bool CDataBuffer::containsFrame(const stTimeFrame &frame)
+bool CDataBuffer::containsFrame(const long double &ldblFrame)
 {
-	foreach(stData data, m_data)
-	{
-		if(data.timeFrame == frame) return true;
+    foreach (stData data, m_data) {
+        if (data.ldblTimeFrame == ldblFrame)
+            return true;
 	}
+
 	return false;
 }
 
-bool CDataBuffer::containsValue(const qreal &value)
+bool CDataBuffer::containsValue(const long double &ldblValue)
 {
-	foreach(stData data, m_data)
-	{
-		if(data.value == value) return true;
+    foreach (stData data, m_data) {
+        if (data.ldblValue == ldblValue)
+            return true;
 	}
+
 	return false;
 }
 
-void CDataBuffer::clear(void)
+void CDataBuffer::clear()
 {
-	if(m_data.isEmpty()) return;
 	m_data.clear();
-	emit cleared();
 }

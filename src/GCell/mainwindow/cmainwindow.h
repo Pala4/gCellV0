@@ -17,7 +17,7 @@ class CElement;
 class CAlgorithm;
 class CScheme;
 class CSchemeEditor;
-class CEngine;
+class CThreadEngine;
 
 class CMainWindow : public QMainWindow
 {
@@ -65,13 +65,10 @@ private:
 
 	QMenu *m_viewToolBarsMenu;
 	QMenu *m_viewDocksMenu;
-
 	QMenu *m_schemeEditorContextMenu;
 
 	QTabWidget *m_workSpaceTabWgt;
-
 	CDataWindow *m_dataWindow;
-
 	CAlgorithmProtoMng *m_algorithmProtoMng;
 	CAlgProtoView *m_algProtoView;
 	QDockWidget *m_algProtoViewDock;
@@ -80,7 +77,7 @@ private:
     CScheme *m_activeScheme;
     QMap<CScheme*, CSchemeEditor*> m_documents;
 
-	CEngine *m_engine;
+    CThreadEngine *m_pThreadEngine;
 
 	void setupActions(void);
 	void setupMainMenu(void);

@@ -43,71 +43,72 @@ private:
 
 	static QPainterPath shapeFromPath(const QPainterPath &path, const QPen &pen);
 	virtual QPainterPath calcPortalForm(void){return QPainterPath();}
-	void updateLinks(void);
+    void updateLinks();
 protected:
-	const qreal& size(void) const{return m_size;}
+    const qreal& size() const{return m_size;}
 	void setLinkPos(const QPointF &linkPos){m_linkPos = linkPos;}
 	virtual QVariant itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant &value);
-	virtual QRectF calcBounds(void);
-	virtual QPointF captionEditorPosition(void);
+    virtual QRectF calcBounds();
+    virtual QPointF captionEditorPosition();
 public:
 	explicit CPortal(QGraphicsItem *parent = 0);
 
     virtual QString caption();
-	const QString& captionPrefix(void) const{return m_captionPrefix;}
+    const QString& captionPrefix() const{return m_captionPrefix;}
 	void setCaptionPrefix(const QString &captionPrefix);
-	const QString& captionPostfix(void) const{return m_captionPostfix;}
+    const QString& captionPostfix() const{return m_captionPostfix;}
 	void setCaptionPostfix(const QString &captionPostfix);
 
-	virtual QPainterPath shape(void) const;
+    QPainterPath shape() const;
 	virtual void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
-	const CPortal::TPortalOrientation& portalOrientation(void) const{return m_portalOrientation;}
-	void setPortalOrientation(const CPortal::TPortalOrientation &portalOrientation);
-	const QColor& dataColor(void) const{return m_dataColor;}
+    const CPortal::TPortalOrientation& portalOrientation() const{return m_portalOrientation;}
+    void setPortalOrientation(const TPortalOrientation &portalOrientation);
+    const QColor& dataColor() const{return m_dataColor;}
 	void setDataColor(const QColor &dataColor);
 
-	const bool& isHighLighted(void) const{return m_highLighted;}
+    const bool& isHighLighted() const{return m_highLighted;}
 	void setHighLighted(const bool &highLighted);
-	const bool& isChecked(void) const{return m_checked;}
+    const bool& isChecked() const{return m_checked;}
 	void setChecked(const bool &cheked);
 
-	const QPointF& linkPos(void) const{return m_linkPos;}
+    const QPointF& linkPos() const{return m_linkPos;}
 
-	const bool& isLoopBackPortal(void) const{return m_loopBackPortal;}
-	void setLoopBackPortal(const bool &loopBackPortal){if(m_loopBackPortal == loopBackPortal) return; m_loopBackPortal = loopBackPortal; update();}
+    const bool& isLoopBackPortal() const{return m_loopBackPortal;}
+    void setLoopBackPortal(const bool &loopBackPortal);
 
-	const QList<CLink*>& links(void) const{return m_links;}
+    const QList<CLink*>& links() const{return m_links;}
 	void addLink(CLink *link);
 	void removeLink(CLink *link);
-	bool isUsed(void) const{return !links().isEmpty();}
-	virtual bool canLinked(void){return true;}
+    bool isUsed() const{return !links().isEmpty();}
+    virtual bool canLinked(){return true;}
 
-	CElement* hostElement(void){return dynamic_cast<CElement*>(parentItem());}
+    CElement* hostElement(){return dynamic_cast<CElement*>(parentItem());}
 
-	virtual CDataBuffer* createBuffer(void);
+    virtual CDataBuffer* createBuffer();
 	void setBuffer(CDataBuffer *dataBuffer);
-	void clearBuffer(void);
-	CDataBuffer* buffer(void){return m_dataBuffer;}
+    void clearBuffer();
+    CDataBuffer* buffer(){return m_dataBuffer;}
 
-	int bufferSize(void) const;
-	void appendBuffer(const stTimeFrame &timeFrame, const qreal &value);
-	virtual stData bufferData(const quint64 &timeFrameIndex);
-	bool isBufferDataExist(const stTimeFrame &frame);
+    unsigned long long bufferSize() const;
+    void appendBuffer(const long double &ldblTimeFrame, const long double &ldblValue);
+    virtual stData bufferData(const unsigned long long &ullTFIndex);
+    bool isBufferDataExist(const unsigned long long &ullTFIndex);
 
 	void operator << (const stData &data)
 	{
-		appendBuffer(data.timeFrame, data.value);
+        appendBuffer(data.ldblTimeFrame, data.ldblValue);
 	}
 
-	virtual void beforeCalc(const qreal &startTime, const qreal &timeStep, const qreal &endTime);
+    void beforeCalc(const long double &ldblStartTime, const long double &ldblTimeStep,
+                    const long double &ldblEndTime);
 private slots:
-	void setPortalOrientation(const int &portalOrientation);
+    void setPortalOrientation(const int &portalOrientation);
 public slots:
-	virtual void updateGeometry(void);
+    virtual void updateGeometry();
 signals:
 	void dataColorChanged(QColor dataColor);
-	void geometryChanged(void);
+    void geometryChanged();
 };
 
 #endif // CPORTAL_H

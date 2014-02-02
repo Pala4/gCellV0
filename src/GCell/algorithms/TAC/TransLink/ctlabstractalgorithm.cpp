@@ -2,23 +2,24 @@
 
 #include "ctranslink.h"
 
-void CTLAbstractAlgorithm::init(void)
+void CTLAbstractAlgorithm::init()
 {
 	m_prepared = false;
-	m_nomFactors = 0;
-	m_denomFactors = 0;
+    m_nomFactors = nullptr;
+    m_denomFactors = nullptr;
 }
 
-void CTLAbstractAlgorithm::prepare(const qreal &startTime, const qreal &timeStep, const qreal &endTime)
+void CTLAbstractAlgorithm::prepare(const long double &ldblStartTime,
+                                   const long double &ldblTimeStep, const long double &ldblEndTime)
 {
-	Q_UNUSED(startTime)
-	Q_UNUSED(timeStep)
-	Q_UNUSED(endTime)
+    Q_UNUSED(ldblStartTime)
+    Q_UNUSED(ldblTimeStep)
+    Q_UNUSED(ldblEndTime)
 
 	m_prepared = true;
 }
 
-CTLAbstractAlgorithm::CTLAbstractAlgorithm(void)
+CTLAbstractAlgorithm::CTLAbstractAlgorithm()
 {
 	init();
 }
@@ -37,14 +38,21 @@ CTLAbstractAlgorithm::CTLAbstractAlgorithm(const QString &methodName, QVector<qr
 	setDenomFactors(denomFactors);
 }
 
-void CTLAbstractAlgorithm::update(const qreal &startTime, const qreal &timeStep, const qreal &endTime)
+void CTLAbstractAlgorithm::update(const long double &ldblStartTime, const long double &ldblTimeStep,
+                                  const long double &ldblEndTime)
 {
-	prepare(startTime, timeStep, endTime);
+    prepare(ldblStartTime, ldblTimeStep, ldblEndTime);
 }
 
-stData CTLAbstractAlgorithm::calculate(const stTimeLine &timeLine,
-									   const QVector<stData> &x, const QVector<stData> &y)
+stData CTLAbstractAlgorithm::calculate(const unsigned long long &ullTFIndex,
+                                       const long double &ldblTimeFrame,
+                                       const long double &ldblStartTime,
+                                       const long double &ldblTimeStep,
+                                       const long double &ldblEndTime,
+                                       const QVector<stData> &x, const QVector<stData> &y)
 {
-	if(!m_prepared) prepare(timeLine.args.startTime, timeLine.args.timeStep, timeLine.args.endTime);
-	return doCalc(timeLine, x, y);
+    if (!m_prepared)
+        prepare(ldblStartTime, ldblTimeStep, ldblEndTime);
+
+    return doCalc(ullTFIndex, ldblTimeFrame, x, y);
 }

@@ -30,7 +30,9 @@ protected:
 	CResult* addResult(const QString &name);
     void clearResults();
 
-	virtual void proced(const stTimeLine &timeLine) = 0;
+    virtual void proced(const unsigned long long &ullTFIndex, const long double &ldblTimeFrame,
+                        const long double &ldblStartTime, const long double &ldblTimeStep,
+                        const long double &ldblEndTime) = 0;
 public:
 	explicit CAlgorithm(QGraphicsItem *parent = 0);
 
@@ -45,7 +47,9 @@ public:
 
 	virtual CElement* createElement(const QString &typeID);
 
-	virtual void calc(const stTimeLine &timeLine);
+    void calc(const unsigned long long &ullTFIndex, const long double &ldblTimeFrame,
+              const long double &ldblStartTime, const long double &ldblTimeStep,
+              const long double &ldblEndTime);
 private slots:
 	void onPortalDestroyed(QObject *objPortal);
 public slots:

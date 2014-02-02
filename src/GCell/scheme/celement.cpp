@@ -284,14 +284,26 @@ void CElement::acceptOptions(CElementOptionsWgt *optWgt)
 	{
 		setName(optWgt->elementCaption());
 		setCaptionVisible(optWgt->isCaptionVisible());
-	}
+    }
 }
 
-void CElement::beforeCalc(const qreal &startTime, const qreal &timeStep, const qreal &endTime)
+void CElement::beforeCalc(const long double &ldblStartTime, const long double &ldblTimeStep,
+                          const long double &ldblEndTime)
 {
-	Q_UNUSED(startTime)
-	Q_UNUSED(timeStep)
-	Q_UNUSED(endTime)
+    Q_UNUSED(ldblStartTime)
+    Q_UNUSED(ldblTimeStep)
+    Q_UNUSED(ldblEndTime)
+}
+
+void CElement::afterCalc(const unsigned long long &ullTFCount, const long double &ldblLastFrame,
+                         const long double &ldblStartTime, const long double &ldblTimeStep,
+                         const long double &ldblEndTime)
+{
+    Q_UNUSED(ullTFCount)
+    Q_UNUSED(ldblLastFrame)
+    Q_UNUSED(ldblStartTime)
+    Q_UNUSED(ldblTimeStep)
+    Q_UNUSED(ldblEndTime)
 }
 
 void CElement::onCaptionEditorTextChanged(const QString &text)

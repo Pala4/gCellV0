@@ -24,10 +24,10 @@ TEMPLATE = app
 DESTDIR = $$DEST_DIR
 
 INCLUDEPATH += \
-    objectmodel \
     scheme \
-    mainwindow \
-    mainwindow/workspace
+    engine \
+    threadengine \
+    mainwindow
 
 SOURCES += \
     mainwindow/cmainwindow.cpp \
@@ -61,7 +61,6 @@ SOURCES += \
     algorithms/TAC/TransLink/ctranslink.cpp \
     algorithms/TAC/TransLink/ctlabstractalgorithm.cpp \
     algorithms/TAC/TransLink/cdiscretdiffmethod.cpp \
-    engine/ctimeframegenerator.cpp \
     mainwindow/coptionswindow.cpp \
     mainwindow/calgprotoview.cpp \
     widgets/clineeditbutton.cpp \
@@ -79,7 +78,9 @@ SOURCES += \
     mainwindow/workspace/cschemedocument.cpp \
     mainwindow/workspace/iview.cpp \
     objectmodel/cobjectitem.cpp \
-    objectmodel/cobjectmodel.cpp
+    objectmodel/cobjectmodel.cpp \
+    threadengine/cthreadengine.cpp \
+    threadengine/cthreadtask.cpp
 
 HEADERS += \
     mainwindow/cmainwindow.h \
@@ -113,8 +114,6 @@ HEADERS += \
     algorithms/TAC/TransLink/ctranslink.h \
     algorithms/TAC/TransLink/ctlabstractalgorithm.h \
     algorithms/TAC/TransLink/cdiscretdiffmethod.h \
-    scheme/timeframe.h \
-    engine/ctimeframegenerator.h \
     mainwindow/coptionswindow.h \
     mainwindow/calgprotoview.h \
     widgets/clineeditbutton.h \
@@ -132,4 +131,6 @@ HEADERS += \
     mainwindow/workspace/cschemedocument.h \
     mainwindow/workspace/iview.h \
     objectmodel/cobjectitem.h \
-    objectmodel/cobjectmodel.h
+    objectmodel/cobjectmodel.h \
+    threadengine/cthreadengine.h \
+    threadengine/cthreadtask.h

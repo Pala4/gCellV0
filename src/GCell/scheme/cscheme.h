@@ -3,8 +3,6 @@
 
 #include <QGraphicsScene>
 
-#include "cobjectitem.h"
-
 #include <QtXml/QDomDocument>
 
 class QAction;

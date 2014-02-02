@@ -7,11 +7,13 @@ class CResult : public CPortal
 {
 	Q_OBJECT
 protected:
-	virtual QPainterPath calcPortalForm(void);
+    QPainterPath calcPortalForm(void);
 public:
 	explicit CResult(QGraphicsItem *parent = 0);
 
-	virtual void calc(const stTimeLine &timeLine);
+    void calc(const unsigned long long &ullTFIndex, const long double &ldblTimeFrame,
+              const long double &ldblStartTime, const long double &ldblTimeStep,
+              const long double &ldblEndTime);
 };
 
 #endif // CRESULT_H

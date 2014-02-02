@@ -7,12 +7,14 @@ class CArgument : public CPortal
 {
 	Q_OBJECT
 protected:
-	virtual QPainterPath calcPortalForm(void);
+    QPainterPath calcPortalForm(void);
 public:
 	explicit CArgument(QGraphicsItem *parent = 0);
 
-	virtual bool canLinked(void){return !isUsed();}
-	virtual void calc(const stTimeLine &timeLine);
+    bool canLinked(void){return !isUsed();}
+    void calc(const unsigned long long &ullTFIndex, const long double &ldblTimeFrame,
+              const long double &ldblStartTime, const long double &ldblTimeStep,
+              const long double &ldblEndTime);
 };
 
 #endif // CARGUMENT_H

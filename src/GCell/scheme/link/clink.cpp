@@ -10,7 +10,8 @@
 
 QPainterPath CLink::shapeFromPath(const QPainterPath &path, const QPen &pen)
 {
-	if(path == QPainterPath()) return path;
+    if (path == QPainterPath())
+        return path;
 
 	QPainterPathStroker ps;
 	ps.setCapStyle(pen.capStyle());
@@ -30,53 +31,51 @@ void CLink::calcLink(void)
 {
 	m_path = QPainterPath();
 	QList<QPointF> pointsList;
-	if(linkEnv())
-	{
+    if (linkEnv() != nullptr) {
 		pointsList << linkEnv()->firstPoint();
 		pointsList << linkEnv()->firstFixedPoint();
 	}
-	if(m_linkSegments) pointsList << m_linkSegments->points();
-	if(linkEnv())
-	{
+    if (m_linkSegments != nullptr)
+        pointsList << m_linkSegments->points();
+    if (linkEnv() != nullptr) {
 		pointsList << linkEnv()->secondFixedPoint();
 		pointsList << linkEnv()->secondPoint();
 	}
-	if(pointsList.count() >= 2)
-	{
-		for(int ci = 0; ci < pointsList.count() - 1; ++ci)
-		{
+    if (pointsList.count() >= 2) {
+        for (int ci = 0; ci < pointsList.count() - 1; ++ci) {
 			m_path.moveTo(pointsList.at(ci));
 			m_path.lineTo(pointsList.at(ci + 1));
 		}
 	}
+
 	emit formChanged();
 }
 
-QRectF CLink::calcBounds(void)
+QRectF CLink::calcBounds()
 {
 	return shape().controlPointRect().adjusted(-1.0, -1.0, 1.0, 1.0);
 }
 
-QPointF CLink::captionEditorPosition(void)
+QPointF CLink::captionEditorPosition()
 {
-	return m_linkSegments ? m_linkSegments->segment(CLinkSegment::Medium)->center() : CElement::captionEditorPosition();
+    return (m_linkSegments != nullptr) ? m_linkSegments->segment(CLinkSegment::Medium)->center()
+                                       : CElement::captionEditorPosition();
 }
 
 CLink::CLink(QGraphicsItem *parent) : CElement(parent)
 {
 	 setObjectName(QStringLiteral("CLink"));
 
-	 m_result = 0;
-	 m_argument = 0;
+     m_result = nullptr;
+     m_argument = nullptr;
 	 m_distFromPortal = 10.0;
-	 m_linkEnv = 0;
-	 m_linkSegments = 0;
+     m_linkEnv = nullptr;
+     m_linkSegments = nullptr;
 
 	 m_linkEnv = new CLinkEnv(this);
 	 m_linkSegments = new CLinkSegments(this);
 
-	 if(captionEditor())
-	 {
+     if (captionEditor() != nullptr) {
 		 captionEditor()->setFlag(QGraphicsItem::ItemIsMovable);
 	 }
 
@@ -85,12 +84,12 @@ CLink::CLink(QGraphicsItem *parent) : CElement(parent)
 	 setZValue(0.0);
 }
 
-CLink::~CLink(void)
+CLink::~CLink()
 {
-	 if(m_result) m_result->removeLink(this);
-	 if(m_argument)
-	 {
-		  m_argument->setBuffer(0);
+     if (m_result != nullptr)
+         m_result->removeLink(this);
+     if (m_argument != nullptr) {
+          m_argument->setBuffer(nullptr);
 		  m_argument->setDataColor(QColor(255, 255, 255, 0));
 		  m_argument->removeLink(this);
 	 }
@@ -98,53 +97,55 @@ CLink::~CLink(void)
 
 void CLink::setDistFromPortal(const qreal &distFromPortal)
 {
-	if(m_distFromPortal == distFromPortal) return;
+    if (m_distFromPortal == distFromPortal)
+        return;
 
 	m_distFromPortal = distFromPortal;
 	updateGeometry();
 }
 
-QPointF CLink::firstPos(void)
+QPointF CLink::firstPos()
 {
-	return m_result ? m_result->mapToScene(m_result->linkPos()) : QPointF();
+    return (m_result != nullptr) ? m_result->mapToScene(m_result->linkPos()) : QPointF();
 }
 
-CPortal::TPortalOrientation CLink::firstOrientation(void)
+CPortal::TPortalOrientation CLink::firstOrientation()
 {
-	return m_result ? m_result->portalOrientation() : CPortal::NoOrientation;
+    return (m_result != nullptr) ? m_result->portalOrientation() : CPortal::NoOrientation;
 }
 
-QRectF CLink::firstFigure(void)
+QRectF CLink::firstFigure()
 {
 	QRectF ff;
-	if(m_result && m_result->hostElement())
-	{
+    if ((m_result != nullptr) && (m_result->hostElement() != nullptr)) {
 		ff = QRectF(m_result->hostElement()->pos(), m_result->hostElement()->boundingRect().size());
 	}
+
 	return ff;
 }
 
-QPointF CLink::secondPos(void)
+QPointF CLink::secondPos()
 {
-	return m_argument ? m_argument->mapToScene(m_argument->linkPos()) : QPointF();
+    return (m_argument != nullptr) ? m_argument->mapToScene(m_argument->linkPos()) : QPointF();
 }
 
-CPortal::TPortalOrientation CLink::secondOrientation(void)
+CPortal::TPortalOrientation CLink::secondOrientation()
 {
-	return m_argument ? m_argument->portalOrientation() : CPortal::NoOrientation;
+    return (m_argument != nullptr) ? m_argument->portalOrientation() : CPortal::NoOrientation;
 }
 
-QRectF CLink::secondFigure(void)
+QRectF CLink::secondFigure()
 {
 	QRectF sf;
-	if(m_argument && m_argument->hostElement())
-	{
-		sf = QRectF(m_argument->hostElement()->pos(), m_argument->hostElement()->boundingRect().size());
+    if ((m_argument != nullptr) && (m_argument->hostElement() != nullptr)) {
+        sf = QRectF(m_argument->hostElement()->pos(),
+                    m_argument->hostElement()->boundingRect().size());
 	}
+
 	return sf;
 }
 
-QPainterPath CLink::shape(void) const
+QPainterPath CLink::shape() const
 {
 	 return shapeFromPath(m_path, QPen());
 }
@@ -154,11 +155,11 @@ void CLink::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWi
 	 CElement::paint(painter, option, widget);
 
 	 QPen pen;
-	 if(isSelected())
-	 {
+     if (isSelected()) {
 		  pen.setWidthF(2.0);
 	 }
-	 if(m_result) pen.setColor(m_result->dataColor());
+     if (m_result != nullptr)
+         pen.setColor(m_result->dataColor());
 
 	 painter->save();
 	 painter->setPen(pen);
@@ -167,118 +168,127 @@ void CLink::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWi
 	 painter->restore();
 }
 
-QString CLink::resultID(void)
+QString CLink::resultID()
 {
-	 if(m_result) return m_result->id();
+     if (m_result != nullptr)
+         return m_result->id();
+
 	 return m_resultID;
 }
 
 void CLink::setResultID(const QString &resultID)
 {
-	 if(scheme())
-	 {
+     if (scheme() != nullptr) {
 		  setResult(qobject_cast<CResult*>(scheme()->element(resultID)));
-	 }
-	 else
-	 {
+     } else {
 		  m_resultID = resultID;
 	 }
 }
 
-QString CLink::argumentID(void)
+QString CLink::argumentID()
 {
-	 if(m_argument) return m_argument->id();
+     if (m_argument != nullptr)
+         return m_argument->id();
+
 	 return m_argumentID;
 }
 
 void CLink::setArgumentID(const QString &argumentID)
 {
-	 if(scheme())
-	 {
+     if (scheme() != nullptr) {
 		  setArgument(qobject_cast<CArgument*>(scheme()->element(argumentID)));
-	 }
-	 else
-	 {
+     } else {
 		  m_argumentID = argumentID;
 	 }
 }
 
-const QPointF CLink::firstOffset(void) const
+const QPointF CLink::firstOffset() const
 {
-	if(!m_linkSegments) return QPointF();
+    if (m_linkSegments == nullptr)
+        return QPointF();
 
 	CLinkSegment *ls = m_linkSegments->segment(CLinkSegment::First);
-	if(!ls) return QPointF();
+    if (ls == nullptr)
+        return QPointF();
 
 	return ls->managedOffset();
 }
 
 void CLink::setFirstOffset(const QPointF &firstOffset)
 {
-	if(!m_linkSegments) return;
+    if (m_linkSegments == nullptr)
+        return;
 
 	CLinkSegment *ls = m_linkSegments->segment(CLinkSegment::First);
-	if(ls) ls->setManagedOffset(firstOffset);
+    if (ls != nullptr)
+        ls->setManagedOffset(firstOffset);
 }
 
-const QPointF CLink::medOffset(void) const
+const QPointF CLink::medOffset() const
 {
-	if(!m_linkSegments) return QPointF();
+    if (m_linkSegments == nullptr)
+        return QPointF();
 
 	CLinkSegment *ls = m_linkSegments->segment(CLinkSegment::Medium);
-	if(!ls) return QPointF();
+    if (ls == nullptr)
+        return QPointF();
 
 	return ls->managedOffset();
 }
 
 void CLink::setMedOffset(const QPointF &medOffset)
 {
-	if(!m_linkSegments) return;
+    if (m_linkSegments == nullptr)
+        return;
 
 	CLinkSegment *ls = m_linkSegments->segment(CLinkSegment::Medium);
-	if(ls) ls->setManagedOffset(medOffset);
+    if (ls != nullptr)
+        ls->setManagedOffset(medOffset);
 }
 
-const QPointF CLink::secondOffset(void) const
+const QPointF CLink::secondOffset() const
 {
-	if(!m_linkSegments) return QPointF();
+    if (m_linkSegments == nullptr)
+        return QPointF();
 
 	CLinkSegment *ls = m_linkSegments->segment(CLinkSegment::Second);
-	if(!ls) return QPointF();
+    if (ls == nullptr)
+        return QPointF();
 
 	return ls->managedOffset();
 }
 
 void CLink::setSecondOffset(const QPointF &secondOffset)
 {
-	if(!m_linkSegments) return;
+    if (m_linkSegments == nullptr)
+        return;
 
 	CLinkSegment *ls = m_linkSegments->segment(CLinkSegment::Second);
-	if(ls) ls->setManagedOffset(secondOffset);
+    if (ls != nullptr)
+        ls->setManagedOffset(secondOffset);
 }
 
 void CLink::setResult(CResult *result)
 {
-	 if(m_result && (m_result == result)) return;
-	 if(m_result)
-	 {
-		  disconnect(m_result, SIGNAL(dataColorChanged(QColor)), this, SLOT(onResultDataColorChanged(QColor)));
-		  disconnect(m_result, SIGNAL(destroyed(QObject*)), this, SLOT(onResultDestroyed(QObject*)));
+     if ((m_result != nullptr) && (m_result == result))
+         return;
+     if (m_result != nullptr) {
+          disconnect(m_result, SIGNAL(dataColorChanged(QColor)),
+                     this, SLOT(onResultDataColorChanged(QColor)));
+          disconnect(m_result, SIGNAL(destroyed()), this, SLOT(onResultDestroyed()));
 		  m_result->removeLink(this);
-		  if(m_argument)
-		  {
-				m_argument->setBuffer(0);
+          if (m_argument != nullptr) {
+                m_argument->setBuffer(nullptr);
 				m_argument->setDataColor(QColor());
 		  }
 	 }
 	 m_result = result;
-	 if(m_result)
-	 {
-		  connect(m_result, SIGNAL(dataColorChanged(QColor)), this, SLOT(onResultDataColorChanged(QColor)));
-		  connect(m_result, SIGNAL(destroyed(QObject*)), this, SLOT(onResultDestroyed(QObject*)));
+     if (m_result != nullptr) {
+          connect(m_result, SIGNAL(dataColorChanged(QColor)),
+                  this, SLOT(onResultDataColorChanged(QColor)));
+          connect(m_result, SIGNAL(destroyed()), this, SLOT(onResultDestroyed()));
 		  m_result->addLink(this);
-		  if(m_argument)
-		  {
+          if (m_argument != nullptr) {
 				m_argument->setBuffer(result->buffer());
 				m_argument->setDataColor(result->dataColor());
 		  }
@@ -288,24 +298,21 @@ void CLink::setResult(CResult *result)
 
 void CLink::setArgument(CArgument *argument)
 {
-	 if(m_argument && (m_argument == argument)) return;
-	 if(m_argument)
-	 {
-		  disconnect(m_argument, SIGNAL(destroyed(QObject*)), this, SLOT(onArgumentDestroyed(QObject*)));
+     if ((m_argument != nullptr) && (m_argument == argument))
+         return;
+     if (m_argument != nullptr) {
+          disconnect(m_argument, SIGNAL(destroyed()), this, SLOT(onArgumentDestroyed()));
 		  m_argument->removeLink(this);
-		  if(m_argument)
-		  {
-				m_argument->setBuffer(0);
+          if (m_argument != nullptr) {
+                m_argument->setBuffer(nullptr);
 				m_argument->setDataColor(QColor());
 		  }
 	 }
 	 m_argument = argument;
-	 if(m_argument)
-	 {
-		  connect(m_argument, SIGNAL(destroyed(QObject*)), this, SLOT(onArgumentDestroyed(QObject*)));
+     if (m_argument != nullptr) {
+          connect(m_argument, SIGNAL(destroyed()), this, SLOT(onArgumentDestroyed()));
 		  m_argument->addLink(this);
-		  if(m_result)
-		  {
+          if (m_result != nullptr) {
 				m_argument->setBuffer(m_result->buffer());
 				m_argument->setDataColor(m_result->dataColor());
 		  }
@@ -313,63 +320,71 @@ void CLink::setArgument(CArgument *argument)
 	 updateGeometry();
 }
 
-QList<CPortal*> CLink::portals(void)
+QList<CPortal*> CLink::portals()
 {
 	QList<CPortal*> prts;
 
-	if(dynamic_cast<CPortal*>(m_argument)) prts << dynamic_cast<CPortal*>(m_argument);
-	if(dynamic_cast<CPortal*>(m_result)) prts << dynamic_cast<CPortal*>(m_result);
+    if (m_argument != nullptr)
+        prts << m_argument;
+    if (m_result != nullptr)
+        prts << m_result;
 
 	return prts;
 }
 
 bool CLink::reIndexing(const QList<CElement*> &elements)
 {
-	 if(!m_result || !m_argument)
-	 {
-		  foreach(CElement *element, elements)
-		  {
-				if(m_result && m_argument) return true;
-				if(!element) continue;
-				if(!m_result && (element->id() == m_resultID))
-				{
-					 setResult(qobject_cast<CResult*>(element));
-				}
-				if(!m_argument && (element->id() == m_argumentID))
-				{
-					 setArgument(qobject_cast<CArgument*>(element));
-				}
-				reIndexing(element->childElements());
-		  }
+     if ((m_result == nullptr) || (m_argument == nullptr)) {
+          foreach(CElement *element, elements) {
+              //checking of the exit condition
+              if ((m_result != nullptr) && (m_argument != nullptr))
+                  return true;
+              if (element == nullptr)
+                  continue;
+              if ((m_result == nullptr) && (element->id() == m_resultID)) {
+                  setResult(qobject_cast<CResult*>(element));
+              }
+              if ((m_argument == nullptr) && (element->id() == m_argumentID)) {
+                  setArgument(qobject_cast<CArgument*>(element));
+              }
+
+              reIndexing(element->childElements());
+          }
 	 }
+
 	 updateGeometry();
 	 return (m_result && m_argument);
 }
 
-void CLink::calc(const stTimeLine &timeLine)
+void CLink::calc(const unsigned long long &ullTFIndex, const long double &ldblTimeFrame,
+                 const long double &ldblStartTime, const long double &ldblTimeStep,
+                 const long double &ldblEndTime)
 {
-	 if(m_argument) m_argument->calc(timeLine);
+     if (m_argument != nullptr)
+         m_argument->calc(ullTFIndex, ldblTimeFrame, ldblStartTime, ldblTimeStep, ldblEndTime);
 }
 
 void CLink::onResultDataColorChanged(const QColor &dataColor)
 {
-	 if(m_argument) m_argument->setDataColor(dataColor);
+     if (m_argument != nullptr)
+         m_argument->setDataColor(dataColor);
+
 	 update();
 }
 
-void CLink::onResultDestroyed(QObject *objResult)
+void CLink::onResultDestroyed()
 {
-	 if(m_result == (CResult*)objResult) m_result = 0;
+     m_result = nullptr;
 	 deleteLater();
 }
 
-void CLink::onArgumentDestroyed(QObject *objArgument)
+void CLink::onArgumentDestroyed()
 {
-	 if(m_argument == (CArgument*)objArgument) m_argument = 0;
+     m_argument = nullptr;
 	 deleteLater();
 }
 
-void CLink::updateGeometry(void)
+void CLink::updateGeometry()
 {
 	 prepareGeometryChange();
 	 calcLink();

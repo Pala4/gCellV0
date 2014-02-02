@@ -1,20 +1,20 @@
 #ifndef CSUM_H
 #define CSUM_H
 
-#include "../../../scheme/algorithm/cdatatransmitter.h"
-#include "../../../scheme/portal/cargument.h"
+#include "algorithm/cdatatransmitter.h"
+#include "portal/cargument.h"
 
 class CSumArgument : public CArgument
 {
 	Q_OBJECT
 	Q_PROPERTY(bool invert READ isInvert WRITE setInvert)
 private:
-	bool m_invert;
+    bool m_bInvert;
 public:
-	explicit CSumArgument(QGraphicsItem *parent = 0);
+    explicit CSumArgument(QGraphicsItem *parent = nullptr);
 
-	const bool& isInvert(void) const{return m_invert;}
-	virtual stData bufferData(const quint64 &timeFrameIndex);
+    const bool& isInvert() const{return m_bInvert;}
+    stData bufferData(const unsigned long long &ullTFIndex);
 public slots:
 	void setInvert(const bool &invert);
 };
@@ -23,16 +23,18 @@ class CSum : public CDataTransmitter
 {
 	Q_OBJECT
 private:
-	QList<CSumArgument*> m_sumArgs;
-	CResult *m_sumRes;
+    QList<CSumArgument*> m_sumArgs;
+    CResult *m_pSumRes;
 protected:
-	virtual void proced(const stTimeLine &timeLine);
+    void proced(const unsigned long long &ullTFIndex, const long double &ldblTimeFrame,
+                const long double &ldblStartTime, const long double &ldblTimeStep,
+                const long double &ldblEndTime);
 public:
-	Q_INVOKABLE explicit CSum(QGraphicsItem *parent = 0);
+    Q_INVOKABLE explicit CSum(QGraphicsItem *parent = nullptr);
 
-	virtual CElement* createElement(const QString &typeID);
+    CElement* createElement(const QString &typeID);
 private slots:
-	CSumArgument* addSumArg(void);
+    CSumArgument* addSumArg();
 	void onSumArgDestroyed(QObject *objSumArg);
 };
 

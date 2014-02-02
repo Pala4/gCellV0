@@ -25,8 +25,7 @@
 #include "calgprotoview.h"
 #include "cscheme.h"
 #include "cschemeeditor.h"
-#include "../engine/cengine.h"
-#include "../engine/ctimeframegenerator.h"
+#include "cthreadengine.h"
 #include "../algorithms/General/Amp/camp.h"
 #include "../algorithms/General/Sum/csum.h"
 #include "../algorithms/CSV/CSVIn/ccsvin.h"
@@ -511,7 +510,7 @@ CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
     m_algProtoView = nullptr;
     m_schemeCounter = 1;
     m_activeScheme = nullptr;
-    m_engine = nullptr;
+    m_pThreadEngine = nullptr;
 
     m_workSpaceTabWgt = new QTabWidget();
     m_workSpaceTabWgt->setObjectName(QStringLiteral("workSpaceTabWgt"));
@@ -542,10 +541,10 @@ CMainWindow::CMainWindow(QWidget *parent) : QMainWindow(parent)
     m_algProtoView->setObjectName(QStringLiteral("algProtoView"));
     m_algProtoView->setWindowTitle(tr("Algorithm prototypes"));
 
-    m_engine = new CEngine(this);
-    m_engine->setObjectName(QStringLiteral("engine"));
-    connect(m_engine, SIGNAL(calcStarted()), m_dataWindow, SLOT(startAutoRefresh()));
-    connect(m_engine, SIGNAL(calcStopped()), m_dataWindow, SLOT(stopAutoRefresh()));
+    m_pThreadEngine = new CThreadEngine(this);
+    m_pThreadEngine->setObjectName(QStringLiteral("threadEngine"));
+    connect(m_pThreadEngine, SIGNAL(calcStarted()), m_dataWindow, SLOT(startAutoRefresh()));
+    connect(m_pThreadEngine, SIGNAL(calcFinished()), m_dataWindow, SLOT(stopAutoRefresh()));
 
     QClipboard *clpb = QApplication::clipboard();
     connect(clpb, SIGNAL(changed(QClipboard::Mode)),
@@ -869,16 +868,16 @@ void CMainWindow::onTabCloseRequested(const int &tabIndex)
 
 void CMainWindow::calcActiveScheme(void)
 {
-    Q_ASSERT(m_engine != nullptr);
+    Q_ASSERT(m_pThreadEngine != nullptr);
 
-    m_engine->calc(activeScheme());
+    m_pThreadEngine->calcScheme(activeScheme());
 }
 
 void CMainWindow::calcAllSchemes()
 {
-    Q_ASSERT(m_engine != nullptr);
+    Q_ASSERT(m_pThreadEngine != nullptr);
 
-//    m_engine->calc(m_documents.keys().toVector().toStdVector());
+    m_pThreadEngine->calcSchemes(m_documents.keys());
 }
 
 void CMainWindow::showOptions(void)
@@ -902,15 +901,15 @@ void CMainWindow::showOptions(void)
     if (optWnd.schemeTab() != nullptr)
         optWnd.schemeTab()->setEnabled((activeScheme()));
 
-    if ((m_engine != nullptr) && (m_engine->framer() != nullptr)) {
-        optWnd.setStartTime(m_engine->framer()->startTime());
-        optWnd.setTimeStep(m_engine->framer()->timeStep());
-        optWnd.setEndTime(m_engine->framer()->endTime());
-    }
-    if (optWnd.calcParamTab() != nullptr) {
-        optWnd.calcParamTab()->setEnabled(((m_engine != nullptr)
-                                           && (m_engine->framer() != nullptr)));
-    }
+//    if ((m_engine != nullptr) && (m_engine->framer() != nullptr)) {
+//        optWnd.setStartTime(m_engine->framer()->startTime());
+//        optWnd.setTimeStep(m_engine->framer()->timeStep());
+//        optWnd.setEndTime(m_engine->framer()->endTime());
+//    }
+//    if (optWnd.calcParamTab() != nullptr) {
+//        optWnd.calcParamTab()->setEnabled(((m_engine != nullptr)
+//                                           && (m_engine->framer() != nullptr)));
+//    }
 
     int dlgResult = optWnd.exec();
     switch (dlgResult) {
@@ -929,11 +928,11 @@ void CMainWindow::showOptions(void)
         if (activeScheme() != nullptr)
             activeScheme()->setSceneRect(0.0, 0.0, optWnd.schemeWidth(), optWnd.schemeHeight());
 
-        if ((m_engine != nullptr) && (m_engine->framer() != nullptr)) {
-            m_engine->framer()->setStartTime(optWnd.startTime());
-            m_engine->framer()->setTimeStep(optWnd.timeStep());
-            m_engine->framer()->setEndTime(optWnd.endTime());
-        }
+//        if ((m_engine != nullptr) && (m_engine->framer() != nullptr)) {
+//            m_engine->framer()->setStartTime(optWnd.startTime());
+//            m_engine->framer()->setTimeStep(optWnd.timeStep());
+//            m_engine->framer()->setEndTime(optWnd.endTime());
+//        }
         break;
     case QDialog::Rejected:break;
     }
@@ -1178,11 +1177,11 @@ void CMainWindow::saveConfig(const QString &fileName)
         cfg.setValue("DataWindow/autoRefreshInterval", m_dataWindow->autoRefreshInterval());
     }
 
-    if ((m_engine != nullptr) && (m_engine->framer() != nullptr)) {
-        cfg.setValue("Engine/startTime", m_engine->framer()->startTime());
-        cfg.setValue("Engine/timeStep", m_engine->framer()->timeStep());
-        cfg.setValue("Engine/endTime", m_engine->framer()->endTime());
-    }
+//    if ((m_engine != nullptr) && (m_engine->framer() != nullptr)) {
+//        cfg.setValue("Engine/startTime", m_engine->framer()->startTime());
+//        cfg.setValue("Engine/timeStep", m_engine->framer()->timeStep());
+//        cfg.setValue("Engine/endTime", m_engine->framer()->endTime());
+//    }
 }
 
 void CMainWindow::restoreConfig(const QString &fileName)
@@ -1209,9 +1208,9 @@ void CMainWindow::restoreConfig(const QString &fileName)
         m_dataWindow->setAutoRefreshInterval(autoRefreshInterval);
     }
 
-    if ((m_engine != nullptr) && (m_engine->framer() != nullptr)) {
-            m_engine->framer()->setStartTime(cfg.value("Engine/startTime", 0.0).toDouble());
-            m_engine->framer()->setTimeStep(cfg.value("Engine/timeStep", 0.01).toDouble());
-            m_engine->framer()->setEndTime(cfg.value("Engine/endTime", 10.0).toDouble());
-    }
+//    if ((m_engine != nullptr) && (m_engine->framer() != nullptr)) {
+//            m_engine->framer()->setStartTime(cfg.value("Engine/startTime", 0.0).toDouble());
+//            m_engine->framer()->setTimeStep(cfg.value("Engine/timeStep", 0.01).toDouble());
+//            m_engine->framer()->setEndTime(cfg.value("Engine/endTime", 10.0).toDouble());
+//    }
 }

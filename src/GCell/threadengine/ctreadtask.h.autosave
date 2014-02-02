@@ -1,0 +1,23 @@
+#ifndef CTHREADTASK_H
+#define CTHREADTASK_H
+
+#include <QRunnable>
+
+class CScheme;
+class CEngine;
+
+class CThreadTask : public QRunnable
+{
+private:
+    CScheme *m_pScheme;
+    CEngine *m_pEngine;
+public:
+    explicit CThreadTask(CScheme *scheme = nullptr);
+    
+    CScheme* scheme() {return m_pScheme;}
+    void setScheme(CScheme *scheme);
+    
+    void run();
+};
+
+#endif // CTHREADTASK_H

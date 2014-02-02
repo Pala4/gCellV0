@@ -11,18 +11,23 @@ private:
 
 	int factorial(const int &n);
 	qreal combination(const int &n, const int &k);
-	QVector<qreal> calcZFactors(const QVector<qreal> *factors, const qreal &timeStep);
-	qreal calcZSum(const stTimeFrame &frame, const QVector<stData> &data, const QVector<qreal> &zFactors, const quint64 &startIndex = 0);
-	stData calcRecurrenceEquation(const stTimeFrame &frame,
+    QVector<qreal> calcZFactors(const QVector<qreal> *factors, const long double &ldblTimeStep);
+    qreal calcZSum(const unsigned long long ullTFIndex, const QVector<stData> &data,
+                   const QVector<qreal> &zFactors, const quint64 &startIndex = 0);
+    stData calcRecurrenceEquation(const unsigned long long &ullTFIndex,
+                                  const long double &ldblTimeFrame,
 								  const QVector<stData> &x, const QVector<qreal> &zNomFactors,
 								  const QVector<stData> &y, const QVector<qreal> &zDenomFactors);
 protected:
-	virtual void prepare(const qreal &startTime, const qreal &timeStep, const qreal &endTime);
-	virtual stData doCalc(const stTimeLine &timeLine, const QVector<stData> &x, const QVector<stData> &y);
+    void prepare(const long double &ldblStartTime, const long double &ldblTimeStep,
+                 const long double &ldblEndTime);
+    stData doCalc(const unsigned long long &ullTFIndex, const long double &ldblTimeFrame,
+                  const QVector<stData> &x, const QVector<stData> &y);
 public:
-	CDiscretDiffMethod(void);
+    CDiscretDiffMethod();
 	CDiscretDiffMethod(const QString &methodName);
-	CDiscretDiffMethod(const QString &methodName, QVector<qreal> *nomFactors, QVector<qreal> *denomFactors);
+    CDiscretDiffMethod(const QString &methodName, QVector<qreal> *nomFactors,
+                       QVector<qreal> *denomFactors);
 };
 
 #endif // CDISCRETDIFFMETHOD_H

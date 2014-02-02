@@ -2,8 +2,8 @@
 
 #include <QAction>
 
-#include "../../../scheme/portal/cargument.h"
-#include "../../../scheme/portal/cresult.h"
+#include "portal/cargument.h"
+#include "portal/cresult.h"
 
 /*!
  * \class CSummatorArgument
@@ -12,7 +12,7 @@ CSumArgument::CSumArgument(QGraphicsItem *parent) : CArgument(parent)
 {
 	setObjectName(QStringLiteral("CSummatorArgument"));
 
-	m_invert = false;
+    m_bInvert = false;
 
 	QAction *acInvers = new QAction(tr("Invert"), this);
 	acInvers->setObjectName(QStringLiteral("acInvers"));
@@ -24,57 +24,67 @@ CSumArgument::CSumArgument(QGraphicsItem *parent) : CArgument(parent)
 	setInteractions(intercations() | CElement::Deletable);
 }
 
-stData CSumArgument::bufferData(const quint64 &timeFrameIndex)
+stData CSumArgument::bufferData(const unsigned long long &ullTFIndex)
 {
-	stData bufData = CArgument::bufferData(timeFrameIndex);
-	if(isInvert()) bufData.value = -bufData.value;
+    stData bufData = CArgument::bufferData(ullTFIndex);
+    if (isInvert())
+        bufData.ldblValue = -bufData.ldblValue;
+
 	return bufData;
 }
 
 void CSumArgument::setInvert(const bool &invert)
 {
-	if(m_invert == invert) return;
-	m_invert = invert;
+    if (m_bInvert == invert)
+        return;
+
+    m_bInvert = invert;
 	QString prefix = captionPrefix();
 	prefix.remove(QChar('-'));
-	if(m_invert)
-	{
+    if (m_bInvert)
 		prefix += QChar('-');
-	}
-	setCaptionPrefix(prefix);
+
+    setCaptionPrefix(prefix);
 }
 
 /*!
  * \class CSum
  */
-void CSum::proced(const stTimeLine &timeLine)
+void CSum::proced(const unsigned long long &ullTFIndex, const long double &ldblTimeFrame,
+                  const long double &ldblStartTime, const long double &ldblTimeStep,
+                  const long double &ldblEndTime)
 {
-	qreal sum = 0;
-	foreach(CSumArgument *sumArg, m_sumArgs)
-	{
-		if(sumArg) sum += sumArg->bufferData(timeLine.timeFrame.timeFrameIndex).value;
+    Q_UNUSED(ldblStartTime)
+    Q_UNUSED(ldblTimeStep)
+    Q_UNUSED(ldblEndTime)
+
+    long double ldblSum = 0.0L;
+    foreach (CSumArgument *sumArg, m_sumArgs) {
+        if (sumArg != nullptr)
+            ldblSum += sumArg->bufferData(ullTFIndex).ldblValue;
 	}
-	m_sumRes->appendBuffer(timeLine.timeFrame, sum);
+
+    m_pSumRes->appendBuffer(ldblTimeFrame, ldblSum);
 }
 
 CSum::CSum(QGraphicsItem *parent) : CDataTransmitter(parent)
 {
 	setObjectName(QStringLiteral("CSum"));
 
-	m_sumRes = 0;
+    m_pSumRes = nullptr;
 
 	CSumArgument *inArg = addSumArg();
 	inArg->setName(tr("In"));
 
 	CSumArgument *x1Arg = addSumArg();
 	x1Arg->setName(QStringLiteral("x1"));
-	x1Arg->setPortalOrientation(CPortal::Top);
+    x1Arg->setPortalOrientation(CPortal::Top);
 
 	CSumArgument *x2Arg = addSumArg();
 	x2Arg->setName(QStringLiteral("x2"));
-	x2Arg->setPortalOrientation(CPortal::Bottom);
+    x2Arg->setPortalOrientation(CPortal::Bottom);
 
-	m_sumRes = addResult("Sum");
+    m_pSumRes = addResult("Sum");
 
 	QAction *acAddSumArg = new QAction(tr("Add argument"), this);
 	acAddSumArg->setObjectName(QStringLiteral("acAddSumArg"));
@@ -84,24 +94,25 @@ CSum::CSum(QGraphicsItem *parent) : CDataTransmitter(parent)
 
 CElement* CSum::createElement(const QString &typeID)
 {
-	if(typeID == CSumArgument::staticMetaObject.className())
-	{
+    if (typeID == CSumArgument::staticMetaObject.className())
 		return addSumArg();
-	}
+
 	return CDataTransmitter::createElement(typeID);
 }
 
-CSumArgument* CSum::addSumArg(void)
+CSumArgument* CSum::addSumArg()
 {
 	 CSumArgument *sumArg = new CSumArgument(this);
 	 addArgument(sumArg);
 	 connect(sumArg, SIGNAL(destroyed(QObject*)), this, SLOT(onSumArgDestroyed(QObject*)));
-	 m_sumArgs << sumArg;
+     m_sumArgs << sumArg;
+
 	 return sumArg;
 }
 
 void CSum::onSumArgDestroyed(QObject *objSumArg)
 {
-	CSumArgument *sumArg = (CSumArgument*)objSumArg;
-	if(sumArg && m_sumArgs.contains(sumArg)) m_sumArgs.removeOne(sumArg);
+    CSumArgument *sumArg = reinterpret_cast<CSumArgument*>(objSumArg);
+    if ((sumArg != nullptr) && m_sumArgs.contains(sumArg))
+        m_sumArgs.removeOne(sumArg);
 }

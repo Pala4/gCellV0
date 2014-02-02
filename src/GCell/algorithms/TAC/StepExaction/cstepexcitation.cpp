@@ -2,16 +2,21 @@
 
 #include "../../../scheme/portal/cresult.h"
 
-void CStepExcitation::proced(const stTimeLine &timeLine)
+void CStepExcitation::proced(const unsigned long long &ullTFIndex, const long double &ldblTimeFrame,
+                             const long double &ldblStartTime, const long double &ldblTimeStep,
+                             const long double &ldblEndTime)
 {
-	m_step->appendBuffer(timeLine.timeFrame, 1.0);
+    Q_UNUSED(ullTFIndex)
+    Q_UNUSED(ldblStartTime)
+    Q_UNUSED(ldblTimeStep)
+    Q_UNUSED(ldblEndTime)
+
+    m_pResStep->appendBuffer(ldblTimeFrame, 1.0L);
 }
 
 CStepExcitation::CStepExcitation(QGraphicsItem *parent) : CDataSource(parent)
 {
 	setObjectName(QStringLiteral("CStepExcitation"));
 
-	m_step = 0;
-
-	m_step = addResult(QStringLiteral("Out"));
+    m_pResStep = addResult(tr("Step"));
 }

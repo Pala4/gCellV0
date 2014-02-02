@@ -1,7 +1,7 @@
 #ifndef CAMP_H
 #define CAMP_H
 
-#include "../../../scheme/algorithm/cdatatransmitter.h"
+#include "algorithm/cdatatransmitter.h"
 
 class QDoubleSpinBox;
 
@@ -17,15 +17,17 @@ private:
 
 	QDoubleSpinBox *m_gainSpinBox;
 protected:
-	virtual void proced(const stTimeLine &timeLine);
+    void proced(const unsigned long long &ullTFIndex, const long double &ldblTimeFrame,
+                const long double &ldblStartTime, const long double &ldblTimeStep,
+                const long double &ldblEndTime);
 public:
-    Q_INVOKABLE explicit CAmp(QGraphicsItem *parent = 0);
+    Q_INVOKABLE explicit CAmp(QGraphicsItem *parent = nullptr);
 
-	const qreal& gain(void) const{return m_gain;}
+    const qreal& gain() const{return m_gain;}
 	void setGain(const qreal &gain){m_gain = gain;}
 
-	virtual CElementOptionsWgt* optionsWidget(QWidget *parentWidget);
-	virtual void acceptOptions(CElementOptionsWgt *optWgt);
+    CElementOptionsWgt* optionsWidget(QWidget *parentWidget);
+    void acceptOptions(CElementOptionsWgt *optWgt);
 };
 
 #endif // CAMP_H

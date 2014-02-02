@@ -1,11 +1,7 @@
 #ifndef CENGINE_H
 #define CENGINE_H
 
-#include <QObject>
-
 #include <vector>
-
-#include "timeframe.h"
 
 class CScheme;
 class CAlgorithm;
@@ -14,7 +10,6 @@ class CPortal;
 class CResult;
 class CArgument;
 class CLink;
-class CTimeFrameGenerator;
 
 class CTraceData
 {
@@ -41,11 +36,9 @@ public:
     void release();
 };
 
-class CEngine : public QObject
+class CEngine
 {
-    Q_OBJECT
 private:
-	CTimeFrameGenerator *m_framer;
 	CTraceData m_traceData;
 
 	void traceArgument(CArgument *argument);
@@ -54,16 +47,9 @@ private:
 	void traceAlgorithm(CAlgorithm *algorithm);
     void traceScheme(CScheme *scheme);
 public:
-    explicit CEngine(QObject *parent = 0);
+    explicit CEngine(){}
 
-	CTimeFrameGenerator* framer(void){return m_framer;}
-private slots:
-	void onNewTimeFrame(const stTimeLine &timeLine);
-public slots:
     void calc(CScheme *scheme);
-signals:
-	void calcStarted(void);
-	void calcStopped(void);
 };
 
 #endif // CENGINE_H

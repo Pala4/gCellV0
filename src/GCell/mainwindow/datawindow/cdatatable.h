@@ -16,7 +16,7 @@ private:
 	CAlgTreeModel *m_algTreeModel;
 	QList<CPortal*> m_portals;
 
-	int maxBuffSize(void) const;
+    unsigned long long maxBuffSize() const;
 public:
 	explicit CDataTable(QObject *parent = 0);
 
