@@ -46,6 +46,7 @@ public:
 	 void setModified(const bool &modified);
      const QString& fileName() const{return m_fileName;}
 	 void setFileName(const QString &fileName);
+     QString caption();
 
      void setAlgorithmProtoMng(CAlgorithmProtoMng *algorithmProtoMng);
 	 CElement* createElement(const QString &typeID);

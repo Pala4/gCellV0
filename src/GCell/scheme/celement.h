@@ -84,7 +84,7 @@ public:
 	void setCaptionFont(const QFont &captionFont);
 	const CElement::Interactions& intercations(void) const{return m_intercations;}
 
-    QString caption();
+    virtual QString caption();
 
 	const QList<QAction*>& actions(void) const{return m_actions;}
 	void addAction(QAction *action);

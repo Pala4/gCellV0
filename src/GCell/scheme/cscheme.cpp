@@ -1,6 +1,7 @@
 #include "cscheme.h"
 
 #include <QMetaProperty>
+#include <QFileInfo>
 
 #include "algorithmproto/calgorithmproto.h"
 #include "algorithmproto/calgorithmprotomng.h"
@@ -143,6 +144,12 @@ void CScheme::setFileName(const QString &fileName)
         return;
     m_fileName = fileName;
     emit fileNameChanged(m_fileName);
+}
+
+QString CScheme::caption()
+{
+    QFileInfo fi(m_fileName);
+    return fi.baseName();
 }
 
 void CScheme::setAlgorithmProtoMng(CAlgorithmProtoMng *algorithmProtoMng)

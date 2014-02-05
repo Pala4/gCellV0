@@ -200,7 +200,7 @@ void CEngine::calc(CScheme *scheme)
 
     long double ldblStartTime = 0.0L;
     long double ldblTimeStep = 0.01L;
-    long double ldblEndTime = 100.0L;
+    long double ldblEndTime = 10.0L;
 
     for (CElement *element : scheme->elements().toVector().toStdVector()) {
         if (element != nullptr)
@@ -215,6 +215,9 @@ void CEngine::calc(CScheme *scheme)
             if (ds != nullptr)
                 ds->calc(ullTFIndex, ldblTimeFrame, ldblStartTime, ldblTimeStep, ldblEndTime);
         }
+
+        //Uncomment this to turn on delay
+        //for (unsigned long long ci = 0; ci < 1000000; ++ci);
 
         ++ullTFIndex;
         ldblTimeFrame += ldblTimeStep;

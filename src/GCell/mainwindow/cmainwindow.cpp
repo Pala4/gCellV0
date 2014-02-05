@@ -371,21 +371,21 @@ void CMainWindow::writeScheme(CScheme *scheme, const QString &fileName)
     scheme->setModified(false);
 }
 
-void CMainWindow::readScheme(CScheme *scheme, const QString &fileName)
+bool CMainWindow::readScheme(CScheme *scheme, const QString &fileName)
 {
     if ((scheme == nullptr) || fileName.isEmpty())
-        return;
+        return false;
 
     QFile fileHandler(fileName);
     if (!fileHandler.exists())
-        return;
+        return false;
 
     QDomDocument domDoc;
     QString errMsg;
     int errLine = 0;
     int errCol = 0;
     if (!domDoc.setContent(&fileHandler, &errMsg, &errLine, &errCol))
-        return;
+        return false;
 
     stSchemeDesc schemeDesc;
     QList<CElement*> elements = scheme->fromXMLDom(domDoc, &schemeDesc);
@@ -394,6 +394,8 @@ void CMainWindow::readScheme(CScheme *scheme, const QString &fileName)
 
     scheme->setNewScheme(false);
     scheme->setModified(false);
+
+    return true;
 }
 
 bool CMainWindow::saveSchemesBeforeClose(const QList<CScheme*> &schemes)
@@ -446,6 +448,19 @@ CSchemeEditor* CMainWindow::activeSchemeEditor(void)
     if ((activeScheme() != nullptr) && m_documents.contains(activeScheme()))
         return m_documents[activeScheme()];
     return 0;
+}
+
+CScheme* CMainWindow::findScheme(const QString &schemeFileName)
+{
+    if (schemeFileName.isEmpty())
+        return nullptr;
+
+    foreach (CScheme *scheme, m_documents.keys()) {
+        if ((scheme != nullptr) && (scheme->fileName() == schemeFileName))
+            return scheme;
+    }
+
+    return nullptr;
 }
 
 void CMainWindow::closeEvent(QCloseEvent *event)
@@ -731,8 +746,11 @@ void CMainWindow::onSchemeEditorWindowTitleChanged(void)
     CSchemeEditor *schemeEditor = qobject_cast<CSchemeEditor*>(sender());
     if ((schemeEditor != nullptr) && (m_workSpaceTabWgt != nullptr)) {
         int tabIndex = m_workSpaceTabWgt->indexOf(schemeEditor);
-        if (tabIndex >= 0)
+        if (tabIndex >= 0) {
             m_workSpaceTabWgt->setTabText(tabIndex, schemeEditor->windowTitle());
+            if (schemeEditor->scheme() != nullptr)
+                m_workSpaceTabWgt->setTabToolTip(tabIndex, schemeEditor->scheme()->fileName());
+        }
     }
 }
 
@@ -950,7 +968,7 @@ void CMainWindow::onDataWindowVisibleChanged(const bool &visible)
         m_acDataWindow->setChecked(visible);
 }
 
-CScheme* CMainWindow::newScheme()
+CScheme* CMainWindow::newScheme(CScheme *scheme)
 {
     CSchemeEditor *schemeEditor = new CSchemeEditor(this);
     schemeEditor->setObjectName(QStringLiteral("schemeEditor"));
@@ -965,11 +983,13 @@ CScheme* CMainWindow::newScheme()
     connect(schemeEditor, SIGNAL(elementsSelected(QList<CElement*>)),
             this, SLOT(onSchemeEditorElementsSelected(QList<CElement*>)));
 
-    CScheme* scheme = new CScheme(m_schemeCounter++, this);
-    scheme->setObjectName(QStringLiteral("scheme"));
-    scheme->setSceneRect(0.0, 0.0, 2000.0, 2000.0);
-    scheme->setNewScheme(true);
-    scheme->setAlgorithmProtoMng(m_algorithmProtoMng);
+    if (scheme == nullptr) {
+        scheme = new CScheme(m_schemeCounter++, this);
+        scheme->setObjectName(QStringLiteral("scheme"));
+        scheme->setSceneRect(0.0, 0.0, 2000.0, 2000.0);
+        scheme->setNewScheme(true);
+        scheme->setAlgorithmProtoMng(m_algorithmProtoMng);
+    }
     schemeEditor->setScheme(scheme);
     connect(scheme, SIGNAL(destroyed(QObject*)), this, SLOT(onSchemeDestroyed(QObject*)));
 
@@ -1008,7 +1028,10 @@ bool CMainWindow::saveSchemeAs(CScheme *scheme)
     if (savedScheme == nullptr)
         return false;
 
-    QString fileName = QFileDialog::getSaveFileName(this, "Save as...", savedScheme->fileName());
+    QString flt = tr("gamma cell V0 schemes (*.scm)");
+    QString selFlt = flt;
+    QString fileName = QFileDialog::getSaveFileName(this, "Save as...", savedScheme->fileName(),
+                                                    flt, &selFlt);
     if (fileName.isEmpty())
         return false;
 
@@ -1017,26 +1040,52 @@ bool CMainWindow::saveSchemeAs(CScheme *scheme)
     return true;
 }
 
-bool CMainWindow::openScheme(const QString &fileName)
+bool CMainWindow::openSchemes(const QStringList &fileNames)
 {
-    QString schemeName = fileName;
-    if (schemeName.isEmpty())
-        schemeName = QFileDialog::getOpenFileName(this, "Open");
-    if (!QFile::exists(schemeName))
+    QStringList schemeNames = fileNames;
+
+    if (schemeNames.isEmpty()) {
+        QString flt = tr("gamma cell V0 schemes (*.scm)");
+        QString selFlt = flt;
+        schemeNames = QFileDialog::getOpenFileNames(this, "Open", QString(), flt, &selFlt);
+    }
+    if (schemeNames.isEmpty())
         return false;
 
-    CScheme *scheme = newScheme();
-    if (scheme) {
+    bool openResult = false;
+    int openedSchemeCounter = m_schemeCounter + 1;
+    foreach (QString schemeName, schemeNames) {
+        if (schemeName.isEmpty() || !QFile::exists(schemeName))
+            continue;
 
-        //Temporary crutch, because that counter must work only with new schemes.
-        //It will be removed, after implementation CWorkSpace class
-        --m_schemeCounter;
-
-        readScheme(scheme, schemeName);
-        scheme->setFileName(schemeName);
+        CScheme *scheme = findScheme(schemeName);
+        if (scheme != nullptr) {
+            if ((m_workSpaceTabWgt != nullptr)
+                    && (m_documents.contains(scheme) && (m_documents[scheme] != nullptr))) {
+                m_workSpaceTabWgt->setCurrentWidget(m_documents[scheme]);
+            }
+        } else {
+            scheme = new CScheme(openedSchemeCounter, this);
+            scheme->setObjectName(QStringLiteral("scheme"));
+            scheme->setAlgorithmProtoMng(m_algorithmProtoMng);
+            if (readScheme(scheme, schemeName)) {
+                newScheme(scheme);
+                scheme->setFileName(schemeName);
+                ++openedSchemeCounter;
+            } else {
+                scheme->deleteLater();
+                continue;
+            }
+        }
+        openResult = true;
     }
 
-    return true;
+    return openResult;
+}
+
+bool CMainWindow::openScheme(const QString &fileName)
+{
+    return openSchemes(fileName.isEmpty() ? QStringList() : QStringList() << fileName);
 }
 
 bool CMainWindow::closeScheme(CScheme *scheme)
@@ -1137,8 +1186,8 @@ void CMainWindow::restoreDesktop(const QString &fileName)
     if (isAutoLoadLastScheme()) {
         QStringList oldSchemeFileList =
                 desk.value("MainWindow/Old schemes", QString()).toStringList();
-        foreach (QString schemeFileName, oldSchemeFileList)
-            openResult = openScheme(schemeFileName);
+        if (!oldSchemeFileList.isEmpty())
+            openResult = openSchemes(oldSchemeFileList);
     }
     if (!openResult)
         newScheme();
@@ -1173,7 +1222,7 @@ void CMainWindow::saveConfig(const QString &fileName)
     cfg.setValue("SchemeEditor/gridAlign", isGridAlign());
 
     if (m_dataWindow != nullptr) {
-        cfg.setValue("DataWindow/autoRefresh", m_dataWindow->isAutoRefresh());
+        cfg.setValue("DataWindow/autoRefresh", m_dataWindow->isAutoRefreshEnabled());
         cfg.setValue("DataWindow/autoRefreshInterval", m_dataWindow->autoRefreshInterval());
     }
 

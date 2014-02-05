@@ -87,11 +87,13 @@ private:
 	void setupSchemeEditorContextMenu(void);
 
 	void writeScheme(CScheme *scheme, const QString &fileName);
-	void readScheme(CScheme *scheme, const QString &fileName);
+    bool readScheme(CScheme *scheme, const QString &fileName);
 	bool saveSchemesBeforeClose(const QList<CScheme*> &schemes);
 
 	CScheme* activeScheme(void);
     CSchemeEditor* activeSchemeEditor(void);
+
+    CScheme *findScheme(const QString &schemeFileName);
 protected:
 	virtual void closeEvent(QCloseEvent *event);
 public:
@@ -137,10 +139,11 @@ private slots:
 	void setDataWindowVisible(const bool &visible);
 	void onDataWindowVisibleChanged(const bool &visible);
 
-    CScheme* newScheme();
+    CScheme* newScheme(CScheme *scheme = nullptr);
 	void saveScheme(CScheme *scheme = 0);
 	bool saveSchemeAs(CScheme *scheme = 0);
-	bool openScheme(const QString &fileName = QString());
+    bool openSchemes(const QStringList &fileNames = QStringList());
+    bool openScheme(const QString &fileName = QString());
     bool closeScheme(CScheme *scheme = 0);
     void onSchemeDestroyed(QObject *objScheme);
 

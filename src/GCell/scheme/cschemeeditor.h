@@ -109,8 +109,6 @@ private:
 
 	qreal vecModul(const QPointF &point) const;
 	CPortal* poratalUnderPortalHook(const QPoint &mousePos);
-
-	CScheme* scheme(void);
 protected:
     virtual void contextMenuEvent(QContextMenuEvent *event);
     virtual void mousePressEvent(QMouseEvent *event);
@@ -138,7 +136,8 @@ public:
 	QMenu* contextMenu(void){return m_contextMenu;}
 	void setContextMenu(QMenu *contextMenu){m_contextMenu = contextMenu;}
 
-	void setScheme(CScheme *a_scheme);
+    CScheme* scheme(void);
+    void setScheme(CScheme *a_scheme);
 	QList<CElement*> selectedElements(void);
 private slots:
 	void onSchemeElementAdedd(CElement *element);

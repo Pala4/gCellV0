@@ -308,7 +308,9 @@ void CElement::afterCalc(const unsigned long long &ullTFCount, const long double
 
 void CElement::onCaptionEditorTextChanged(const QString &text)
 {
-	if(name() == text) return;
+    if (name() == text)
+        return;
+
 	m_blockCaptionEditorSetText = true;
 	setName(text);
 }
@@ -316,8 +318,7 @@ void CElement::onCaptionEditorTextChanged(const QString &text)
 void CElement::onNameChanged(const QString &name)
 {
 	Q_UNUSED(name)
-	if(m_captionEditor && !m_blockCaptionEditorSetText)
-	{
+    if (m_captionEditor && !m_blockCaptionEditorSetText) {
 		m_captionEditor->blockSignals(true);
 		m_captionEditor->setText(caption());
 		m_captionEditor->blockSignals(false);

@@ -177,6 +177,7 @@ void CPortal::setCaptionPrefix(const QString &captionPrefix)
         return;
 
     m_captionPrefix = captionPrefix;
+    emit nameChanged(name());
     updateGeometry();
 }
 
@@ -186,7 +187,7 @@ void CPortal::setCaptionPostfix(const QString &captionPostfix)
         return;
 
     m_captionPostfix = captionPostfix;
-    updateGeometry();
+    emit nameChanged(name());
 }
 
 QPainterPath CPortal::shape() const

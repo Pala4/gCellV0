@@ -5,8 +5,10 @@
 
 class QSplitter;
 class QTabWidget;
-class QToolButton;
+class QCheckBox;
 class QSpinBox;
+class QPushButton;
+class QTimer;
 
 class CAlgorithm;
 class CScheme;
@@ -17,7 +19,7 @@ class CAlgTreeModel;
 class CDataWindow : public QMainWindow
 {
 	Q_OBJECT
-	Q_PROPERTY(bool autoRefresh READ isAutoRefresh WRITE setAutoRefresh)
+    Q_PROPERTY(bool autoRefresh READ isAutoRefreshEnabled WRITE setAutoRefresh)
 	Q_PROPERTY(int autoRefreshInterval READ autoRefreshInterval WRITE setAutoRefreshInterval)
 private:
 	QList<CAlgorithm*> m_algorithms;
@@ -26,25 +28,24 @@ private:
 	CDataPlot *m_dataPlot;
 	CDataTable *m_dataTable;
 	CAlgTreeModel *m_algTreeModel;
-	bool m_autoRefreshStopped;
-	int m_refreshTimerID;
-	QToolButton *m_autoRefreshToolBt;
+    QTimer *m_autoRefreshTimer;
+    bool m_autoRefreshStarted;
+    QCheckBox *m_autoRefreshChBx;
 	QSpinBox *m_autoRefreshIntervalSpBx;
-private:
-	void stopAutoRefreshProcedure(void);
-protected:
-	virtual void timerEvent(QTimerEvent *event);
+    QPushButton *m_pbRefresh;
 public:
 	explicit CDataWindow(QWidget *parent = 0);
 
-	bool isAutoRefresh(void);
+    bool isAutoRefreshEnabled(void);
 	void setAutoRefresh(const bool &autoRefresh);
 	int autoRefreshInterval(void);
 	void setAutoRefreshInterval(const int &autoRefreshInterval);
 
 	QSplitter* splitter(void){return m_splMain;}
+private slots:
+    void onAutoRefreshChBxStateChanged(int state);
 public slots:
-	virtual void setVisible(bool visible);
+    void setVisible(bool visible);
 
     void setSchemes(const QList<CScheme*> &schemes);
     void addScheme(CScheme *scheme);
