@@ -75,9 +75,8 @@ void CAlgTreeModel::setSchemes(const QList<CScheme*> &schemes)
 {
     clear();
 
-    foreach (CScheme *scheme, schemes) {
+    foreach (CScheme *scheme, schemes)
         addScheme(scheme);
-    }
 }
 
 void CAlgTreeModel::addScheme(CScheme *scheme)

@@ -23,13 +23,14 @@ protected:
     void setItemType(const CAlgBuffModelItem::AlgBuffModelItemType &itemType);
 public:
     explicit CAlgBuffModelItem(QObject *parent = 0);
-    virtual ~CAlgBuffModelItem();
 
     virtual int type() const{return m_itemType;}
 	virtual void setData(const QVariant &value, int role = Qt::UserRole + 1);
 
     void addRow(CAlgBuffModelItem *item);
     void clear();
+protected slots:
+    void remove();
 public slots:
     void changeText(const QString &newText);
 signals:

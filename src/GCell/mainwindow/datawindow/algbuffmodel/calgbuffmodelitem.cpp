@@ -19,14 +19,6 @@ CAlgBuffModelItem::CAlgBuffModelItem(QObject *parent) : QObject(parent), QStanda
     setSelectable(false);
 }
 
-CAlgBuffModelItem::~CAlgBuffModelItem()
-{
-    //A bit of crutches, because
-    //QStandardItemModel don't update their views when the item is destroyed
-    if (model() != nullptr)
-        model()->takeRow(row());
-}
-
 void CAlgBuffModelItem::setData(const QVariant &value, int role)
 {
 	QStandardItem::setData(value, role);
@@ -45,6 +37,16 @@ void CAlgBuffModelItem::addRow(CAlgBuffModelItem *item)
 void CAlgBuffModelItem::clear()
 {
     removeRows(0, rowCount());
+}
+
+void CAlgBuffModelItem::remove()
+{
+    if (QStandardItem::parent() != nullptr)
+        QStandardItem::parent()->takeRow(row());
+    else if (model() != nullptr)
+        model()->takeRow(row());
+
+    deleteLater();
 }
 
 void CAlgBuffModelItem::changeText(const QString &newText)
@@ -95,7 +97,7 @@ CSchemeItem::CSchemeItem(CScheme *scheme, QObject *parent) : CAlgBuffModelItem(p
     m_scheme = scheme;
     if (m_scheme != nullptr) {
         setText(tr("Scheme [%1]").arg(m_scheme->fileName()));
-        connect(m_scheme, SIGNAL(destroyed()), this, SLOT(deleteLater()));
+        connect(m_scheme, SIGNAL(destroyed()), this, SLOT(remove()));
         connect(m_scheme, SIGNAL(selectionChanged()), this, SLOT(onSelectionChanged()));
         connect(m_scheme, SIGNAL(fileNameChanged(QString)), this, SLOT(changeText(QString)));
 
@@ -188,7 +190,7 @@ CAlgItem::CAlgItem(CAlgorithm *alg, QObject *parent) : CAlgBuffModelItem(parent)
     m_alg = alg;
     if (m_alg != nullptr) {
         setText(m_alg->caption());
-        connect(m_alg, SIGNAL(destroyed()), this, SLOT(deleteLater()));
+        connect(m_alg, SIGNAL(destroyed()), this, SLOT(remove()));
         connect(m_alg, SIGNAL(portalAdded(CPortal*)), this, SLOT(onPortalAdded(CPortal*)));
         connect(m_alg, SIGNAL(nameChanged(QString)), this, SLOT(changeText(QString)));
 
@@ -264,7 +266,7 @@ CPortalItem::CPortalItem(CPortal *portal, QObject *parent) : CAlgBuffModelItem(p
     m_portal = portal;
 
     if (m_portal != nullptr) {
-        connect(m_portal, SIGNAL(destroyed()), this, SLOT(deleteLater()));
+        connect(m_portal, SIGNAL(destroyed()), this, SLOT(remove()));
         connect(m_portal, SIGNAL(nameChanged(QString)), this, SLOT(changeText(QString)));
 
         setText(m_portal->caption());
