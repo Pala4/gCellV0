@@ -8,4 +8,5 @@ TEMPLATE = subdirs
 CONFIG = ordered
 
 SUBDIRS +=  GCellCoreLib \
+        GCellCon \
         GCell
