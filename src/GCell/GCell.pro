@@ -9,19 +9,17 @@ QT      +=  core gui xml
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
+TEMPLATE = app
+DESTDIR = $$DEST_DIR
+TARGET = $$join(TARGET,,, _GUI)
+
 CONFIG(release,debug|release){
-    TARGET = gCellV0Gui
     LIBS    +=  -lqwt
 }
 
 CONFIG(debug,debug|release){
-    TARGET = gCellV0Gui_d
     LIBS    +=  -lqwtd
 }
-
-TEMPLATE = app
-
-DESTDIR = $$DEST_DIR
 
 INCLUDEPATH += \
     scheme \

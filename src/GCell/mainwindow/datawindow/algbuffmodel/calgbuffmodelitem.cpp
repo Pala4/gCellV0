@@ -41,6 +41,8 @@ void CAlgBuffModelItem::clear()
 
 void CAlgBuffModelItem::remove()
 {
+    //A bit of crutches, because
+    //QStandardItemModel don't update their views when the item is destroyed
     if (QStandardItem::parent() != nullptr)
         QStandardItem::parent()->takeRow(row());
     else if (model() != nullptr)
