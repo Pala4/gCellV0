@@ -12,6 +12,7 @@
 
 # Qt-es
 
+*.autosave
 *.pro.user
 *.pro.user.*
 moc_*.cpp
