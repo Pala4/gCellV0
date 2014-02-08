@@ -1,8 +1,15 @@
 #include <QCoreApplication>
 
+#include "cconio.h"
+
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-    return a.exec();
+    CConIO conIO;
+    conIO.start();
+
+    int ret = a.exec();
+
+    return ret;
 }

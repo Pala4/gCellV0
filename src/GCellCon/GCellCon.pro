@@ -16,4 +16,8 @@ TARGET = $$join(TARGET,,, _con)
 
 LIBS += $$sprintf(%1%2%3%4%5, -L, $$DEST_API_DIR, -l, $$PRJ_TARGET, _lib) #gCellV0_lib
 
-SOURCES += main.cpp
+SOURCES += main.cpp \
+    cconio.cpp
+
+HEADERS += \
+    cconio.h
