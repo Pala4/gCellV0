@@ -13,13 +13,8 @@ TEMPLATE = app
 DESTDIR = $$DEST_DIR
 TARGET = $$join(TARGET,,, _GUI)
 
-CONFIG(release,debug|release){
-    LIBS    +=  -lqwt
-}
-
-CONFIG(debug,debug|release){
-    LIBS    +=  -lqwtd
-}
+LIBS += $$sprintf(%1%2%3%4%5, -L, $$DEST_API_DIR, -l, $$PRJ_TARGET, _lib) \ #gCellV0_lib
+        $$sprintf(%1%2, -lqwt, $$replace(DR_POSTFIX, _,)) #qwtlib
 
 INCLUDEPATH += \
     scheme \
