@@ -9,4 +9,4 @@ CONFIG = ordered
 
 SUBDIRS +=  GCellCoreLib \
         GCellCon \
-        GCell
+        GCellGui
