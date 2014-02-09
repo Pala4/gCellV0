@@ -54,6 +54,7 @@ private slots:
     void onStdInThreadStopped();
 public slots:
     void outMsg(const QString &msg);
+    void setCmd(const QString &cmd);
     void start();
     void stop();
 signals:

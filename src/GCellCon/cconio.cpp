@@ -87,6 +87,12 @@ void CConIO::outMsg(const QString &msg)
     cout << msg << endl;
 }
 
+void CConIO::setCmd(const QString &cmd)
+{
+    outMsg("Cmd# " + cmd);
+    emit sendCmd(cmd);
+}
+
 void CConIO::start(void)
 {   
     if (m_stdInThread == nullptr) {

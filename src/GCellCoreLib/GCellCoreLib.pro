@@ -14,10 +14,14 @@ TARGET = $$join(TARGET,,, _lib)
 
 DEFINES += GCELLCORELIB_LIBRARY
 
-SOURCES += gcellcorelib.cpp
+SOURCES += \
+    ciosystem.cpp \
+    cchannel.cpp
 
-HEADERS += gcellcorelib.h\
-        gcellcorelib_global.h
+HEADERS +=\
+        gcellcorelib_global.h \
+    ciosystem.h \
+    cchannel.h
 
 unix {
     target.path = /usr/lib
