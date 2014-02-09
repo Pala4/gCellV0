@@ -16,12 +16,17 @@ DEFINES += GCELLCORELIB_LIBRARY
 
 SOURCES += \
     ciosystem.cpp \
-    cchannel.cpp
+    cchannel.cpp \
+    cquery.cpp \
+    cthreadmng.cpp
 
 HEADERS +=\
         gcellcorelib_global.h \
     ciosystem.h \
-    cchannel.h
+    cchannel.h \
+    cquery.h \
+    cthreadmng.h \
+    package.h
 
 unix {
     target.path = /usr/lib

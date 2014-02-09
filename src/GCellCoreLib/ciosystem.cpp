@@ -41,38 +41,46 @@ void CIOSystem::onChannelDestroyed(QObject *objChannel)
         m_channels.remove(m_channels.key(channel));
 }
 
-void CIOSystem::sendBackwardCmd(const int &channelID, const QString &cmd)
+void CIOSystem::sendBackwardCmd(Package pkg)
 {
-    if (m_channels.contains(channelID) && (m_channels[channelID] != nullptr)
-        && (m_channels[channelID]->id() == channelID)) {
-        m_channels[channelID]->sendBackwardCmd(cmd);
+    if ((!pkg.query.isNull()) && m_channels.contains(pkg.channelID)
+        && (m_channels[pkg.channelID] != nullptr)
+        && (m_channels[pkg.channelID]->id() == pkg.channelID)) {
+        m_channels[pkg.channelID]->sendBackwardCmd(/*pkg.query.data()*/pkg.respons);
     }
 
-    emit backwardCmd(cmd);
+    emit backwardCmd(/*pkg.query.data()*/pkg.respons);
 }
 
-void CIOSystem::sendBackwardMsg(const int &channelID, const QString &msg)
+void CIOSystem::sendBackwardMsg(Package pkg)
 {
-    if (m_channels.contains(channelID) && (m_channels[channelID] != nullptr)
-        && (m_channels[channelID]->id() == channelID)) {
-        m_channels[channelID]->sendBackwardMsg(msg);
+    if (m_channels.contains(pkg.channelID) && (m_channels[pkg.channelID] != nullptr)
+        && (m_channels[pkg.channelID]->id() == pkg.channelID)) {
+        m_channels[pkg.channelID]->sendBackwardMsg(pkg.respons);
     }
 
-    emit backwardMsg(msg);
+    emit backwardMsg(pkg.respons);
 }
 
 void CIOSystem::sendForwardCmd(const int &channelID, const QString &cmd)
 {
     if (cmd == "GetIOSystemInfo") {
-        sendBackwardMsg(channelID, QString("IO System v0.0.1 initialized"));
+        Package pkg;
+        pkg.channelID = channelID;
+        pkg.respons = QString("IO System v0.0.1");
+        sendBackwardMsg(pkg);
         return;
     }
 
-    emit forwardCmd(cmd);
+    Package pkg;
+    pkg.channelID = channelID;
+    emit forwardCmd(pkg);
 }
 
 void CIOSystem::sendForwardMsg(const int &channelID, const QString &msg)
 {
-    Q_UNUSED(channelID)
-    emit forwardMsg(msg);
+    Package pkg;
+    pkg.channelID = channelID;
+    pkg.respons = msg;
+    emit forwardMsg(pkg);
 }
