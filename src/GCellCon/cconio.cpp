@@ -77,10 +77,10 @@ CConIO::~CConIO(void)
 
 void CConIO::onStdInThreadStopped()
 {
-    outMsg(tr("Halted"));
+    setMsg(tr("Halted"));
 }
 
-void CConIO::outMsg(const QString &msg)
+void CConIO::setMsg(const QString &msg)
 {
     QTextStream cout(stdout);
 
@@ -89,7 +89,7 @@ void CConIO::outMsg(const QString &msg)
 
 void CConIO::setCmd(const QString &cmd)
 {
-    outMsg("Cmd# " + cmd);
+    setMsg("Cmd# " + cmd);
     emit sendCmd(cmd);
 }
 
@@ -105,7 +105,7 @@ void CConIO::start(void)
     if (!m_stdInThread->isRunning())
         m_stdInThread->start(QThread::IdlePriority);
 
-    outMsg(tr("Client console i/o subsystem v0.0.1 is initialized"));
+    setMsg(tr("Client console i/o subsystem v0.0.1 is initialized"));
 }
 
 void CConIO::stop()

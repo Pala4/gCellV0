@@ -16,16 +16,15 @@ public:
     const int& id() const{return m_id;}
     void setID(const int &id) {m_id = id;}
 public slots:
-    void outCmdIn(const QString &cmd);
-    void outMsgIn(const QString &msg);
-
-    void receiveCmd(const QString &cmd);
-    void receiveMsg(const QString &msg);
+    void sendBackwardCmd(const QString &cmd);
+    void sendBackwardMsg(const QString &msg);
+    void sendForwardCmd(const QString &cmd);
+    void sendForwardMsg(const QString &msg);
 signals:
-    void sendCmdIn(QString cmd);
-    void sendMsgIn(QString msg);
-    void sendCmdOut(int channelID, QString cmd);
-    void sendMsgOut(int channelID, QString msg);
+    void backwardCmd(QString cmd);
+    void backwardMsg(QString msg);
+    void forwardCmd(int channelID, QString cmd);
+    void forwardMsg(int channelID, QString msg);
 };
 
 #endif // CCHANNEL_H

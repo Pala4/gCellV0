@@ -7,27 +7,27 @@ CChannel::CChannel(const int &id, QObject *parent) : QObject(parent)
     setID(id);
 }
 
-void CChannel::outCmdIn(const QString &cmd)
+void CChannel::sendBackwardCmd(const QString &cmd)
 {
-    emit sendCmdIn(cmd);
+    emit backwardCmd(cmd);
 }
 
-void CChannel::outMsgIn(const QString &msg)
+void CChannel::sendBackwardMsg(const QString &msg)
 {
-    emit sendMsgIn(msg);
+    emit backwardMsg(msg);
 }
 
-void CChannel::receiveCmd(const QString &cmd)
+void CChannel::sendForwardCmd(const QString &cmd)
 {
     if (cmd == "GetChannelInfo") {
-        outMsgIn(QString("Channel id #%1").arg(id()));
+        sendBackwardMsg(QString("Channel id #%1").arg(id()));
         return;
     }
 
-    emit sendCmdOut(id(), cmd);
+    emit forwardCmd(id(), cmd);
 }
 
-void CChannel::receiveMsg(const QString &msg)
+void CChannel::sendForwardMsg(const QString &msg)
 {
-    emit sendMsgOut(id(), msg);
+    emit forwardMsg(id(), msg);
 }

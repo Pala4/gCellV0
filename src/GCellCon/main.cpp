@@ -15,8 +15,8 @@ int main(int argc, char *argv[])
     ioSystem->setObjectName(QLatin1String("ioSystem"));
 
     CChannel *channel = ioSystem->createChannel();
-    QObject::connect(&conIO, SIGNAL(execCmd(QString)), channel, SLOT(receiveCmd(QString)));
-    QObject::connect(channel, SIGNAL(sendMsgIn(QString)), &conIO, SLOT(outMsg(QString)));
+    QObject::connect(&conIO, SIGNAL(sendCmd(QString)), channel, SLOT(sendForwardCmd(QString)));
+    QObject::connect(channel, SIGNAL(backwardMsg(QString)), &conIO, SLOT(setMsg(QString)));
 
     conIO.setCmd("GetChannelInfo");
     conIO.setCmd("GetIOSystemInfo");
