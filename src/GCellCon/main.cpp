@@ -13,14 +13,16 @@ int main(int argc, char *argv[])
     conIO.start();
 
     CIOSystem ioSystem;
-    ioSystem.setObjectName(QLatin1String("ioSystem"));
+    ioSystem.setObjectName(QStringLiteral("ioSystem"));
+    ioSystem.registerQueryDesc(&conIO, QStringLiteral("GetConIOInfo"), (int)CConIO::GetInfo);
 
     CChannel *channel = ioSystem.createChannel();
     QObject::connect(&conIO, SIGNAL(sendCmd(QString)), channel, SLOT(sendForwardCmd(QString)));
     QObject::connect(channel, SIGNAL(backwardMsg(QString)), &conIO, SLOT(setMsg(QString)));
 
-    conIO.setCmd("GetChannelInfo");
-    conIO.setCmd("GetIOSystemInfo");
+    conIO.setCmd(QStringLiteral("GetConIOInfo"));
+    conIO.setCmd(QStringLiteral("GetChannelInfo"));
+    conIO.setCmd(QStringLiteral("GetIOSystemInfo"));
 
     CThreadMng threadMng;
     threadMng.setObjectName(QStringLiteral("threadMng"));

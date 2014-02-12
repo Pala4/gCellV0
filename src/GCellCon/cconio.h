@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QThread>
 
+#include "cbase.h"
+
 #include <QtCore/QReadWriteLock>
 
 class CStdInWorker : public QObject
@@ -42,11 +44,15 @@ signals:
     void stopWork();
 };
 
-class CConIO : public QObject
+class CConIO : public QObject, public CBase
 {
     Q_OBJECT
+public:
+    enum ConIOQuery{GetInfo};
 private:
     CStdInTread *m_stdInThread;
+protected:
+    void processCommand(CQueryEvent *event);
 public:
     explicit CConIO(QObject *parent = 0);
     virtual ~CConIO();

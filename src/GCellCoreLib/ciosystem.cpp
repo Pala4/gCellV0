@@ -4,9 +4,10 @@
 #include <QtCore/QStringList>
 
 #include "cqueryevent.h"
+#include "cresponsevent.h"
 #include "cchannel.h"
 
-void CIOSystem::sendQuery(const QString &queryName)
+void CIOSystem::sendQuery(const int &channelID, const QString &queryName)
 {
     if (queryName.isEmpty() || (!queryName.isEmpty() && !m_queryDescs.contains(queryName)))
         return;
@@ -14,6 +15,7 @@ void CIOSystem::sendQuery(const QString &queryName)
     if ((queryDesc.queryReceiver == nullptr) || (queryDesc.queryID == -1))
         return;
 
+    queryDesc.channelID = channelID;
     queryDesc.responsReceiver = this;
     CQueryEvent queryEvent(queryDesc);
     QCoreApplication::postEvent(queryDesc.queryReceiver, &queryEvent);
@@ -36,6 +38,23 @@ int CIOSystem::generateChannelID()
     return ++maxID;
 }
 
+bool CIOSystem::event(QEvent *event)
+{
+    if (static_cast<int>(event->type()) == static_cast<int>(CResponsEvent::ResponsEvent)) {
+        CResponsEvent *responsEvent = dynamic_cast<CResponsEvent*>(event);
+        if (responsEvent != nullptr) {
+            QueryDesc queryDesc = responsEvent->queryDesc();
+
+            Package pkg;
+            pkg.channelID = queryDesc.channelID;
+            pkg.respons = queryDesc.responsMsg;
+            sendBackwardMsg(pkg);
+        }
+    }
+
+    return false;
+}
+
 CIOSystem::CIOSystem(QObject *parent) : QObject(parent), CBase()
 {
     setObjectName(QStringLiteral("CIOSystem"));
@@ -53,7 +72,7 @@ QueryDesc CIOSystem::registerQueryDesc(QObject *queryReceiver, const QString &qu
         return QueryDesc();
     }
 
-    QueryDesc queryDesc(queryReceiver, nullptr, queryName, queryID);
+    QueryDesc queryDesc(queryReceiver, nullptr, -1, QString(), queryName, queryID);
     m_queryDescs[queryName] = queryDesc;
     connect(queryReceiver, SIGNAL(destroyed(QObject*)),
             this, SLOT(onQueryReceiverDestroyed(QObject*)));
@@ -113,17 +132,18 @@ void CIOSystem::sendBackwardMsg(Package pkg)
 
 void CIOSystem::sendForwardCmd(const int &channelID, const QString &cmd)
 {
-    if (cmd == "GetIOSystemInfo") {
-        Package pkg;
-        pkg.channelID = channelID;
-        pkg.respons = QString("IO System v0.0.1");
-        sendBackwardMsg(pkg);
-        return;
-    }
+    sendQuery(channelID, cmd);
+//    if (cmd == "GetIOSystemInfo") {
+//        Package pkg;
+//        pkg.channelID = channelID;
+//        pkg.respons = QString("IO System v0.0.1");
+//        sendBackwardMsg(pkg);
+//        return;
+//    }
 
-    Package pkg;
-    pkg.channelID = channelID;
-    emit forwardCmd(pkg);
+//    Package pkg;
+//    pkg.channelID = channelID;
+//    emit forwardCmd(pkg);
 }
 
 void CIOSystem::sendForwardMsg(const int &channelID, const QString &msg)

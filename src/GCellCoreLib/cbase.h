@@ -4,6 +4,7 @@
 #include "gcellcorelib_global.h"
 
 #include "cqueryeventprocessor.h"
+#include "querydesc.h"
 
 class CQueryEventProcessor;
 class CQueryEvent;
@@ -16,6 +17,8 @@ protected:
     friend class CQueryEventProcessor;
     void initCmdEventProcessor();
     virtual void processCommand(CQueryEvent *event);
+
+    void sendRespons(QueryDesc queryDesc, const QString &respons);
 public:
     CBase();
     virtual ~CBase();

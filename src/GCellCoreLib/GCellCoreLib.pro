@@ -22,7 +22,8 @@ SOURCES += \
     cthreadmng.cpp \
     cbase.cpp \
     cqueryevent.cpp \
-    cqueryeventprocessor.cpp
+    cqueryeventprocessor.cpp \
+    cresponsevent.cpp
 
 HEADERS +=\
         gcellcorelib_global.h \
@@ -34,7 +35,8 @@ HEADERS +=\
     cbase.h \
     cqueryevent.h \
     cqueryeventprocessor.h \
-    querydesc.h
+    querydesc.h \
+    cresponsevent.h
 
 unix {
     target.path = /usr/lib

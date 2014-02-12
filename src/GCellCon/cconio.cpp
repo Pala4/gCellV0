@@ -4,6 +4,8 @@
 #include <QtCore/QReadLocker>
 #include <QtCore/QWriteLocker>
 
+#include "cqueryevent.h"
+
 /*!
  * \class CStdInWorker
  */
@@ -62,6 +64,18 @@ void CStdInTread::stop()
 /*!
  * \class CClientOut
  */
+void CConIO::processCommand(CQueryEvent *event)
+{
+    QueryDesc queryDesc = event->queryDesc();
+    switch (queryDesc.queryID) {
+        case CConIO::GetInfo:
+            sendRespons(queryDesc, "Console IO system v0.0.1");
+        break;
+        default:
+        break;
+    }
+}
+
 CConIO::CConIO(QObject *parent) : QObject(parent)
 {
     setObjectName(QStringLiteral("CConIO"));

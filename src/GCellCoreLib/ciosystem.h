@@ -21,8 +21,10 @@ private:
     QMap<QString, QueryDesc> m_queryDescs;
     QMap<int, CChannel*> m_channels;
 
-    void sendQuery(const QString &queryName);
+    void sendQuery(const int &channelID, const QString &queryName);
     int generateChannelID();
+protected:
+    bool event(QEvent *event);
 public:
     explicit CIOSystem(QObject *parent = 0);
 
