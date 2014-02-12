@@ -3,18 +3,19 @@
 
 #include "gcellcorelib_global.h"
 
-#include "ccommanddsp.h"
+#include "ccmdeventprocessor.h"
 
-class CCommandDsp;
+class CCmdEventProcessor;
+class CCmdEvent;
 
 class GCELLCORELIBSHARED_EXPORT CBase
 {
 private:
-    CCommandDsp *m_commandDsp;
+    CCmdEventProcessor *m_cmdEventProc;
 protected:
-    friend class CCommandDsp;
-    void initCommandDsp();
-    virtual void processCommand(QEvent *event);
+    friend class CCmdEventProcessor;
+    void initCmdEventProcessor();
+    virtual void processCommand(CCmdEvent *event);
 public:
     CBase();
     virtual ~CBase();

@@ -22,7 +22,7 @@ int CIOSystem::generateChannelID()
 CIOSystem::CIOSystem(QObject *parent) : QObject(parent), CBase()
 {
     setObjectName(QStringLiteral("CIOSystem"));
-    initCommandDsp();
+    initCmdEventProcessor();
 }
 
 CChannel* CIOSystem::createChannel()

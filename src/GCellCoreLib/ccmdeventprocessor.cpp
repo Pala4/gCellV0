@@ -1,14 +1,14 @@
-#include "ccommanddsp.h"
+#include "ccmdeventprocessor.h"
 
 #include "ccmdevent.h"
 
-void CCommandDsp::setObject(QObject *object)
+void CCmdEventProcessor::setObject(QObject *object)
 {
     if (object != nullptr)
         object->installEventFilter(this);
 }
 
-bool CCommandDsp::eventFilter(QObject *object, QEvent *event)
+bool CCmdEventProcessor::eventFilter(QObject *object, QEvent *event)
 {
     if (static_cast<int>(event->type()) == static_cast<int>(CCmdEvent::CmdEvent)) {
         CCmdEvent *cmdEvent = dynamic_cast<CCmdEvent*>(event);
@@ -24,7 +24,7 @@ bool CCommandDsp::eventFilter(QObject *object, QEvent *event)
     return false;
 }
 
-CCommandDsp::CCommandDsp(QObject *parent) : QObject(parent)
+CCmdEventProcessor::CCmdEventProcessor(QObject *parent) : QObject(parent)
 {
     setObjectName("CCommandDsp");
 }

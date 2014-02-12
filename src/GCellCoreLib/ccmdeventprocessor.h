@@ -1,5 +1,5 @@
-#ifndef CCOMMANDDSP_H
-#define CCOMMANDDSP_H
+#ifndef CCMDEVENTPROCESSOR_H
+#define CCMDEVENTPROCESSOR_H
 
 #include "gcellcorelib_global.h"
 
@@ -7,7 +7,7 @@
 
 #include "cbase.h"
 
-class GCELLCORELIBSHARED_EXPORT CCommandDsp : public QObject
+class GCELLCORELIBSHARED_EXPORT CCmdEventProcessor : public QObject
 {
     Q_OBJECT
 private:
@@ -16,7 +16,7 @@ private:
 protected:
     bool eventFilter(QObject *object, QEvent *event);
 public:
-    explicit CCommandDsp(QObject *parent = 0);    
+    explicit CCmdEventProcessor(QObject *parent = 0);
 };
 
-#endif // CCOMMANDDSP_H
+#endif // CCMDEVENTPROCESSOR_H

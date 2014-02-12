@@ -20,8 +20,8 @@ SOURCES += \
     cquery.cpp \
     cthreadmng.cpp \
     cbase.cpp \
-    ccommanddsp.cpp \
-    ccmdevent.cpp
+    ccmdevent.cpp \
+    ccmdeventprocessor.cpp
 
 HEADERS +=\
         gcellcorelib_global.h \
@@ -31,8 +31,8 @@ HEADERS +=\
     cthreadmng.h \
     package.h \
     cbase.h \
-    ccommanddsp.h \
-    ccmdevent.h
+    ccmdevent.h \
+    ccmdeventprocessor.h
 
 unix {
     target.path = /usr/lib

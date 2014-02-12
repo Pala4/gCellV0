@@ -1,27 +1,27 @@
 #include "cbase.h"
 
-void CBase::initCommandDsp()
+void CBase::initCmdEventProcessor()
 {
     QObject *qObject = toQObject();
     if (qObject != nullptr) {
-        m_commandDsp = new CCommandDsp();
-        m_commandDsp->setObjectName(QStringLiteral("commandDsp"));
-        m_commandDsp->setObject(qObject);
+        m_cmdEventProc = new CCmdEventProcessor();
+        m_cmdEventProc->setObjectName(QStringLiteral("cmdEventProc"));
+        m_cmdEventProc->setObject(qObject);
     }
 }
 
-void CBase::processCommand(QEvent *event)
+void CBase::processCommand(CCmdEvent *event)
 {
     Q_UNUSED(event)
 }
 
 CBase::CBase()
 {
-    m_commandDsp = nullptr;
+    m_cmdEventProc = nullptr;
 }
 
 CBase::~CBase()
 {
-    if (m_commandDsp != nullptr)
-        delete m_commandDsp;
+    if (m_cmdEventProc != nullptr)
+        delete m_cmdEventProc;
 }
