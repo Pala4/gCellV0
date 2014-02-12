@@ -15,12 +15,12 @@ class CChannel;
 
 struct GCELLCORELIBSHARED_EXPORT QueryDesc
 {
-    QueryDesc() : receiver(nullptr), cmdName(QString()), cmdID(-1){}
-    QueryDesc(QObject *_receiver, const QString &_cmdName, const int &_cmdID) :
-        receiver(_receiver), cmdName(_cmdName), cmdID(_cmdID){}
+    QueryDesc() : receiver(nullptr), queryName(QString()), queryID(-1){}
+    QueryDesc(QObject *_receiver, const QString &_queryName, const int &_queryID) :
+        receiver(_receiver), queryName(_queryName), queryID(_queryID){}
     QObject *receiver;
-    QString cmdName;
-    int cmdID;
+    QString queryName;
+    int queryID;
 };
 
 class GCELLCORELIBSHARED_EXPORT CIOSystem : public QObject, public CBase
@@ -30,16 +30,16 @@ private:
     QMap<QString, QueryDesc> m_queryDescs;
     QMap<int, CChannel*> m_channels;
 
-    void sendQuery(const QString &cmdName);
+    void sendQuery(const QString &queryName);
     int generateChannelID();
 public:
     explicit CIOSystem(QObject *parent = 0);
 
-    QueryDesc registerCommand(QObject *receiver, const QString &cmdName, const int &cmdID);
+    QueryDesc registerCommand(QObject *receiver, const QString &queryName, const int &queryID);
 
     CChannel* createChannel();    
 private slots:
-    void onCmdReceiverDestroyed(QObject *objReceiver);
+    void onQueryReceiverDestroyed(QObject *objReceiver);
     void onChannelDestroyed(QObject *objChannel);
 public slots:
     void sendBackwardCmd(Package pkg);

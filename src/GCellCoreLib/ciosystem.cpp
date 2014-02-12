@@ -6,15 +6,15 @@
 #include "cqueryevent.h"
 #include "cchannel.h"
 
-void CIOSystem::sendQuery(const QString &cmdName)
+void CIOSystem::sendQuery(const QString &queryName)
 {
-    if (cmdName.isEmpty() || (!cmdName.isEmpty() && !m_queryDescs.contains(cmdName)))
+    if (queryName.isEmpty() || (!queryName.isEmpty() && !m_queryDescs.contains(queryName)))
         return;
-    QueryDesc queryDesc = m_queryDescs[cmdName];
-    if ((queryDesc.receiver == nullptr) || (queryDesc.cmdID == -1))
+    QueryDesc queryDesc = m_queryDescs[queryName];
+    if ((queryDesc.receiver == nullptr) || (queryDesc.queryID == -1))
         return;
 
-    CQueryEvent queryEvent(queryDesc.cmdID);
+    CQueryEvent queryEvent(queryDesc.queryID);
     QCoreApplication::postEvent(queryDesc.receiver, &queryEvent);
 }
 
@@ -41,18 +41,20 @@ CIOSystem::CIOSystem(QObject *parent) : QObject(parent), CBase()
     initCmdEventProcessor();
 }
 
-QueryDesc CIOSystem::registerCommand(QObject *receiver, const QString &cmdName, const int &cmdID)
+QueryDesc CIOSystem::registerCommand(QObject *receiver, const QString &queryName,
+                                     const int &queryID)
 {
-    if ((receiver == nullptr) || cmdName.isEmpty() || (cmdID == -1))
+    if ((receiver == nullptr) || queryName.isEmpty() || (queryID == -1))
         return QueryDesc();
-    if (m_queryDescs.contains(cmdName)) {
-        qWarning(qPrintable(QString("Command [%1] already exist").arg(cmdName)));
+    if (m_queryDescs.contains(queryName)) {
+        qWarning(qPrintable(QString("Query descriptor with name "
+                                    "[%1] already exist").arg(queryName)));
         return QueryDesc();
     }
 
-    QueryDesc queryDesc(receiver, cmdName, cmdID);
-    m_queryDescs[cmdName] = queryDesc;
-    connect(receiver, SIGNAL(destroyed(QObject*)), this, SLOT(onCmdReceiverDestroyed(QObject*)));
+    QueryDesc queryDesc(receiver, queryName, queryID);
+    m_queryDescs[queryName] = queryDesc;
+    connect(receiver, SIGNAL(destroyed(QObject*)), this, SLOT(onQueryReceiverDestroyed(QObject*)));
 
     return queryDesc;
 }
@@ -67,16 +69,16 @@ CChannel* CIOSystem::createChannel()
     return channel;
 }
 
-void CIOSystem::onCmdReceiverDestroyed(QObject *objReceiver)
+void CIOSystem::onQueryReceiverDestroyed(QObject *objReceiver)
 {
-    QStringList remCommands;
+    QStringList remQueryNames;
     for (int ci = 0; ci < m_queryDescs.count(); ++ci) {
         if (m_queryDescs.values().at(ci).receiver == objReceiver)
-            remCommands << m_queryDescs.keys().at(ci);
+            remQueryNames << m_queryDescs.keys().at(ci);
     }
 
-    foreach (QString cmd, remCommands)
-        m_queryDescs.remove(cmd);
+    foreach (QString queryName, remQueryNames)
+        m_queryDescs.remove(queryName);
 }
 
 void CIOSystem::onChannelDestroyed(QObject *objChannel)
