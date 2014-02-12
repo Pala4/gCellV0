@@ -13,10 +13,10 @@
 
 class CChannel;
 
-struct GCELLCORELIBSHARED_EXPORT CmdDesc
+struct GCELLCORELIBSHARED_EXPORT QueryDesc
 {
-    CmdDesc() : receiver(nullptr), cmdName(QString()), cmdID(-1){}
-    CmdDesc(QObject *_receiver, const QString &_cmdName, const int &_cmdID) :
+    QueryDesc() : receiver(nullptr), cmdName(QString()), cmdID(-1){}
+    QueryDesc(QObject *_receiver, const QString &_cmdName, const int &_cmdID) :
         receiver(_receiver), cmdName(_cmdName), cmdID(_cmdID){}
     QObject *receiver;
     QString cmdName;
@@ -27,15 +27,15 @@ class GCELLCORELIBSHARED_EXPORT CIOSystem : public QObject, public CBase
 {
     Q_OBJECT
 private:
-    QMap<QString, CmdDesc> m_cmdDescs;
+    QMap<QString, QueryDesc> m_queryDescs;
     QMap<int, CChannel*> m_channels;
 
-    void execCommand(const QString &cmdName);
+    void sendQuery(const QString &cmdName);
     int generateChannelID();
 public:
     explicit CIOSystem(QObject *parent = 0);
 
-    CmdDesc registerCommand(QObject *receiver, const QString &cmdName, const int &cmdID);
+    QueryDesc registerCommand(QObject *receiver, const QString &cmdName, const int &cmdID);
 
     CChannel* createChannel();    
 private slots:

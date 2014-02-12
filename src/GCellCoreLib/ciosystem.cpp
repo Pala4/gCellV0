@@ -3,19 +3,19 @@
 #include <QtCore/QCoreApplication>
 #include <QtCore/QStringList>
 
-#include "ccmdevent.h"
+#include "cqueryevent.h"
 #include "cchannel.h"
 
-void CIOSystem::execCommand(const QString &cmdName)
+void CIOSystem::sendQuery(const QString &cmdName)
 {
-    if (cmdName.isEmpty() || (!cmdName.isEmpty() && !m_cmdDescs.contains(cmdName)))
+    if (cmdName.isEmpty() || (!cmdName.isEmpty() && !m_queryDescs.contains(cmdName)))
         return;
-    CmdDesc cmdDesc = m_cmdDescs[cmdName];
-    if ((cmdDesc.receiver == nullptr) || (cmdDesc.cmdID == -1))
+    QueryDesc queryDesc = m_queryDescs[cmdName];
+    if ((queryDesc.receiver == nullptr) || (queryDesc.cmdID == -1))
         return;
 
-    CCmdEvent cmdEvent(cmdDesc.cmdID);
-    QCoreApplication::postEvent(cmdDesc.receiver, &cmdEvent);
+    CQueryEvent queryEvent(queryDesc.cmdID);
+    QCoreApplication::postEvent(queryDesc.receiver, &queryEvent);
 }
 
 int CIOSystem::generateChannelID()
@@ -41,20 +41,20 @@ CIOSystem::CIOSystem(QObject *parent) : QObject(parent), CBase()
     initCmdEventProcessor();
 }
 
-CmdDesc CIOSystem::registerCommand(QObject *receiver, const QString &cmdName, const int &cmdID)
+QueryDesc CIOSystem::registerCommand(QObject *receiver, const QString &cmdName, const int &cmdID)
 {
     if ((receiver == nullptr) || cmdName.isEmpty() || (cmdID == -1))
-        return CmdDesc();
-    if (m_cmdDescs.contains(cmdName)) {
+        return QueryDesc();
+    if (m_queryDescs.contains(cmdName)) {
         qWarning(qPrintable(QString("Command [%1] already exist").arg(cmdName)));
-        return CmdDesc();
+        return QueryDesc();
     }
 
-    CmdDesc cmdDesc(receiver, cmdName, cmdID);
-    m_cmdDescs[cmdName] = cmdDesc;
+    QueryDesc queryDesc(receiver, cmdName, cmdID);
+    m_queryDescs[cmdName] = queryDesc;
     connect(receiver, SIGNAL(destroyed(QObject*)), this, SLOT(onCmdReceiverDestroyed(QObject*)));
 
-    return cmdDesc;
+    return queryDesc;
 }
 
 CChannel* CIOSystem::createChannel()
@@ -70,13 +70,13 @@ CChannel* CIOSystem::createChannel()
 void CIOSystem::onCmdReceiverDestroyed(QObject *objReceiver)
 {
     QStringList remCommands;
-    for (int ci = 0; ci < m_cmdDescs.count(); ++ci) {
-        if (m_cmdDescs.values().at(ci).receiver == objReceiver)
-            remCommands << m_cmdDescs.keys().at(ci);
+    for (int ci = 0; ci < m_queryDescs.count(); ++ci) {
+        if (m_queryDescs.values().at(ci).receiver == objReceiver)
+            remCommands << m_queryDescs.keys().at(ci);
     }
 
     foreach (QString cmd, remCommands)
-        m_cmdDescs.remove(cmd);
+        m_queryDescs.remove(cmd);
 }
 
 void CIOSystem::onChannelDestroyed(QObject *objChannel)

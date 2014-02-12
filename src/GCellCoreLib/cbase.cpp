@@ -10,7 +10,7 @@ void CBase::initCmdEventProcessor()
     }
 }
 
-void CBase::processCommand(CCmdEvent *event)
+void CBase::processCommand(CQueryEvent *event)
 {
     Q_UNUSED(event)
 }

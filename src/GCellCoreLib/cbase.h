@@ -6,7 +6,7 @@
 #include "ccmdeventprocessor.h"
 
 class CCmdEventProcessor;
-class CCmdEvent;
+class CQueryEvent;
 
 class GCELLCORELIBSHARED_EXPORT CBase
 {
@@ -15,7 +15,7 @@ private:
 protected:
     friend class CCmdEventProcessor;
     void initCmdEventProcessor();
-    virtual void processCommand(CCmdEvent *event);
+    virtual void processCommand(CQueryEvent *event);
 public:
     CBase();
     virtual ~CBase();
