@@ -33,7 +33,8 @@ HEADERS +=\
     package.h \
     cbase.h \
     cqueryevent.h \
-    cqueryeventprocessor.h
+    cqueryeventprocessor.h \
+    querydesc.h
 
 unix {
     target.path = /usr/lib

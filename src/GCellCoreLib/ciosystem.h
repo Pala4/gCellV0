@@ -10,18 +10,9 @@
 #include <QMap>
 
 #include "package.h"
+#include "querydesc.h"
 
 class CChannel;
-
-struct GCELLCORELIBSHARED_EXPORT QueryDesc
-{
-    QueryDesc() : receiver(nullptr), queryName(QString()), queryID(-1){}
-    QueryDesc(QObject *_receiver, const QString &_queryName, const int &_queryID) :
-        receiver(_receiver), queryName(_queryName), queryID(_queryID){}
-    QObject *receiver;
-    QString queryName;
-    int queryID;
-};
 
 class GCELLCORELIBSHARED_EXPORT CIOSystem : public QObject, public CBase
 {

@@ -14,7 +14,7 @@ void CIOSystem::sendQuery(const QString &queryName)
     if ((queryDesc.receiver == nullptr) || (queryDesc.queryID == -1))
         return;
 
-    CQueryEvent queryEvent(queryDesc.queryID);
+    CQueryEvent queryEvent(queryDesc.queryID, this);
     QCoreApplication::postEvent(queryDesc.receiver, &queryEvent);
 }
 
