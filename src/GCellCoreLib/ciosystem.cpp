@@ -1,6 +1,22 @@
 #include "ciosystem.h"
 
+#include <QtCore/QCoreApplication>
+#include <QtCore/QStringList>
+
+#include "ccmdevent.h"
 #include "cchannel.h"
+
+void CIOSystem::execCommand(const QString &cmdName)
+{
+    if (cmdName.isEmpty() || (!cmdName.isEmpty() && !m_cmdDescs.contains(cmdName)))
+        return;
+    CmdDesc cmdDesc = m_cmdDescs[cmdName];
+    if ((cmdDesc.receiver == nullptr) || (cmdDesc.cmdID == -1))
+        return;
+
+    CCmdEvent cmdEvent(cmdDesc.cmdID);
+    QCoreApplication::postEvent(cmdDesc.receiver, &cmdEvent);
+}
 
 int CIOSystem::generateChannelID()
 {
@@ -25,6 +41,22 @@ CIOSystem::CIOSystem(QObject *parent) : QObject(parent), CBase()
     initCmdEventProcessor();
 }
 
+CmdDesc CIOSystem::registerCommand(QObject *receiver, const QString &cmdName, const int &cmdID)
+{
+    if ((receiver == nullptr) || cmdName.isEmpty() || (cmdID == -1))
+        return CmdDesc();
+    if (m_cmdDescs.contains(cmdName)) {
+        qWarning(qPrintable(QString("Command [%1] already exist").arg(cmdName)));
+        return CmdDesc();
+    }
+
+    CmdDesc cmdDesc(receiver, cmdName, cmdID);
+    m_cmdDescs[cmdName] = cmdDesc;
+    connect(receiver, SIGNAL(destroyed(QObject*)), this, SLOT(onCmdReceiverDestroyed(QObject*)));
+
+    return cmdDesc;
+}
+
 CChannel* CIOSystem::createChannel()
 {
     CChannel *channel = new CChannel(generateChannelID(), this);
@@ -33,6 +65,18 @@ CChannel* CIOSystem::createChannel()
     connect(channel, SIGNAL(forwardMsg(int,QString)), this, SLOT(sendForwardMsg(int,QString)));
     m_channels[channel->id()] = channel;
     return channel;
+}
+
+void CIOSystem::onCmdReceiverDestroyed(QObject *objReceiver)
+{
+    QStringList remCommands;
+    for (int ci = 0; ci < m_cmdDescs.count(); ++ci) {
+        if (m_cmdDescs.values().at(ci).receiver == objReceiver)
+            remCommands << m_cmdDescs.keys().at(ci);
+    }
+
+    foreach (QString cmd, remCommands)
+        m_cmdDescs.remove(cmd);
 }
 
 void CIOSystem::onChannelDestroyed(QObject *objChannel)

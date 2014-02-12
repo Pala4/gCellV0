@@ -5,7 +5,8 @@
 #-------------------------------------------------
 include("../gcellv0.pri")
 
-QT       -= gui
+QT -= gui
+QT += core
 
 TEMPLATE = lib
 DLLDESTDIR = $$DEST_DIR
