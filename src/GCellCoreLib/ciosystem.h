@@ -26,7 +26,8 @@ private:
 public:
     explicit CIOSystem(QObject *parent = 0);
 
-    QueryDesc registerCommand(QObject *receiver, const QString &queryName, const int &queryID);
+    QueryDesc registerQueryDesc(QObject *queryReceiver, const QString &queryName,
+                                const int &queryID);
 
     CChannel* createChannel();    
 private slots:

@@ -11,11 +11,12 @@ void CIOSystem::sendQuery(const QString &queryName)
     if (queryName.isEmpty() || (!queryName.isEmpty() && !m_queryDescs.contains(queryName)))
         return;
     QueryDesc queryDesc = m_queryDescs[queryName];
-    if ((queryDesc.receiver == nullptr) || (queryDesc.queryID == -1))
+    if ((queryDesc.queryReceiver == nullptr) || (queryDesc.queryID == -1))
         return;
 
-    CQueryEvent queryEvent(queryDesc.queryID, this);
-    QCoreApplication::postEvent(queryDesc.receiver, &queryEvent);
+    queryDesc.responsReceiver = this;
+    CQueryEvent queryEvent(queryDesc);
+    QCoreApplication::postEvent(queryDesc.queryReceiver, &queryEvent);
 }
 
 int CIOSystem::generateChannelID()
@@ -41,10 +42,10 @@ CIOSystem::CIOSystem(QObject *parent) : QObject(parent), CBase()
     initCmdEventProcessor();
 }
 
-QueryDesc CIOSystem::registerCommand(QObject *receiver, const QString &queryName,
-                                     const int &queryID)
+QueryDesc CIOSystem::registerQueryDesc(QObject *queryReceiver, const QString &queryName,
+                                       const int &queryID)
 {
-    if ((receiver == nullptr) || queryName.isEmpty() || (queryID == -1))
+    if ((queryReceiver == nullptr) || queryName.isEmpty() || (queryID == -1))
         return QueryDesc();
     if (m_queryDescs.contains(queryName)) {
         qWarning(qPrintable(QString("Query descriptor with name "
@@ -52,9 +53,10 @@ QueryDesc CIOSystem::registerCommand(QObject *receiver, const QString &queryName
         return QueryDesc();
     }
 
-    QueryDesc queryDesc(receiver, queryName, queryID);
+    QueryDesc queryDesc(queryReceiver, nullptr, queryName, queryID);
     m_queryDescs[queryName] = queryDesc;
-    connect(receiver, SIGNAL(destroyed(QObject*)), this, SLOT(onQueryReceiverDestroyed(QObject*)));
+    connect(queryReceiver, SIGNAL(destroyed(QObject*)),
+            this, SLOT(onQueryReceiverDestroyed(QObject*)));
 
     return queryDesc;
 }
@@ -73,7 +75,7 @@ void CIOSystem::onQueryReceiverDestroyed(QObject *objReceiver)
 {
     QStringList remQueryNames;
     for (int ci = 0; ci < m_queryDescs.count(); ++ci) {
-        if (m_queryDescs.values().at(ci).receiver == objReceiver)
+        if (m_queryDescs.values().at(ci).queryReceiver == objReceiver)
             remQueryNames << m_queryDescs.keys().at(ci);
     }
 
