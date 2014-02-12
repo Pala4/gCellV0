@@ -19,9 +19,10 @@ int CIOSystem::generateChannelID()
     return ++maxID;
 }
 
-CIOSystem::CIOSystem(QObject *parent) : QObject(parent)
+CIOSystem::CIOSystem(QObject *parent) : QObject(parent), CBase()
 {
     setObjectName(QStringLiteral("CIOSystem"));
+    initCommandDsp();
 }
 
 CChannel* CIOSystem::createChannel()

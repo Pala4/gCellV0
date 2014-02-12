@@ -18,7 +18,10 @@ SOURCES += \
     ciosystem.cpp \
     cchannel.cpp \
     cquery.cpp \
-    cthreadmng.cpp
+    cthreadmng.cpp \
+    cbase.cpp \
+    ccommanddsp.cpp \
+    ccmdevent.cpp
 
 HEADERS +=\
         gcellcorelib_global.h \
@@ -26,7 +29,10 @@ HEADERS +=\
     cchannel.h \
     cquery.h \
     cthreadmng.h \
-    package.h
+    package.h \
+    cbase.h \
+    ccommanddsp.h \
+    ccmdevent.h
 
 unix {
     target.path = /usr/lib
