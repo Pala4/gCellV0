@@ -1,14 +1,14 @@
-#include "ccmdeventprocessor.h"
+#include "cqueryeventprocessor.h"
 
 #include "cqueryevent.h"
 
-void CCmdEventProcessor::setObject(QObject *object)
+void CQueryEventProcessor::setObject(QObject *object)
 {
     if (object != nullptr)
         object->installEventFilter(this);
 }
 
-bool CCmdEventProcessor::eventFilter(QObject *object, QEvent *event)
+bool CQueryEventProcessor::eventFilter(QObject *object, QEvent *event)
 {
     if (static_cast<int>(event->type()) == static_cast<int>(CQueryEvent::QueryEvent)) {
         CQueryEvent *queryEvent = dynamic_cast<CQueryEvent*>(event);
@@ -24,7 +24,7 @@ bool CCmdEventProcessor::eventFilter(QObject *object, QEvent *event)
     return false;
 }
 
-CCmdEventProcessor::CCmdEventProcessor(QObject *parent) : QObject(parent)
+CQueryEventProcessor::CQueryEventProcessor(QObject *parent) : QObject(parent)
 {
-    setObjectName("CCommandDsp");
+    setObjectName(QStringLiteral("CQueryEventProcessor"));
 }

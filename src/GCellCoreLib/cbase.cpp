@@ -4,7 +4,7 @@ void CBase::initCmdEventProcessor()
 {
     QObject *qObject = toQObject();
     if (qObject != nullptr) {
-        m_cmdEventProc = new CCmdEventProcessor();
+        m_cmdEventProc = new CQueryEventProcessor();
         m_cmdEventProc->setObjectName(QStringLiteral("cmdEventProc"));
         m_cmdEventProc->setObject(qObject);
     }

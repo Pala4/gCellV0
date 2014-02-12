@@ -1,5 +1,5 @@
-#ifndef CCMDEVENTPROCESSOR_H
-#define CCMDEVENTPROCESSOR_H
+#ifndef CQUERYEVENTPROCESSOR_H
+#define CQUERYEVENTPROCESSOR_H
 
 #include "gcellcorelib_global.h"
 
@@ -7,7 +7,7 @@
 
 #include "cbase.h"
 
-class GCELLCORELIBSHARED_EXPORT CCmdEventProcessor : public QObject
+class GCELLCORELIBSHARED_EXPORT CQueryEventProcessor : public QObject
 {
     Q_OBJECT
 private:
@@ -16,7 +16,7 @@ private:
 protected:
     bool eventFilter(QObject *object, QEvent *event);
 public:
-    explicit CCmdEventProcessor(QObject *parent = 0);
+    explicit CQueryEventProcessor(QObject *parent = 0);
 };
 
-#endif // CCMDEVENTPROCESSOR_H
+#endif // CQUERYEVENTPROCESSOR_H

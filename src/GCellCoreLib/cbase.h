@@ -3,17 +3,17 @@
 
 #include "gcellcorelib_global.h"
 
-#include "ccmdeventprocessor.h"
+#include "cqueryeventprocessor.h"
 
-class CCmdEventProcessor;
+class CQueryEventProcessor;
 class CQueryEvent;
 
 class GCELLCORELIBSHARED_EXPORT CBase
 {
 private:
-    CCmdEventProcessor *m_cmdEventProc;
+    CQueryEventProcessor *m_cmdEventProc;
 protected:
-    friend class CCmdEventProcessor;
+    friend class CQueryEventProcessor;
     void initCmdEventProcessor();
     virtual void processCommand(CQueryEvent *event);
 public:
