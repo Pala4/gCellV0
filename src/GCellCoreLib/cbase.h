@@ -13,6 +13,7 @@ class GCELLCORELIBSHARED_EXPORT CBase
 {
 private:
     CQueryEventProcessor *m_cmdEventProc;
+    int m_test;
 protected:
     friend class CQueryEventProcessor;
     void initCmdEventProcessor();
