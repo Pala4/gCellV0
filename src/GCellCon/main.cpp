@@ -1,7 +1,7 @@
 #include <QCoreApplication>
 
-#include "ciosystem.h"
-#include "cchannel.h"
+#include "iosystem/ciosystem.h"
+#include "iosystem/cchannel.h"
 #include "cconio.h"
 
 int main(int argc, char *argv[])

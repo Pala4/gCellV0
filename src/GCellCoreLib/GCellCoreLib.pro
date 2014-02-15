@@ -15,24 +15,30 @@ TARGET = $$join(TARGET,,, _lib)
 
 DEFINES += GCELLCORELIB_LIBRARY
 
+INCLUDEPATH += \
+    iosystem \
+    threads \
+    transaction \
+    network
+
 SOURCES += \
-    ciosystem.cpp \
-    cchannel.cpp \
-    cthreadmng.cpp \
     cbase.cpp \
-    ctransaction.cpp \
-    ctransactionevent.cpp \
-    ctransactionprocessor.cpp
+    iosystem/cchannel.cpp \
+    iosystem/ciosystem.cpp \
+    threads/cthreadmng.cpp \
+    transaction/ctransaction.cpp \
+    transaction/ctransactionevent.cpp \
+    transaction/ctransactionprocessor.cpp
 
 HEADERS +=\
-        gcellcorelib_global.h \
-    ciosystem.h \
-    cchannel.h \
-    cthreadmng.h \
+    gcellcorelib_global.h \
     cbase.h \
-    ctransaction.h \
-    ctransactionevent.h \
-    ctransactionprocessor.h
+    iosystem/cchannel.h \
+    iosystem/ciosystem.h \
+    threads/cthreadmng.h \
+    transaction/ctransaction.h \
+    transaction/ctransactionevent.h \
+    transaction/ctransactionprocessor.h
 
 unix {
     target.path = /usr/lib

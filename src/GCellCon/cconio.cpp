@@ -4,7 +4,7 @@
 #include <QtCore/QReadLocker>
 #include <QtCore/QWriteLocker>
 
-#include "ctransaction.h"
+#include "transaction/ctransaction.h"
 
 /*!
  * \class CStdInWorker

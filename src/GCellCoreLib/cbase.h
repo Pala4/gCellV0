@@ -3,7 +3,7 @@
 
 #include "gcellcorelib_global.h"
 
-#include "ctransactionprocessor.h"
+#include "transaction/ctransactionprocessor.h"
 
 class CTransactionProcessor;
 class CTransaction;
