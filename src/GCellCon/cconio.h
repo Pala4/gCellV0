@@ -8,6 +8,8 @@
 
 #include <QtCore/QReadWriteLock>
 
+class CTransactionEvent;
+
 class CStdInWorker : public QObject
 {
     Q_OBJECT
@@ -24,7 +26,7 @@ public:
 public slots:
     void stopWork();
 signals:
-    void sendCmd(QString cmd);
+    void sendQuery(QString query);
 };
 
 class CStdInTread : public QThread
@@ -40,7 +42,7 @@ public:
 public slots:
     void stop();
 signals:
-    void sendCmd(QString cmd);
+    void sendQuery(QString query);
     void stopWork();
 };
 
@@ -52,19 +54,20 @@ public:
 private:
     CStdInTread *m_stdInThread;
 protected:
-    void processCommand(CQueryEvent *event);
+    void processTransaction(CTransaction *transaction);
 public:
     explicit CConIO(QObject *parent = 0);
     virtual ~CConIO();
 private slots:
     void onStdInThreadStopped();
 public slots:
-    void setMsg(const QString &msg);
-    void setCmd(const QString &cmd);
+    void setQuery(const QString &query);
+    void setRespons(const QString &respons);
     void start();
     void stop();
 signals:
-    void sendCmd(QString cmd);
+    void sendQuery(QString query);
+    void sendRespons(QString respons);
 };
 
 #endif // CCONIO_H

@@ -9,42 +9,38 @@
 
 #include <QMap>
 
-#include "package.h"
-#include "querydesc.h"
-
 class CChannel;
 
 class GCELLCORELIBSHARED_EXPORT CIOSystem : public QObject, public CBase
 {
     Q_OBJECT
 private:
-    QMap<QString, QueryDesc> m_queryDescs;
+    QMap<QString, CTransaction*> m_transactions;
     QMap<int, CChannel*> m_channels;
 
-    void sendQuery(const int &channelID, const QString &queryName);
     int generateChannelID();
 protected:
-    bool event(QEvent *event);
+    void processTransaction(CTransaction *transaction);
 public:
     explicit CIOSystem(QObject *parent = 0);
 
-    QueryDesc registerQueryDesc(QObject *queryReceiver, const QString &queryName,
-                                const int &queryID);
+    CTransaction* registerTransaction(QObject *queryReceiver, const QString &query,
+                                      const int &cmdID);
 
     CChannel* createChannel();    
 private slots:
-    void onQueryReceiverDestroyed(QObject *objReceiver);
     void onChannelDestroyed(QObject *objChannel);
+    void onTransactionDestroyed(QObject *objTransaction);
 public slots:
-    void sendBackwardCmd(Package pkg);
-    void sendBackwardMsg(Package pkg);
-    void sendForwardCmd(const int &channelID, const QString &cmd);
-    void sendForwardMsg(const int &channelID, const QString &msg);
+    void sendBackwardQuery(const int &channelID, const QString &query);
+    void sendBackwardRespons(const int &channelID, const QString &respons);
+    void sendForwardQuery(const int &channelID, const QString &query);
+    void sendForwardRespons(const int &channelID, const QString &respons);
 signals:
-    void backwardCmd(QString cmd);
-    void backwardMsg(QString msg);
-    void forwardCmd(Package pkg);
-    void forwardMsg(Package pkg);
+    void backwardQuery(QString query);
+    void backwardRespons(QString respons);
+    void forwardQuery();
+    void forwardRespons();
 };
 
 #endif // CIOSYSTEM_H

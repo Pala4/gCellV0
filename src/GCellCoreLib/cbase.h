@@ -3,22 +3,19 @@
 
 #include "gcellcorelib_global.h"
 
-#include "cqueryeventprocessor.h"
-#include "querydesc.h"
+#include "ctransactionprocessor.h"
 
-class CQueryEventProcessor;
-class CQueryEvent;
+class CTransactionProcessor;
+class CTransaction;
 
 class GCELLCORELIBSHARED_EXPORT CBase
 {
 private:
-    CQueryEventProcessor *m_cmdEventProc;
+    CTransactionProcessor *m_transactionProcessor;
 protected:
-    friend class CQueryEventProcessor;
-    void initCmdEventProcessor();
-    virtual void processCommand(CQueryEvent *event);
-
-    void sendRespons(QueryDesc queryDesc, const QString &respons);
+    friend class CTransactionProcessor;
+    void initTransactionProcessor();
+    virtual void processTransaction(CTransaction *tranzaction);
 public:
     CBase();
     virtual ~CBase();

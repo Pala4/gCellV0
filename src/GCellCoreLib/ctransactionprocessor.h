@@ -1,5 +1,5 @@
-#ifndef CQUERYEVENTPROCESSOR_H
-#define CQUERYEVENTPROCESSOR_H
+#ifndef CTRANSACTIONPROCESSOR_H
+#define CTRANSACTIONPROCESSOR_H
 
 #include "gcellcorelib_global.h"
 
@@ -7,7 +7,7 @@
 
 #include "cbase.h"
 
-class GCELLCORELIBSHARED_EXPORT CQueryEventProcessor : public QObject
+class GCELLCORELIBSHARED_EXPORT CTransactionProcessor : public QObject
 {
     Q_OBJECT
 private:
@@ -16,7 +16,7 @@ private:
 protected:
     bool eventFilter(QObject *object, QEvent *event);
 public:
-    explicit CQueryEventProcessor(QObject *parent = 0);
+    explicit CTransactionProcessor(QObject *parent = 0);
 };
 
-#endif // CQUERYEVENTPROCESSOR_H
+#endif // CTRANSACTIONPROCESSOR_H

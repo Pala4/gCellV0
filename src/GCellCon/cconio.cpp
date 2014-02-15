@@ -4,7 +4,7 @@
 #include <QtCore/QReadLocker>
 #include <QtCore/QWriteLocker>
 
-#include "cqueryevent.h"
+#include "ctransaction.h"
 
 /*!
  * \class CStdInWorker
@@ -12,10 +12,10 @@
 void CStdInWorker::ioLoop()
 {
     QTextStream cin(stdin);
-    QString cmd;
-    while ((cmd != QStringLiteral("halt")) && !isStopWork()) {
-        cmd = cin.readLine();
-        emit sendCmd(cmd);
+    QString query;
+    while (!isStopWork()) {
+        query = cin.readLine();
+        emit sendQuery(query);
     }
 }
 
@@ -38,8 +38,8 @@ void CStdInTread::run()
 {
     if (m_stdInWorker == nullptr) {
         m_stdInWorker = new CStdInWorker();
-        connect(m_stdInWorker, SIGNAL(sendCmd(QString)),
-                this, SIGNAL(sendCmd(QString)));
+        connect(m_stdInWorker, SIGNAL(sendQuery(QString)),
+                this, SIGNAL(sendQuery(QString)));
         connect(this, SIGNAL(stopWork()), m_stdInWorker, SLOT(stopWork()));
     }
 
@@ -64,12 +64,14 @@ void CStdInTread::stop()
 /*!
  * \class CClientOut
  */
-void CConIO::processCommand(CQueryEvent *event)
+void CConIO::processTransaction(CTransaction *transaction)
 {
-    QueryDesc queryDesc = event->queryDesc();
-    switch (queryDesc.queryID) {
+    if (transaction == nullptr)
+        return;
+
+    switch (transaction->cmdID()) {
         case CConIO::GetInfo:
-            sendRespons(queryDesc, "Console IO system v0.0.1");
+            transaction->sendRespons(tr("Console IO system v0.0.1"));
         break;
         default:
         break;
@@ -81,6 +83,8 @@ CConIO::CConIO(QObject *parent) : QObject(parent)
     setObjectName(QStringLiteral("CConIO"));
 
     m_stdInThread = nullptr;
+
+    initTransactionProcessor();
 }
 
 CConIO::~CConIO(void)
@@ -91,35 +95,35 @@ CConIO::~CConIO(void)
 
 void CConIO::onStdInThreadStopped()
 {
-    setMsg(tr("Halted"));
+    setRespons(tr("Halted"));
 }
 
-void CConIO::setMsg(const QString &msg)
+void CConIO::setQuery(const QString &query)
+{
+    setRespons("Cmd# " + query);
+    emit sendQuery(query);
+}
+
+void CConIO::setRespons(const QString &respons)
 {
     QTextStream cout(stdout);
 
-    cout << msg << endl;
-}
-
-void CConIO::setCmd(const QString &cmd)
-{
-    setMsg("Cmd# " + cmd);
-    emit sendCmd(cmd);
+    cout << respons << endl;
 }
 
 void CConIO::start(void)
 {   
     if (m_stdInThread == nullptr) {
         m_stdInThread = new CStdInTread(this);
-        connect(m_stdInThread, SIGNAL(sendCmd(QString)),
-                this, SIGNAL(sendCmd(QString)));
+        connect(m_stdInThread, SIGNAL(sendQuery(QString)),
+                this, SIGNAL(sendQuery(QString)));
         connect(m_stdInThread, SIGNAL(finished()), this, SLOT(onStdInThreadStopped()));
     }
 
     if (!m_stdInThread->isRunning())
         m_stdInThread->start(QThread::IdlePriority);
 
-    setMsg(tr("Client console i/o subsystem v0.0.1 is initialized"));
+    setRespons(tr("Client console i/o subsystem v0.0.1 is initialized"));
 }
 
 void CConIO::stop()

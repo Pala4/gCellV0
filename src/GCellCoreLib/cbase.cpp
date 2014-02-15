@@ -1,40 +1,27 @@
 #include "cbase.h"
 
-#include <QCoreApplication>
-
-#include "cresponsevent.h"
-
-void CBase::initCmdEventProcessor()
+void CBase::initTransactionProcessor()
 {
     QObject *qObject = toQObject();
     if (qObject != nullptr) {
-        m_cmdEventProc = new CQueryEventProcessor();
-        m_cmdEventProc->setObjectName(QStringLiteral("cmdEventProc"));
-        m_cmdEventProc->setObject(qObject);
+        m_transactionProcessor = new CTransactionProcessor();
+        m_transactionProcessor->setObjectName(QStringLiteral("transactionProcessor"));
+        m_transactionProcessor->setObject(qObject);
     }
 }
 
-void CBase::processCommand(CQueryEvent *event)
+void CBase::processTransaction(CTransaction *tranzaction)
 {
-    Q_UNUSED(event)
-}
-
-void CBase::sendRespons(QueryDesc queryDesc, const QString &respons)
-{
-    if (queryDesc.responsReceiver != nullptr) {
-        queryDesc.responsMsg = respons;
-        CResponsEvent responsEvent(queryDesc);
-        QCoreApplication::postEvent(queryDesc.responsReceiver, &responsEvent);
-    }
+    Q_UNUSED(tranzaction)
 }
 
 CBase::CBase()
 {
-    m_cmdEventProc = nullptr;
+    m_transactionProcessor = nullptr;
 }
 
 CBase::~CBase()
 {
-    if (m_cmdEventProc != nullptr)
-        delete m_cmdEventProc;
+    if (m_transactionProcessor != nullptr)
+        delete m_transactionProcessor;
 }

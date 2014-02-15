@@ -18,25 +18,21 @@ DEFINES += GCELLCORELIB_LIBRARY
 SOURCES += \
     ciosystem.cpp \
     cchannel.cpp \
-    cquery.cpp \
     cthreadmng.cpp \
     cbase.cpp \
-    cqueryevent.cpp \
-    cqueryeventprocessor.cpp \
-    cresponsevent.cpp
+    ctransaction.cpp \
+    ctransactionevent.cpp \
+    ctransactionprocessor.cpp
 
 HEADERS +=\
         gcellcorelib_global.h \
     ciosystem.h \
     cchannel.h \
-    cquery.h \
     cthreadmng.h \
-    package.h \
     cbase.h \
-    cqueryevent.h \
-    cqueryeventprocessor.h \
-    querydesc.h \
-    cresponsevent.h
+    ctransaction.h \
+    ctransactionevent.h \
+    ctransactionprocessor.h
 
 unix {
     target.path = /usr/lib

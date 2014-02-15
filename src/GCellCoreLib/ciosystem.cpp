@@ -3,23 +3,9 @@
 #include <QtCore/QCoreApplication>
 #include <QtCore/QStringList>
 
-#include "cqueryevent.h"
-#include "cresponsevent.h"
 #include "cchannel.h"
-
-void CIOSystem::sendQuery(const int &channelID, const QString &queryName)
-{
-    if (queryName.isEmpty() || (!queryName.isEmpty() && !m_queryDescs.contains(queryName)))
-        return;
-    QueryDesc queryDesc = m_queryDescs[queryName];
-    if ((queryDesc.queryReceiver == nullptr) || (queryDesc.queryID == -1))
-        return;
-
-    queryDesc.channelID = channelID;
-    queryDesc.responsReceiver = this;
-    CQueryEvent queryEvent(queryDesc);
-    QCoreApplication::postEvent(queryDesc.queryReceiver, &queryEvent);
-}
+#include "ctransaction.h"
+#include "ctransactionevent.h"
 
 int CIOSystem::generateChannelID()
 {
@@ -38,68 +24,49 @@ int CIOSystem::generateChannelID()
     return ++maxID;
 }
 
-bool CIOSystem::event(QEvent *event)
+void CIOSystem::processTransaction(CTransaction *transaction)
 {
-    if (static_cast<int>(event->type()) == static_cast<int>(CResponsEvent::ResponsEvent)) {
-        CResponsEvent *responsEvent = dynamic_cast<CResponsEvent*>(event);
-        if (responsEvent != nullptr) {
-            QueryDesc queryDesc = responsEvent->queryDesc();
+    if (transaction == nullptr)
+        return;
 
-            Package pkg;
-            pkg.channelID = queryDesc.channelID;
-            pkg.respons = queryDesc.responsMsg;
-            sendBackwardMsg(pkg);
-        }
-    }
-
-    return false;
+    if (transaction->isRespons())
+        sendBackwardRespons(transaction->channelID(), transaction->respons());
 }
 
 CIOSystem::CIOSystem(QObject *parent) : QObject(parent), CBase()
 {
     setObjectName(QStringLiteral("CIOSystem"));
-    initCmdEventProcessor();
+    initTransactionProcessor();
 }
 
-QueryDesc CIOSystem::registerQueryDesc(QObject *queryReceiver, const QString &queryName,
-                                       const int &queryID)
+CTransaction* CIOSystem::registerTransaction(QObject *queryReceiver, const QString &query,
+                                             const int &cmdID)
 {
-    if ((queryReceiver == nullptr) || queryName.isEmpty() || (queryID == -1))
-        return QueryDesc();
-    if (m_queryDescs.contains(queryName)) {
+    if ((queryReceiver == nullptr) || query.isEmpty() || (cmdID < 0))
+        return nullptr;
+    if (m_transactions.contains(query)) {
         qWarning(qPrintable(QString("Query descriptor with name "
-                                    "[%1] already exist").arg(queryName)));
-        return QueryDesc();
+                                    "[%1] already exist").arg(query)));
+        return nullptr;
     }
 
-    QueryDesc queryDesc(queryReceiver, nullptr, -1, QString(), queryName, queryID);
-    m_queryDescs[queryName] = queryDesc;
-    connect(queryReceiver, SIGNAL(destroyed(QObject*)),
-            this, SLOT(onQueryReceiverDestroyed(QObject*)));
+    CTransaction *transaction = new CTransaction(queryReceiver, this, query, cmdID, this);
+    m_transactions[query] = transaction;
+    connect(transaction, SIGNAL(destroyed(QObject*)),
+            this, SLOT(onTransactionDestroyed(QObject*)));
 
-    return queryDesc;
+    return transaction;
 }
 
 CChannel* CIOSystem::createChannel()
 {
     CChannel *channel = new CChannel(generateChannelID(), this);
     channel->setObjectName(QString("Channel#%1").arg(channel->id()));
-    connect(channel, SIGNAL(forwardCmd(int,QString)), this, SLOT(sendForwardCmd(int,QString)));
-    connect(channel, SIGNAL(forwardMsg(int,QString)), this, SLOT(sendForwardMsg(int,QString)));
+    connect(channel, SIGNAL(forwardQuery(int,QString)), this, SLOT(sendForwardQuery(int,QString)));
+    connect(channel, SIGNAL(forwardRespons(int,QString)),
+            this, SLOT(sendForwardRespons(int,QString)));
     m_channels[channel->id()] = channel;
     return channel;
-}
-
-void CIOSystem::onQueryReceiverDestroyed(QObject *objReceiver)
-{
-    QStringList remQueryNames;
-    for (int ci = 0; ci < m_queryDescs.count(); ++ci) {
-        if (m_queryDescs.values().at(ci).queryReceiver == objReceiver)
-            remQueryNames << m_queryDescs.keys().at(ci);
-    }
-
-    foreach (QString queryName, remQueryNames)
-        m_queryDescs.remove(queryName);
 }
 
 void CIOSystem::onChannelDestroyed(QObject *objChannel)
@@ -109,47 +76,45 @@ void CIOSystem::onChannelDestroyed(QObject *objChannel)
         m_channels.remove(m_channels.key(channel));
 }
 
-void CIOSystem::sendBackwardCmd(Package pkg)
+void CIOSystem::onTransactionDestroyed(QObject *objTransaction)
 {
-    if ((!pkg.query.isNull()) && m_channels.contains(pkg.channelID)
-        && (m_channels[pkg.channelID] != nullptr)
-        && (m_channels[pkg.channelID]->id() == pkg.channelID)) {
-        m_channels[pkg.channelID]->sendBackwardCmd(/*pkg.query.data()*/pkg.respons);
+    CTransaction *transaction = reinterpret_cast<CTransaction*>(objTransaction);
+    if (m_transactions.values().contains(transaction))
+        m_transactions.remove(m_transactions.key(transaction));
+}
+
+
+void CIOSystem::sendBackwardQuery(const int &channelID, const QString &query)
+{
+    if (!query.isEmpty() && m_channels.contains(channelID) && (m_channels[channelID] != nullptr)
+        && (m_channels[channelID]->id() == channelID)) {
+        m_channels[channelID]->sendBackwardQuery(query);
     }
 
-    emit backwardCmd(/*pkg.query.data()*/pkg.respons);
+    emit backwardQuery(query);
 }
 
-void CIOSystem::sendBackwardMsg(Package pkg)
+void CIOSystem::sendBackwardRespons(const int &channelID, const QString &respons)
 {
-    if (m_channels.contains(pkg.channelID) && (m_channels[pkg.channelID] != nullptr)
-        && (m_channels[pkg.channelID]->id() == pkg.channelID)) {
-        m_channels[pkg.channelID]->sendBackwardMsg(pkg.respons);
+    if (!respons.isEmpty() && m_channels.contains(channelID) && (m_channels[channelID] != nullptr)
+        && (m_channels[channelID]->id() == channelID)) {
+        m_channels[channelID]->sendBackwardRespons(respons);
     }
 
-    emit backwardMsg(pkg.respons);
+    emit backwardRespons(respons);
 }
 
-void CIOSystem::sendForwardCmd(const int &channelID, const QString &cmd)
+void CIOSystem::sendForwardQuery(const int &channelID, const QString &query)
 {
-    sendQuery(channelID, cmd);
-//    if (cmd == "GetIOSystemInfo") {
-//        Package pkg;
-//        pkg.channelID = channelID;
-//        pkg.respons = QString("IO System v0.0.1");
-//        sendBackwardMsg(pkg);
-//        return;
-//    }
+    if (m_transactions.contains(query) && (m_transactions[query] != nullptr)) {
+        m_transactions[query]->setChannelID(channelID);
+        m_transactions[query]->sendQuery();
+    }
 
-//    Package pkg;
-//    pkg.channelID = channelID;
-//    emit forwardCmd(pkg);
+    emit forwardQuery();
 }
 
-void CIOSystem::sendForwardMsg(const int &channelID, const QString &msg)
+void CIOSystem::sendForwardRespons(const int &channelID, const QString &respons)
 {
-    Package pkg;
-    pkg.channelID = channelID;
-    pkg.respons = msg;
-    emit forwardMsg(pkg);
+    emit forwardRespons();
 }
