@@ -5,8 +5,8 @@
 #-------------------------------------------------
 include("../gcellv0.pri")
 
+QT += core network
 QT -= gui
-QT += core
 
 TEMPLATE = lib
 DLLDESTDIR = $$DEST_DIR
@@ -28,7 +28,10 @@ SOURCES += \
     threads/cthreadmng.cpp \
     transaction/ctransaction.cpp \
     transaction/ctransactionevent.cpp \
-    transaction/ctransactionprocessor.cpp
+    transaction/ctransactionprocessor.cpp \
+    network/cserver.cpp \
+    network/csocket.cpp \
+    network/csocketmng.cpp
 
 HEADERS +=\
     gcellcorelib_global.h \
@@ -38,7 +41,10 @@ HEADERS +=\
     threads/cthreadmng.h \
     transaction/ctransaction.h \
     transaction/ctransactionevent.h \
-    transaction/ctransactionprocessor.h
+    transaction/ctransactionprocessor.h \
+    network/cserver.h \
+    network/csocket.h \
+    network/csocketmng.h
 
 unix {
     target.path = /usr/lib
