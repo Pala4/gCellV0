@@ -13,7 +13,7 @@ void CStdInWorker::ioLoop()
 {
     QTextStream cin(stdin);
     QString query;
-    while (!isStopWork()) {
+    while ((QString(query).simplified().toLower() != QStringLiteral("halt")) && !isStopWork()) {
         query = cin.readLine();
         emit sendQuery(query);
     }
@@ -72,6 +72,10 @@ void CConIO::processTransaction(CTransaction *transaction)
     switch (transaction->cmdID()) {
         case CConIO::GetInfo:
             transaction->sendRespons(tr("Console IO system v0.0.1"));
+        break;
+        case CConIO::Halt:
+            stop();
+            transaction->sendRespons(tr("Power down"));
         break;
         default:
         break;

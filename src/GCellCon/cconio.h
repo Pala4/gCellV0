@@ -50,7 +50,7 @@ class CConIO : public QObject, public CBase
 {
     Q_OBJECT
 public:
-    enum ConIOQuery{GetInfo};
+    enum ConIOQuery{GetInfo, Halt};
 private:
     CStdInTread *m_stdInThread;
 protected:
