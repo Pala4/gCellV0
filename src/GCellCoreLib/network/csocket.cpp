@@ -1,147 +1,46 @@
 #include "csocket.h"
 
+#include <QtNetwork/QTcpSocket>
 #include <QtNetwork/QHostAddress>
 #include <QDataStream>
 #include <QStringList>
+#include <QWriteLocker>
+#include <QReadLocker>
 
 /*!
- * \class CTcpSocket
+ * \class CSocket
  */
-CTcpSocket::CTcpSocket(QObject *parent) : QTcpSocket(parent)
-{
-    setObjectName(QStringLiteral("CTcpSocket"));
-
-    m_blockSize = 0;
-
-    connect(this, SIGNAL(readyRead()), this, SLOT(onReadyRead()));
-}
-#include <QDebug>
-CTcpSocket::~CTcpSocket(void)
-{
-    unsigned long long i = 0;
-    while (++i < 1000000000);
-    qDebug() << "Soc destroyed";
-}
-
-void CTcpSocket::onReadyRead(void)
-{
-    QDataStream in(this);
-    in.setVersion(QDataStream::Qt_5_2);
-
-    if(m_blockSize == 0)
-    {
-        if(bytesAvailable() < (int)sizeof(quint16)) return;
-        in >> m_blockSize;
-    }
-    if(bytesAvailable() < m_blockSize) return;
-    m_blockSize = 0;
-
-    int msgType;
-    QString msg;
-    in >> msgType;
-    in >> msg;
-}
-
-void CTcpSocket::startConnection(const QString &address, const quint16 &port)
-{
-    connectToHost(address, port);
-    if (!waitForConnected())
-        stopConnection();
-}
-
-void CTcpSocket::startConnection(qintptr socketDescriptor)
-{
-    setSocketDescriptor(socketDescriptor);
-}
-
-void CTcpSocket::stopConnection()
-{
-    disconnectFromHost();
-    waitForDisconnected();
-}
-
-void CTcpSocket::sendMessage()
+bool CSocket::processForwardQuery(const QString &forwardQuery)
 {
     QByteArray block;
     QDataStream out(&block, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_5_2);
     out << (quint16)0;
-//    out << (int)cellMsg.msgType();
-//    out << cellMsg.msg();
+    out << (int)0;//query type
+    out << forwardQuery;
     out.device()->seek(0);
     out << (quint16)(block.size() - sizeof(quint16));
-    write(block);
-    waitForBytesWritten();
+
+    if (m_tcpSocket != nullptr)
+        m_tcpSocket->write(block);
+
+    return true;
 }
 
-CSocThread::~CSocThread()
+CSocket::CSocket(QObject *parent) : CObject(parent)
 {
-    qDebug() << "Soc thread destroyed";
-}
+    setObjectName(QStringLiteral("CSocket"));
 
-/*!
- * \class CSocket
- */
-void CThreadedSocket::initSocket()
-{
-    if ((m_tcpSocket != nullptr) || (m_socketThread != nullptr))
-        disconnectFromHost();
-
-    m_tcpSocket = new CTcpSocket();
-    connect(m_tcpSocket, SIGNAL(connected()), this, SLOT(onSocketConnected()));
-    connect(m_tcpSocket, SIGNAL(disconnected()), this, SLOT(onSocketDisconnected()));
+    m_tcpSocket = new QTcpSocket(this);
+    m_tcpSocket->setObjectName(QStringLiteral("tcpSocket"));
+    connect(m_tcpSocket, SIGNAL(connected()),
+            this, SLOT(onSocketConnected()), Qt::DirectConnection);
     connect(m_tcpSocket, SIGNAL(error(QAbstractSocket::SocketError)),
-            this, SLOT(onSocketError(QAbstractSocket::SocketError)));
-    connect(this, SIGNAL(doStartConnection(QString,quint16)),
-            m_tcpSocket, SLOT(startConnection(QString,quint16)));
-    connect(this, SIGNAL(doStartConnection(qintptr)), m_tcpSocket, SLOT(startConnection(qintptr)));
-    connect(this, SIGNAL(doStopConnection()), m_tcpSocket, SLOT(stopConnection()));
-    connect(m_tcpSocket, SIGNAL(destroyed()), this, SLOT(onSocketDestroyed()));
-
-    m_socketThread = new CSocThread(this);
-    connect(m_socketThread, SIGNAL(destroyed()), this, SLOT(onThreadDestroyed()));
-
-    m_socketThread->start();
-    m_tcpSocket->moveToThread(m_socketThread);
+            this, SLOT(onSocketError(int)), Qt::DirectConnection);
+    connect(m_tcpSocket, SIGNAL(disconnected()), this, SLOT(onSocketDisconnected()));
 }
 
-void CThreadedSocket::killSocket()
-{
-    if (m_tcpSocket != nullptr) {
-        m_tcpSocket->deleteLater();
-        m_tcpSocket = nullptr;
-    }
-}
-
-void CThreadedSocket::killThread()
-{
-    if (m_socketThread != nullptr) {
-        if (m_socketThread->isRunning()) {
-            m_socketThread->quit();
-            m_socketThread->wait();
-        }
-
-        delete m_socketThread;
-        m_socketThread = nullptr;
-    }
-}
-
-CThreadedSocket::CThreadedSocket(QObject *parent) : QObject(parent)
-{
-    setObjectName(QStringLiteral("CThreadedSocket"));
-
-    m_tcpSocket = nullptr;
-    m_socketThread = nullptr;
-}
-
-CThreadedSocket::~CThreadedSocket()
-{
-    killSocket();
-    killThread();
-    qDebug() << "Tr soc destroyed";
-}
-
-void CThreadedSocket::splitAddressPort(const QString &addressPort, QString &address, quint16 &port)
+void CSocket::splitAddressPort(const QString &addressPort, QString &address, quint16 &port)
 {
     QStringList hapList = addressPort.split(QChar(':'));
     address = hapList.count() > 0 ? hapList.at(0) : QString();
@@ -152,77 +51,84 @@ void CThreadedSocket::splitAddressPort(const QString &addressPort, QString &addr
     }
 }
 
-QString CThreadedSocket::hostAddress(void) const
+QString CSocket::hostAddress() const
 {
-    //Mutex
+    QWriteLocker locker(&m_lock);
     if (m_tcpSocket != nullptr)
         return m_tcpSocket->peerAddress().toString();
+    locker.unlock();
 
     return QString();
 }
 
-quint16 CThreadedSocket::hostPort(void) const
+quint16 CSocket::hostPort() const
 {
-    //Mutex
+    QWriteLocker locker(&m_lock);
     if (m_tcpSocket != nullptr)
         return m_tcpSocket->peerPort();
+    locker.unlock();
 
     return 0;
 }
 
-QAbstractSocket::SocketState CThreadedSocket::state(void) const
+int CSocket::state() const
 {
-    //Mutex
+    QWriteLocker locker(&m_lock);
     if (m_tcpSocket != nullptr)
-        return m_tcpSocket->state();
+        return static_cast<int>(m_tcpSocket->state());
+    locker.unlock();
 
-    return QAbstractSocket::UnconnectedState;
+    return static_cast<int>(QAbstractSocket::UnconnectedState);
 }
 
-void CThreadedSocket::onSocketConnected(void)
+void CSocket::onSocketConnected()
 {
+    receiveBackwardRespons(tr("Connection established to host [%1:%2]").arg(hostAddress()).
+                           arg(hostPort()));
     emit connected(this);
 }
 
-void CThreadedSocket::onSocketDisconnected(void)
+void CSocket::onSocketDisconnected()
 {
+    receiveBackwardRespons(tr("Disconnection from host [%1:%2]").arg(hostAddress()).
+                           arg(hostPort()));
     emit disconnected(this);
 }
 
-void CThreadedSocket::onSocketError(const QAbstractSocket::SocketError &socketError)
+void CSocket::onSocketError(const int &socketError)
 {
-    //Mutex
     if (m_tcpSocket != nullptr)
-        emit error(this, m_tcpSocket->errorString(), socketError);
+        emit error(this, m_tcpSocket->errorString(), static_cast<int>(socketError));
 }
 
-void CThreadedSocket::onSocketDestroyed()
+void CSocket::connectToHost(const QString &addressPort)
 {
-    killThread();
-}
-
-void CThreadedSocket::onThreadDestroyed()
-{
-    killSocket();
-}
-
-void CThreadedSocket::connectToHost(const QString &addressPort)
-{
-    initSocket();
+    disconnectFromHost();
 
     QString address;
     quint16 port = 0;
     splitAddressPort(addressPort, address, port);
-    emit doStartConnection(address, port);
+
+    QReadLocker locker(&m_lock);
+    if (m_tcpSocket != nullptr)
+        m_tcpSocket->connectToHost(address, port);
+    locker.unlock();
 }
 
-void CThreadedSocket::setSocketDescriptor(const qintptr &socketDescriptor)
+void CSocket::setSocketDescriptor(const qintptr &socketDescriptor)
 {
-    initSocket();
-    emit doStartConnection(socketDescriptor);
+    disconnectFromHost();
+
+    QReadLocker locker(&m_lock);
+    if (m_tcpSocket != nullptr)
+        m_tcpSocket->setSocketDescriptor(socketDescriptor);
+    locker.unlock();
 }
 
-void CThreadedSocket::disconnectFromHost()
+void CSocket::disconnectFromHost()
 {
-    emit doStopConnection();
+    QReadLocker locker(&m_lock);
+    if (m_tcpSocket != nullptr)
+        m_tcpSocket->disconnectFromHost();
+    locker.unlock();
 }

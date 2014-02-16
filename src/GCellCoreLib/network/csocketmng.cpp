@@ -4,7 +4,7 @@
 
 #include "csocket.h"
 
-bool CSocketMng::addSocket(CThreadedSocket *socket, const QString &addressPort)
+bool CSocketMng::addSocket(CSocket *socket, const QString &addressPort)
 {
     if (socket == nullptr)
         return false;
@@ -18,7 +18,7 @@ bool CSocketMng::addSocket(CThreadedSocket *socket, const QString &addressPort)
     return true;
 }
 
-void CSocketMng::removeSocket(CThreadedSocket *socket)
+void CSocketMng::removeSocket(CSocket *socket)
 {
     if (socket == nullptr)
         return;
@@ -39,7 +39,7 @@ CSocketMng::CSocketMng(QObject *parent) : QObject(parent)
     qRegisterMetaType<QAbstractSocket::SocketError>("QAbstractSocket::SocketError");
 }
 
-void CSocketMng::onSocketConnected(CThreadedSocket *socket)
+void CSocketMng::onSocketConnected(CSocket *socket)
 {
     if (socket == nullptr)
         return;
@@ -51,13 +51,13 @@ void CSocketMng::onSocketConnected(CThreadedSocket *socket)
     }
 }
 
-void CSocketMng::onSocketDisconnected(CThreadedSocket *socket)
+void CSocketMng::onSocketDisconnected(CSocket *socket)
 {
     //    sendMsg(tr("Disconnected"));
     removeSocket(socket);
 }
 
-void CSocketMng::onSocketError(CThreadedSocket *socket, const QString &errorString,
+void CSocketMng::onSocketError(CSocket *socket, const QString &errorString,
                                const QAbstractSocket::SocketError &error)
 {
     Q_UNUSED(socket)
@@ -94,25 +94,25 @@ void CSocketMng::connectToHost(const QString &addressPort)
         return;
     }
 
-    CThreadedSocket *socket = new CThreadedSocket(this);
-    connect(socket, SIGNAL(connected(CThreadedSocket*)),
-            this, SLOT(onSocketConnected(CThreadedSocket*)));
-    connect(socket, SIGNAL(disconnected(CThreadedSocket*)),
-            this, SLOT(onSocketDisconnected(CThreadedSocket*)));
-    connect(socket, SIGNAL(error(CThreadedSocket*,QString,QAbstractSocket::SocketError)),
-            this, SLOT(onSocketError(CThreadedSocket*,QString,QAbstractSocket::SocketError)));
+    CSocket *socket = new CSocket(this);
+    connect(socket, SIGNAL(connected(CSocket*)),
+            this, SLOT(onSocketConnected(CSocket*)));
+    connect(socket, SIGNAL(disconnected(CSocket*)),
+            this, SLOT(onSocketDisconnected(CSocket*)));
+    connect(socket, SIGNAL(error(CSocket*,QString,QAbstractSocket::SocketError)),
+            this, SLOT(onSocketError(CSocket*,QString,QAbstractSocket::SocketError)));
 
     socket->connectToHost(addressPort);
 }
 
 void CSocketMng::addConnection(const qintptr &socketDescriptor)
 {
-    CThreadedSocket *socket = new CThreadedSocket(this);
+    CSocket *socket = new CSocket(this);
     socket->setSocketDescriptor(socketDescriptor);
-    connect(socket, SIGNAL(disconnected(CThreadedSocket*)),
-            this, SLOT(onSocketDisconnected(CThreadedSocket*)));
-    connect(socket, SIGNAL(error(CThreadedSocket*,QString,QAbstractSocket::SocketError)),
-            this, SLOT(onSocketError(CThreadedSocket*,QString,QAbstractSocket::SocketError)));
+    connect(socket, SIGNAL(disconnected(CSocket*)),
+            this, SLOT(onSocketDisconnected(CSocket*)));
+    connect(socket, SIGNAL(error(CSocket*,QString,QAbstractSocket::SocketError)),
+            this, SLOT(onSocketError(CSocket*,QString,QAbstractSocket::SocketError)));
 
     QString addressPort = socket->hostAddress() + ":" + QString("%1").arg(socket->hostPort());
     if (!addSocket(socket, addressPort)) {
@@ -124,7 +124,7 @@ void CSocketMng::disconnectFromHost(const QString &addressPort)
     if (!m_sockets.contains(addressPort)) {
         QString address;
         quint16 port = 0;
-        CThreadedSocket::splitAddressPort(addressPort, address, port);
+        CSocket::splitAddressPort(addressPort, address, port);
         //        sendMsg(tr("Connection [IP: %1; Port: %2] not established").arg(address).arg(port));
         return;
     }

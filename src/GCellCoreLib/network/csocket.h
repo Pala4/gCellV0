@@ -3,76 +3,41 @@
 
 #include "gcellcorelib_global.h"
 
-#include <QtNetwork/QTcpSocket>
+#include "cobject.h"
 
-#include <QThread>
+#include <QReadWriteLock>
 
-class CTcpSocket : public QTcpSocket
-{
-    Q_OBJECT
-private:
-    quint16 m_blockSize;
-public:
-    explicit CTcpSocket(QObject *parent = 0);
-    virtual ~CTcpSocket(void);
-private slots:
-    void onReadyRead(void);
-public slots:
-    void startConnection(const QString &address, const quint16 &port);
-    void startConnection(qintptr socketDescriptor);
-    void stopConnection();
-    void sendMessage();
-};
+class QTcpSocket;
 
-class CSocThread : public QThread
-{
-    Q_OBJECT
-public:
-    explicit CSocThread(QObject *parent = 0) : QThread(parent){}
-    virtual ~CSocThread();
-};
-
-class GCELLCORELIBSHARED_EXPORT CThreadedSocket : public QObject
+class GCELLCORELIBSHARED_EXPORT CSocket : public CObject
 {
 	Q_OBJECT
 private:
+    mutable QReadWriteLock m_lock;
     quint16 m_blockSize;
-
-    CTcpSocket *m_tcpSocket;
-    CSocThread *m_socketThread;
-
-    void initSocket();
-    void killSocket();
-    void killThread();
+    QTcpSocket *m_tcpSocket;
+protected:
+    bool processForwardQuery(const QString &forwardQuery);
 public:
-    explicit CThreadedSocket(QObject *parent = 0);
-    virtual ~CThreadedSocket();
+    explicit CSocket(QObject *parent = 0);
 
     static void splitAddressPort(const QString &addressPort, QString &address, quint16 &port);
 
-    QString hostAddress(void) const;
-    quint16 hostPort(void) const;
-    QAbstractSocket::SocketState state(void) const;
+    QString hostAddress() const;
+    quint16 hostPort() const;
+    int state() const;
 private slots:
-    void onSocketConnected(void);
-    void onSocketDisconnected(void);
-    void onSocketError(const QAbstractSocket::SocketError &socketError);
-
-    void onSocketDestroyed();
-    void onThreadDestroyed();
+    void onSocketConnected();
+    void onSocketDisconnected();
+    void onSocketError(const int &socketError);
 public slots:
     void connectToHost(const QString &addressPort);
     void setSocketDescriptor(const qintptr &socketDescriptor);
     void disconnectFromHost();
 signals:
-    void connected(CThreadedSocket *thisSocket);
-    void disconnected(CThreadedSocket *thisSocket);
-    void error(CThreadedSocket *thisSocket, QString errorString,
-               QAbstractSocket::SocketError error);
-
-    void doStartConnection(QString address, quint16 port);
-    void doStartConnection(qintptr socketDescriptor);
-    void doStopConnection(void);
+    void connected(CSocket *thisSocket);
+    void disconnected(CSocket *thisSocket);
+    void error(CSocket *thisSocket, QString errorString, int error);
 };
 
 #endif // CTCPSOCKET_H

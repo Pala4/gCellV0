@@ -7,38 +7,18 @@
 
 #include <QMap>
 
-class CChannel;
-
 class GCELLCORELIBSHARED_EXPORT CIOSystem : public CObject
 {
     Q_OBJECT
 private:
     QMap<QString, CTransaction*> m_transactions;
-    QMap<int, CChannel*> m_channels;
-
-    int generateChannelID();
-protected:
-    void processQuery(CTransaction *transaction);
 public:
     explicit CIOSystem(QObject *parent = 0);
 
-    CTransaction* registerTransaction(QObject *queryReceiver, const QString &query,
-                                      const int &cmdID);
-
-    CChannel* createChannel();    
+    CTransaction* registerTransaction(QObject *queryReceiver, QObject *responsReceiver,
+                                      const QString &query, const int &cmdID);
 private slots:
-    void onChannelDestroyed(QObject *objChannel);
     void onTransactionDestroyed(QObject *objTransaction);
-public slots:
-    void sendBackwardQuery(const int &channelID, const QString &query);
-    void sendBackwardRespons(const int &channelID, const QString &respons);
-    void sendForwardQuery(const int &channelID, const QString &query);
-    void sendForwardRespons(const int &channelID, const QString &respons);
-signals:
-    void backwardQuery(QString query);
-    void backwardRespons(QString respons);
-    void forwardQuery();
-    void forwardRespons();
 };
 
 #endif // CIOSYSTEM_H

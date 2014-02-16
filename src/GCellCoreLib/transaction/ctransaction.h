@@ -18,7 +18,6 @@ private:
     QString m_query;
     int m_cmdID;
 
-    int m_channelID;
     QString m_respons;
 
     void setTransactionType(const CTransaction::TransactionType &transactionType);
@@ -35,8 +34,6 @@ public:
     const int& cmdID() const{return m_cmdID;}
     void setCmdID(const int &cmdID){m_cmdID = cmdID;}
 
-    const int& channelID() const{return m_channelID;}
-    void setChannelID(const int &channelID){m_channelID = channelID;}
     const QString& respons() const{return m_respons;}
     void setRespons(const QString &respons){m_respons = respons;}
 

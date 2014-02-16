@@ -53,20 +53,18 @@ public:
 private:
     CStdInTread *m_stdInThread;
 protected:
-    void processQuery(CTransaction *transaction);
+    void processTransactionQuery(CTransaction *transaction);
+    void processTransactionRespons(CTransaction *transaction);
+    bool processBackwardQuery(const QString &backwardQuery);
+    bool processBackwardRespons(const QString &backwardRespons);
 public:
     explicit CConIO(QObject *parent = 0);
     virtual ~CConIO();
 private slots:
     void onStdInThreadStopped();
 public slots:
-    void setQuery(const QString &query);
-    void setRespons(const QString &respons);
     void start();
     void stop();
-signals:
-    void sendQuery(QString query);
-    void sendRespons(QString respons);
 };
 
 #endif // CCONIO_H

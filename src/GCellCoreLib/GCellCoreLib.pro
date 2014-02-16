@@ -22,7 +22,6 @@ INCLUDEPATH += \
     network
 
 SOURCES += \
-    iosystem/cchannel.cpp \
     iosystem/ciosystem.cpp \
     threads/cthreadmng.cpp \
     transaction/ctransaction.cpp \
@@ -34,7 +33,6 @@ SOURCES += \
 
 HEADERS +=\
     gcellcorelib_global.h \
-    iosystem/cchannel.h \
     iosystem/ciosystem.h \
     threads/cthreadmng.h \
     transaction/ctransaction.h \

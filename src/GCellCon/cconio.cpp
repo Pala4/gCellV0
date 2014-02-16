@@ -64,7 +64,7 @@ void CStdInTread::stop()
 /*!
  * \class CClientOut
  */
-void CConIO::processQuery(CTransaction *transaction)
+void CConIO::processTransactionQuery(CTransaction *transaction)
 {
     if (transaction == nullptr)
         return;
@@ -82,6 +82,29 @@ void CConIO::processQuery(CTransaction *transaction)
     }
 }
 
+void CConIO::processTransactionRespons(CTransaction *transaction)
+{
+    if (transaction == nullptr)
+        return;
+
+    receiveBackwardRespons(transaction->respons());
+}
+
+bool CConIO::processBackwardQuery(const QString &backwardQuery)
+{
+    receiveBackwardRespons("Cmd# " + backwardQuery);
+    receiveForwardQuery(backwardQuery);
+    return true;
+}
+
+bool CConIO::processBackwardRespons(const QString &backwardRespons)
+{
+    QTextStream cout(stdout);
+    cout << backwardRespons << endl;
+
+    return true;
+}
+
 CConIO::CConIO(QObject *parent) : CObject(parent)
 {
     setObjectName(QStringLiteral("CConIO"));
@@ -97,20 +120,7 @@ CConIO::~CConIO(void)
 
 void CConIO::onStdInThreadStopped()
 {
-    setRespons(tr("Halted"));
-}
-
-void CConIO::setQuery(const QString &query)
-{
-    setRespons("Cmd# " + query);
-    emit sendQuery(query);
-}
-
-void CConIO::setRespons(const QString &respons)
-{
-    QTextStream cout(stdout);
-
-    cout << respons << endl;
+    receiveBackwardRespons(tr("Halted"));
 }
 
 void CConIO::start(void)
@@ -125,7 +135,7 @@ void CConIO::start(void)
     if (!m_stdInThread->isRunning())
         m_stdInThread->start(QThread::IdlePriority);
 
-    setRespons(tr("Client console i/o subsystem v0.0.1 is initialized"));
+    receiveBackwardRespons(tr("Client console i/o subsystem v0.0.1 is initialized"));
 }
 
 void CConIO::stop()

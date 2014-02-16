@@ -8,22 +8,22 @@
 #include <QMap>
 #include <QtNetwork/QTcpSocket>
 
-class CThreadedSocket;
+class CSocket;
 
 class GCELLCORELIBSHARED_EXPORT CSocketMng : public QObject
 {
 	Q_OBJECT
 private:
-    QMap<QString, CThreadedSocket*> m_sockets;
+    QMap<QString, CSocket*> m_sockets;
 
-    bool addSocket(CThreadedSocket *socket, const QString &addressPort);
-    void removeSocket(CThreadedSocket *socket);
+    bool addSocket(CSocket *socket, const QString &addressPort);
+    void removeSocket(CSocket *socket);
 public:
 	explicit CSocketMng(QObject *parent = 0);
 private slots:
-    void onSocketConnected(CThreadedSocket *socket);
-    void onSocketDisconnected(CThreadedSocket *socket);
-    void onSocketError(CThreadedSocket *socket, const QString &errorString,
+    void onSocketConnected(CSocket *socket);
+    void onSocketDisconnected(CSocket *socket);
+    void onSocketError(CSocket *socket, const QString &errorString,
                        const QAbstractSocket::SocketError &error);
 public slots:
     void sendMessage(const QString &address, const QString &msg);
@@ -32,8 +32,8 @@ public slots:
     void addConnection(const qintptr &socketDescriptor);
     void disconnectFromHost(const QString &addressPort);
 signals:
-    void newConnectionReady(CThreadedSocket *socket);
-    void connectionClose(CThreadedSocket *socket);
+    void newConnectionReady(CSocket *socket);
+    void connectionClose(CSocket *socket);
 
     void messageReady(/*stCellMessage cellMsg*/);
 };
