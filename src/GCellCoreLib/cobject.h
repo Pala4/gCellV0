@@ -20,6 +20,9 @@ protected:
     virtual bool processForwardRespons(const QString &forwardRespons);
 public:
     explicit CObject(QObject *parent = 0);
+
+    void connectBackwardObject(CObject *backwardObject);
+    void connectForwardObject(CObject *forwardObject);
 public slots:
     void receiveBackwardQuery(const QString &query);
     void receiveBackwardRespons(const QString &respons);

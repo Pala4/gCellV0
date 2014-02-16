@@ -19,10 +19,7 @@ int main(int argc, char *argv[])
     ioSystem.registerTransaction(&conIO, &conIO, QStringLiteral("halt"), (int)CConIO::Halt);
 
     CSocket *socket = new CSocket();
-    QObject::connect(&conIO, SIGNAL(transmitForwardQuery(QString)),
-                     socket, SLOT(receiveForwardQuery(QString)));
-    QObject::connect(socket, SIGNAL(transmitBackwardRespons(QString)),
-                     &conIO, SLOT(receiveBackwardRespons(QString)));
+    conIO.connectForwardObject(socket);
 
     socket->connectToHost("127.0.0.1:33538");
 

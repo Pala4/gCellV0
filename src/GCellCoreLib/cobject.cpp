@@ -60,6 +60,27 @@ CObject::CObject(QObject *parent) : QObject(parent)
     setObjectName(QStringLiteral("CObject"));
 }
 
+void CObject::connectBackwardObject(CObject *backwardObject)
+{
+    Q_ASSERT(backwardObject != nullptr);
+
+    backwardObject->connectForwardObject(this);
+}
+
+void CObject::connectForwardObject(CObject *forwardObject)
+{
+    Q_ASSERT(forwardObject != nullptr);
+
+    connect(this, SIGNAL(transmitForwardQuery(QString)),
+            forwardObject, SLOT(receiveForwardQuery(QString)));
+    connect(this, SIGNAL(transmitForwardRespons(QString)),
+            forwardObject, SLOT(receiveForwardRespons(QString)));
+    connect(forwardObject, SIGNAL(transmitBackwardQuery(QString)),
+            this, SLOT(receiveBackwardQuery(QString)));
+    connect(forwardObject, SIGNAL(transmitBackwardRespons(QString)),
+            this, SLOT(receiveBackwardRespons(QString)));
+}
+
 void CObject::receiveBackwardQuery(const QString &query)
 {
     if (!processBackwardQuery(query))
