@@ -5,13 +5,13 @@
 
 #include <QObject>
 
-#include "cbase.h"
+#include "cobject.h"
 
 #include <QMap>
 
 class CChannel;
 
-class GCELLCORELIBSHARED_EXPORT CIOSystem : public QObject, public CBase
+class GCELLCORELIBSHARED_EXPORT CIOSystem : public QObject, public CObject
 {
     Q_OBJECT
 private:

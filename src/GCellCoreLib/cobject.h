@@ -1,5 +1,5 @@
-#ifndef CBASE_H
-#define CBASE_H
+#ifndef COBJECT_H
+#define COBJECT_H
 
 #include "gcellcorelib_global.h"
 
@@ -8,7 +8,7 @@
 class CTransactionProcessor;
 class CTransaction;
 
-class GCELLCORELIBSHARED_EXPORT CBase
+class GCELLCORELIBSHARED_EXPORT CObject
 {
 private:
     CTransactionProcessor *m_transactionProcessor;
@@ -17,10 +17,10 @@ protected:
     void initTransactionProcessor();
     virtual void processTransaction(CTransaction *tranzaction);
 public:
-    CBase();
-    virtual ~CBase();
+    CObject();
+    virtual ~CObject();
 
     QObject* toQObject(){return dynamic_cast<QObject*>(this);}
 };
 
-#endif // CBASE_H
+#endif // COBJECT_H

@@ -22,7 +22,6 @@ INCLUDEPATH += \
     network
 
 SOURCES += \
-    cbase.cpp \
     iosystem/cchannel.cpp \
     iosystem/ciosystem.cpp \
     threads/cthreadmng.cpp \
@@ -31,11 +30,11 @@ SOURCES += \
     transaction/ctransactionprocessor.cpp \
     network/cserver.cpp \
     network/csocket.cpp \
-    network/csocketmng.cpp
+    network/csocketmng.cpp \
+    cobject.cpp
 
 HEADERS +=\
     gcellcorelib_global.h \
-    cbase.h \
     iosystem/cchannel.h \
     iosystem/ciosystem.h \
     threads/cthreadmng.h \
@@ -44,7 +43,8 @@ HEADERS +=\
     transaction/ctransactionprocessor.h \
     network/cserver.h \
     network/csocket.h \
-    network/csocketmng.h
+    network/csocketmng.h \
+    cobject.h
 
 unix {
     target.path = /usr/lib

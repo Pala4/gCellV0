@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QThread>
 
-#include "cbase.h"
+#include "cobject.h"
 
 #include <QtCore/QReadWriteLock>
 
@@ -46,7 +46,7 @@ signals:
     void stopWork();
 };
 
-class CConIO : public QObject, public CBase
+class CConIO : public QObject, public CObject
 {
     Q_OBJECT
 public:

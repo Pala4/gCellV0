@@ -13,7 +13,7 @@ bool CTransactionProcessor::eventFilter(QObject *object, QEvent *event)
     if (static_cast<int>(event->type()) == static_cast<int>(CTransactionEvent::TransactionEvent)) {
         CTransactionEvent *transactionEvent = dynamic_cast<CTransactionEvent*>(event);
         if (transactionEvent != nullptr) {
-            CBase *baseObject = dynamic_cast<CBase*>(object);
+            CObject *baseObject = dynamic_cast<CObject*>(object);
             if (baseObject != nullptr) {
                 baseObject->processTransaction(transactionEvent->transaction());
                 return true;

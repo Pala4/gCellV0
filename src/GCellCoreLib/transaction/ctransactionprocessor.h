@@ -5,13 +5,13 @@
 
 #include <QObject>
 
-#include "cbase.h"
+#include "cobject.h"
 
 class GCELLCORELIBSHARED_EXPORT CTransactionProcessor : public QObject
 {
     Q_OBJECT
 private:
-    friend class CBase;
+    friend class CObject;
     void setObject(QObject *object);
 protected:
     bool eventFilter(QObject *object, QEvent *event);

@@ -1,6 +1,6 @@
-#include "cbase.h"
+#include "cobject.h"
 
-void CBase::initTransactionProcessor()
+void CObject::initTransactionProcessor()
 {
     QObject *qObject = toQObject();
     if (qObject != nullptr) {
@@ -10,17 +10,17 @@ void CBase::initTransactionProcessor()
     }
 }
 
-void CBase::processTransaction(CTransaction *tranzaction)
+void CObject::processTransaction(CTransaction *tranzaction)
 {
     Q_UNUSED(tranzaction)
 }
 
-CBase::CBase()
+CObject::CObject()
 {
     m_transactionProcessor = nullptr;
 }
 
-CBase::~CBase()
+CObject::~CObject()
 {
     if (m_transactionProcessor != nullptr)
         delete m_transactionProcessor;
