@@ -5,6 +5,7 @@
 
 #include "cobject.h"
 
+#include <QtNetwork/QTcpSocket>
 #include <QReadWriteLock>
 
 class QTcpSocket;
@@ -28,8 +29,9 @@ public:
     int state() const;
 private slots:
     void onSocketConnected();
+    void onSocketError(const QAbstractSocket::SocketError &socketError);
+    void onSocketStateChanged(const QAbstractSocket::SocketState &state);
     void onSocketDisconnected();
-    void onSocketError(const int &socketError);
 public slots:
     void connectToHost(const QString &addressPort);
     void setSocketDescriptor(const qintptr &socketDescriptor);
@@ -37,7 +39,8 @@ public slots:
 signals:
     void connected(CSocket *thisSocket);
     void disconnected(CSocket *thisSocket);
-    void error(CSocket *thisSocket, QString errorString, int error);
+    void error(CSocket *thisSocket, QString errorString, QAbstractSocket::SocketError error);
 };
+//Q_DECLARE_METATYPE(QAbstractSocket::SocketState)
 
 #endif // CTCPSOCKET_H

@@ -128,7 +128,7 @@ void CConIO::start(void)
     if (m_stdInThread == nullptr) {
         m_stdInThread = new CStdInTread(this);
         connect(m_stdInThread, SIGNAL(sendQuery(QString)),
-                this, SIGNAL(sendQuery(QString)));
+                this, SLOT(receiveForwardQuery(QString)));
         connect(m_stdInThread, SIGNAL(finished()), this, SLOT(onStdInThreadStopped()));
     }
 
