@@ -27,7 +27,6 @@ SOURCES += \
     threads/cthreadmng.cpp \
     transaction/ctransaction.cpp \
     transaction/ctransactionevent.cpp \
-    transaction/ctransactionprocessor.cpp \
     network/cserver.cpp \
     network/csocket.cpp \
     network/csocketmng.cpp \
@@ -40,7 +39,6 @@ HEADERS +=\
     threads/cthreadmng.h \
     transaction/ctransaction.h \
     transaction/ctransactionevent.h \
-    transaction/ctransactionprocessor.h \
     network/cserver.h \
     network/csocket.h \
     network/csocketmng.h \

@@ -3,24 +3,19 @@
 
 #include "gcellcorelib_global.h"
 
-#include "transaction/ctransactionprocessor.h"
+#include <QObject>
 
-class CTransactionProcessor;
 class CTransaction;
 
-class GCELLCORELIBSHARED_EXPORT CObject
+class GCELLCORELIBSHARED_EXPORT CObject : public QObject
 {
-private:
-    CTransactionProcessor *m_transactionProcessor;
+    Q_OBJECT
 protected:
     friend class CTransactionProcessor;
-    void initTransactionProcessor();
     virtual void processTransaction(CTransaction *tranzaction);
+    bool event(QEvent *event);
 public:
-    CObject();
-    virtual ~CObject();
-
-    QObject* toQObject(){return dynamic_cast<QObject*>(this);}
+    explicit CObject(QObject *parent = 0);
 };
 
 #endif // COBJECT_H

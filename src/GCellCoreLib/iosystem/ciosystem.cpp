@@ -33,10 +33,9 @@ void CIOSystem::processTransaction(CTransaction *transaction)
         sendBackwardRespons(transaction->channelID(), transaction->respons());
 }
 
-CIOSystem::CIOSystem(QObject *parent) : QObject(parent), CObject()
+CIOSystem::CIOSystem(QObject *parent) : CObject(parent)
 {
     setObjectName(QStringLiteral("CIOSystem"));
-    initTransactionProcessor();
 }
 
 CTransaction* CIOSystem::registerTransaction(QObject *queryReceiver, const QString &query,

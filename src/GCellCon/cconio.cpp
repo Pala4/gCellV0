@@ -82,13 +82,11 @@ void CConIO::processTransaction(CTransaction *transaction)
     }
 }
 
-CConIO::CConIO(QObject *parent) : QObject(parent)
+CConIO::CConIO(QObject *parent) : CObject(parent)
 {
     setObjectName(QStringLiteral("CConIO"));
 
     m_stdInThread = nullptr;
-
-    initTransactionProcessor();
 }
 
 CConIO::~CConIO(void)

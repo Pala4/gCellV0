@@ -3,15 +3,13 @@
 
 #include "gcellcorelib_global.h"
 
-#include <QObject>
-
 #include "cobject.h"
 
 #include <QMap>
 
 class CChannel;
 
-class GCELLCORELIBSHARED_EXPORT CIOSystem : public QObject, public CObject
+class GCELLCORELIBSHARED_EXPORT CIOSystem : public CObject
 {
     Q_OBJECT
 private:

@@ -1,7 +1,6 @@
 #ifndef CCONIO_H
 #define CCONIO_H
 
-#include <QObject>
 #include <QThread>
 
 #include "cobject.h"
@@ -46,7 +45,7 @@ signals:
     void stopWork();
 };
 
-class CConIO : public QObject, public CObject
+class CConIO : public CObject
 {
     Q_OBJECT
 public:

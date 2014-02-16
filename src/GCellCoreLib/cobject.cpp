@@ -1,27 +1,26 @@
 #include "cobject.h"
 
-void CObject::initTransactionProcessor()
-{
-    QObject *qObject = toQObject();
-    if (qObject != nullptr) {
-        m_transactionProcessor = new CTransactionProcessor();
-        m_transactionProcessor->setObjectName(QStringLiteral("transactionProcessor"));
-        m_transactionProcessor->setObject(qObject);
-    }
-}
+#include "transaction/ctransactionevent.h"
 
 void CObject::processTransaction(CTransaction *tranzaction)
 {
     Q_UNUSED(tranzaction)
 }
 
-CObject::CObject()
+bool CObject::event(QEvent *event)
 {
-    m_transactionProcessor = nullptr;
+    if (static_cast<int>(event->type()) == static_cast<int>(CTransactionEvent::TransactionEvent)) {
+        CTransactionEvent *transactionEvent = dynamic_cast<CTransactionEvent*>(event);
+        if (transactionEvent != nullptr) {
+            processTransaction(transactionEvent->transaction());
+            return true;
+        }
+    }
+
+    return QObject::event(event);
 }
 
-CObject::~CObject()
+CObject::CObject(QObject *parent) : QObject(parent)
 {
-    if (m_transactionProcessor != nullptr)
-        delete m_transactionProcessor;
+    setObjectName(QStringLiteral("CObject"));
 }
