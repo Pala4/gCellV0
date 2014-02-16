@@ -18,7 +18,7 @@ private:
 
     int generateChannelID();
 protected:
-    void processTransaction(CTransaction *transaction);
+    void processQuery(CTransaction *transaction);
 public:
     explicit CIOSystem(QObject *parent = 0);
 

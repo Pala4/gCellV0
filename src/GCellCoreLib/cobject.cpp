@@ -2,7 +2,12 @@
 
 #include "transaction/ctransactionevent.h"
 
-void CObject::processTransaction(CTransaction *tranzaction)
+void CObject::processQuery(CTransaction *tranzaction)
+{
+    Q_UNUSED(tranzaction)
+}
+
+void CObject::processRespons(CTransaction *tranzaction)
 {
     Q_UNUSED(tranzaction)
 }
@@ -12,7 +17,7 @@ bool CObject::event(QEvent *event)
     if (static_cast<int>(event->type()) == static_cast<int>(CTransactionEvent::TransactionEvent)) {
         CTransactionEvent *transactionEvent = dynamic_cast<CTransactionEvent*>(event);
         if (transactionEvent != nullptr) {
-            processTransaction(transactionEvent->transaction());
+            processQuery(transactionEvent->transaction());
             return true;
         }
     }

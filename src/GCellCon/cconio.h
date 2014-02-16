@@ -53,7 +53,7 @@ public:
 private:
     CStdInTread *m_stdInThread;
 protected:
-    void processTransaction(CTransaction *transaction);
+    void processQuery(CTransaction *transaction);
 public:
     explicit CConIO(QObject *parent = 0);
     virtual ~CConIO();

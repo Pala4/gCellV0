@@ -64,7 +64,7 @@ void CStdInTread::stop()
 /*!
  * \class CClientOut
  */
-void CConIO::processTransaction(CTransaction *transaction)
+void CConIO::processQuery(CTransaction *transaction)
 {
     if (transaction == nullptr)
         return;

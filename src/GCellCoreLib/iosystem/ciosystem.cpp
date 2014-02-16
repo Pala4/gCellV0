@@ -24,7 +24,7 @@ int CIOSystem::generateChannelID()
     return ++maxID;
 }
 
-void CIOSystem::processTransaction(CTransaction *transaction)
+void CIOSystem::processQuery(CTransaction *transaction)
 {
     if (transaction == nullptr)
         return;
