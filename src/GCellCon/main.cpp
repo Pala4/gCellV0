@@ -19,11 +19,11 @@ int main(int argc, char *argv[])
     ioSystem.registerTransaction(&conIO, &conIO, QStringLiteral("halt"), (int)CConIO::Halt);
 
     CSocket *socket = new CSocket();
-    conIO.connectForwardObject(socket);
+    conIO.connectForwardObject(&ioSystem);
 
     socket->connectToHost("127.0.0.1:33538");
 
-    conIO.receiveBackwardQuery(QStringLiteral("get_con_info"));
+//    conIO.receiveBackwardQuery(QStringLiteral("get_con_info"));
 
     int ret = a.exec();
     delete socket;

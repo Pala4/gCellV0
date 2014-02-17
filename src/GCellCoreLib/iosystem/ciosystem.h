@@ -12,6 +12,8 @@ class GCELLCORELIBSHARED_EXPORT CIOSystem : public CObject
     Q_OBJECT
 private:
     QMap<QString, CTransaction*> m_transactions;
+protected:
+    bool processForwardQuery(const QString &forwardQuery);
 public:
     explicit CIOSystem(QObject *parent = 0);
 

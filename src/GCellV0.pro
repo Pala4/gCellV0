@@ -10,4 +10,5 @@ CONFIG = ordered
 SUBDIRS +=  GCellCoreLib \
         GCellServer \
         GCellCon \
-        GCellGui
+        GCellGui \
+        tests

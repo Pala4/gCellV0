@@ -29,7 +29,8 @@ SOURCES += \
     network/cserver.cpp \
     network/csocket.cpp \
     network/csocketmng.cpp \
-    cobject.cpp
+    cobject.cpp \
+    iosystem/cqueryparser.cpp
 
 HEADERS +=\
     gcellcorelib_global.h \
@@ -40,7 +41,8 @@ HEADERS +=\
     network/cserver.h \
     network/csocket.h \
     network/csocketmng.h \
-    cobject.h
+    cobject.h \
+    iosystem/cqueryparser.h
 
 unix {
     target.path = /usr/lib

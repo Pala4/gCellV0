@@ -4,6 +4,32 @@
 #include <QtCore/QStringList>
 
 #include "ctransaction.h"
+#include "cqueryparser.h"
+
+bool CIOSystem::processForwardQuery(const QString &forwardQuery)
+{
+    bool error = false;
+    QString errorDescription;
+    QStringList queryList = CQueryParser::pars(forwardQuery, error, errorDescription);
+    if (error) {
+        receiveBackwardRespons(errorDescription);
+        return true;
+    }
+    if (queryList.isEmpty())
+        return true;
+
+    QString queryCmd = queryList.at(0);
+    QStringList argList;
+    if (queryList.count() > 1)
+        argList = queryList.mid(2, queryList.count() - 1);
+    if (!queryCmd.isEmpty() && m_transactions.contains(queryCmd)
+        && (m_transactions[queryCmd] != nullptr)) {
+        m_transactions[queryCmd]->sendQuery();
+        return true;
+    }
+
+    return false;
+}
 
 CIOSystem::CIOSystem(QObject *parent) : CObject(parent)
 {
