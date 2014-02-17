@@ -21,10 +21,10 @@ bool CIOSystem::processForwardQuery(const QString &forwardQuery)
     QString queryCmd = queryList.at(0);
     QStringList argList;
     if (queryList.count() > 1)
-        argList = queryList.mid(2, queryList.count() - 1);
+        argList = queryList.mid(1, queryList.count() - 1);
     if (!queryCmd.isEmpty() && m_transactions.contains(queryCmd)
         && (m_transactions[queryCmd] != nullptr)) {
-        m_transactions[queryCmd]->sendQuery();
+        m_transactions[queryCmd]->sendQuery(argList);
         return true;
     }
 

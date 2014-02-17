@@ -75,7 +75,6 @@ void CConIO::processTransactionQuery(CTransaction *transaction)
         break;
         case CConIO::Halt:
             stop();
-            transaction->sendRespons(tr("Power down"));
         break;
         default:
         break;
@@ -118,18 +117,14 @@ CConIO::~CConIO(void)
         m_stdInThread->terminate();
 }
 
-void CConIO::onStdInThreadStopped()
-{
-    receiveBackwardRespons(tr("Halted"));
-}
-
 void CConIO::start(void)
 {   
     if (m_stdInThread == nullptr) {
         m_stdInThread = new CStdInTread(this);
         connect(m_stdInThread, SIGNAL(sendQuery(QString)),
-                this, SLOT(receiveForwardQuery(QString)));
-        connect(m_stdInThread, SIGNAL(finished()), this, SLOT(onStdInThreadStopped()));
+                this, SLOT(receiveForwardQuery(QString)), Qt::DirectConnection);
+        connect(m_stdInThread, SIGNAL(finished()), this, SIGNAL(halted()),
+                Qt::DirectConnection);
     }
 
     if (!m_stdInThread->isRunning())

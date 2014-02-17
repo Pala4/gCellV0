@@ -7,9 +7,28 @@
 #include <QWriteLocker>
 #include <QReadLocker>
 
+#include "ctransaction.h"
+
 /*!
  * \class CSocket
  */
+void CSocket::processTransactionQuery(CTransaction *transaction)
+{
+    if (transaction == nullptr)
+        return;
+
+    switch (transaction->cmdID()) {
+        case CSocket::Connect:
+            connectToHost(transaction->argList().at(0));
+        break;
+        case CSocket::Disconnect:
+            disconnectFromHost();
+        break;
+        default:
+        break;
+    }
+}
+
 bool CSocket::processForwardQuery(const QString &forwardQuery)
 {
     if (m_tcpSocket == nullptr)
@@ -65,38 +84,57 @@ void CSocket::splitAddressPort(const QString &addressPort, QString &address, qui
 
 QString CSocket::hostAddress() const
 {
-    QWriteLocker locker(&m_lock);
-    if (m_tcpSocket != nullptr)
+    if (m_tcpSocket != nullptr) {
+        QWriteLocker locker(&m_lock);
         return m_tcpSocket->peerAddress().toString();
-    locker.unlock();
+    }
 
     return QString();
 }
 
 quint16 CSocket::hostPort() const
 {
-    QWriteLocker locker(&m_lock);
-    if (m_tcpSocket != nullptr)
+    if (m_tcpSocket != nullptr) {
+        QWriteLocker locker(&m_lock);
         return m_tcpSocket->peerPort();
-    locker.unlock();
+    }
 
     return 0;
 }
 
+QString CSocket::hostName() const
+{
+    if (m_tcpSocket != nullptr) {
+        QWriteLocker locker(&m_lock);
+        return m_tcpSocket->peerName();
+    }
+
+    return QString();
+}
+
 int CSocket::state() const
 {
-    QWriteLocker locker(&m_lock);
-    if (m_tcpSocket != nullptr)
+    if (m_tcpSocket != nullptr) {
+        QWriteLocker locker(&m_lock);
         return static_cast<int>(m_tcpSocket->state());
-    locker.unlock();
+    }
 
     return static_cast<int>(QAbstractSocket::UnconnectedState);
 }
 
 void CSocket::onSocketConnected()
 {
-    receiveBackwardRespons(tr("Connection established to host [%1:%2]").arg(hostAddress()).
-                           arg(hostPort()));
+    QString hostAddress;
+    quint16 hostPort = 0;
+    QString hostName;
+    if (m_tcpSocket != nullptr) {
+        hostAddress = m_tcpSocket->peerAddress().toString();
+        hostPort = m_tcpSocket->peerPort();
+        hostName = m_tcpSocket->peerName();
+    }
+
+    receiveBackwardRespons(tr("Connection established to host [%1:%2 (%3)]").arg(hostAddress).
+                           arg(hostPort).arg(hostName));
     emit connected(this);
 }
 
@@ -133,9 +171,18 @@ void CSocket::onSocketStateChanged(const QAbstractSocket::SocketState &state)
 }
 
 void CSocket::onSocketDisconnected()
-{
-    receiveBackwardRespons(tr("Disconnected from host [%1:%2]").arg(hostAddress()).
-                           arg(hostPort()));
+{   
+    QString hostAddress;
+    quint16 hostPort = 0;
+    QString hostName;
+    if (m_tcpSocket != nullptr) {
+        hostAddress = m_tcpSocket->peerAddress().toString();
+        hostPort = m_tcpSocket->peerPort();
+        hostName = m_tcpSocket->peerName();
+    }
+
+    receiveBackwardRespons(tr("Disconnected from host [%1:%2 (%3)]").arg(hostAddress).
+                           arg(hostPort).arg(hostName));
     emit disconnected(this);
 }
 
@@ -147,26 +194,29 @@ void CSocket::connectToHost(const QString &addressPort)
     quint16 port = 0;
     splitAddressPort(addressPort, address, port);
 
-    QReadLocker locker(&m_lock);
-    if (m_tcpSocket != nullptr)
+    if (m_tcpSocket != nullptr) {
+        QReadLocker locker(&m_lock);
         m_tcpSocket->connectToHost(address, port);
-    locker.unlock();
+        locker.unlock();
+    }
 }
 
 void CSocket::setSocketDescriptor(const qintptr &socketDescriptor)
 {
     disconnectFromHost();
 
-    QReadLocker locker(&m_lock);
-    if (m_tcpSocket != nullptr)
+    if (m_tcpSocket != nullptr) {
+        QReadLocker locker(&m_lock);
         m_tcpSocket->setSocketDescriptor(socketDescriptor);
-    locker.unlock();
+        locker.unlock();
+    }
 }
 
 void CSocket::disconnectFromHost()
 {
-    QReadLocker locker(&m_lock);
-    if (m_tcpSocket != nullptr)
+    if (m_tcpSocket != nullptr) {
+        QReadLocker locker(&m_lock);
         m_tcpSocket->disconnectFromHost();
-    locker.unlock();
+        locker.unlock();
+    }
 }

@@ -13,11 +13,14 @@ class QTcpSocket;
 class GCELLCORELIBSHARED_EXPORT CSocket : public CObject
 {
 	Q_OBJECT
+public:
+    enum SocketQuery{Connect, Disconnect};
 private:
     mutable QReadWriteLock m_lock;
     quint16 m_blockSize;
     QTcpSocket *m_tcpSocket;
 protected:
+    void processTransactionQuery(CTransaction *transaction);
     bool processForwardQuery(const QString &forwardQuery);
 public:
     explicit CSocket(QObject *parent = 0);
@@ -26,6 +29,7 @@ public:
 
     QString hostAddress() const;
     quint16 hostPort() const;
+    QString hostName() const;
     int state() const;
 private slots:
     void onSocketConnected();

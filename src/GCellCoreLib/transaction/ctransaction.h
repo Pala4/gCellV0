@@ -5,6 +5,8 @@
 
 #include <QObject>
 
+#include <QStringList>
+
 class GCELLCORELIBSHARED_EXPORT CTransaction : public QObject
 {
     Q_OBJECT
@@ -18,9 +20,11 @@ private:
     QString m_query;
     int m_cmdID;
 
+    QStringList m_argList;
     QString m_respons;
 
     void setTransactionType(const CTransaction::TransactionType &transactionType);
+    bool checkArgs(const QStringList argList, QString &errorDescription);
 public:
     explicit CTransaction(QObject *queryReceiver, QObject *responsReceiver, const QString &query,
                           const int &cmdID, QObject *parent = 0);
@@ -34,6 +38,8 @@ public:
     const int& cmdID() const{return m_cmdID;}
     void setCmdID(const int &cmdID){m_cmdID = cmdID;}
 
+    const QStringList& argList() const{return m_argList;}
+    void setArgList(const QStringList &argList) {m_argList = argList;}
     const QString& respons() const{return m_respons;}
     void setRespons(const QString &respons){m_respons = respons;}
 
@@ -44,6 +50,7 @@ private slots:
     void onResponsReceiverDestroyed(){m_responsReceiver = nullptr;}
 public slots:
     void sendQuery();
+    void sendQuery(const QStringList &argList);
     void sendRespons();
     void sendRespons(const QString &respons);
 };

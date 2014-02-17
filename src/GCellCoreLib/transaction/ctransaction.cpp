@@ -9,6 +9,13 @@ void CTransaction::setTransactionType(const CTransaction::TransactionType &trans
     m_transactionType = transactionType;
 }
 
+bool CTransaction::checkArgs(const QStringList argList, QString &errorDescription)
+{
+    Q_UNUSED(argList)
+    Q_UNUSED(errorDescription)
+    return true;
+}
+
 CTransaction::CTransaction(QObject *queryReceiver, QObject *responsReceiver, const QString &query,
                            const int &cmdID, QObject *parent) : QObject(parent)
 {
@@ -54,6 +61,18 @@ void CTransaction::sendQuery()
         setTransactionType(CTransaction::Query);
         QCoreApplication::postEvent(m_queryReceiver, new CTransactionEvent(this));
     }
+}
+
+void CTransaction::sendQuery(const QStringList &argList)
+{
+    QString errorDescription;
+    if (!checkArgs(argList, errorDescription)) {
+        sendRespons(tr("Can't resolve this query because: %1").arg(errorDescription));
+        return;
+    }
+
+    setArgList(argList);
+    sendQuery();
 }
 
 void CTransaction::sendRespons()

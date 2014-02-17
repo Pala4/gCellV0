@@ -60,11 +60,11 @@ protected:
 public:
     explicit CConIO(QObject *parent = 0);
     virtual ~CConIO();
-private slots:
-    void onStdInThreadStopped();
 public slots:
     void start();
     void stop();
+signals:
+    void halted();
 };
 
 #endif // CCONIO_H
