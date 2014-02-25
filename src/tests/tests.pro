@@ -21,4 +21,8 @@ INCLUDEPATH += $${PWD}/../GCellCoreLib
 LIBS += -L $$DEST_API_DIR -l$$join(PRJ_TARGET,,, _lib)
 
 
-SOURCES += tst_testscorelib.cpp
+SOURCES += tst_testscorelib.cpp \
+    cmockcmdreceiver.cpp
+
+HEADERS += \
+    cmockcmdreceiver.h

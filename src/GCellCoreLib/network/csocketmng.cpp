@@ -4,32 +4,17 @@
 
 #include "csocket.h"
 
+using namespace gccore;
+
 bool CSocketMng::addSocket(CSocket *socket, const QString &addressPort)
 {
-    if (socket == nullptr)
+    if ((socket == nullptr) || addressPort.isEmpty())
         return false;
-    if (m_sockets.contains(addressPort)) {
-        removeSocket(socket);
+    if (m_sockets.contains(addressPort))
         return false;
-    }
 
     m_sockets[addressPort] = socket;
-    emit newConnectionReady(socket);
     return true;
-}
-
-void CSocketMng::removeSocket(CSocket *socket)
-{
-    if (socket == nullptr)
-        return;
-
-    if (m_sockets.values().contains(socket)) {
-        QString hap = m_sockets.key(socket);
-        m_sockets.remove(hap);
-    }
-
-    socket->deleteLater();
-    emit connectionClose(socket);
 }
 
 CSocketMng::CSocketMng(QObject *parent) : QObject(parent)
@@ -39,70 +24,30 @@ CSocketMng::CSocketMng(QObject *parent) : QObject(parent)
     qRegisterMetaType<QAbstractSocket::SocketError>("QAbstractSocket::SocketError");
 }
 
-void CSocketMng::onSocketConnected(CSocket *socket)
+void CSocketMng::onSocketDisconnected(CSocket *socket)
 {
     if (socket == nullptr)
         return;
-
-    QString addressPort = socket->hostAddress() + ":" + QString("%1").arg(socket->hostPort());
-    if (addSocket(socket, addressPort)) {
-        //        sendMsg(tr("Connection established [address: %1; port: %2]").
-        //                arg(socket->hostAddress()).arg(socket->hostPort()));
-    }
-}
-
-void CSocketMng::onSocketDisconnected(CSocket *socket)
-{
-    //    sendMsg(tr("Disconnected"));
-    removeSocket(socket);
-}
-
-void CSocketMng::onSocketError(CSocket *socket, const QString &errorString,
-                               const QAbstractSocket::SocketError &error)
-{
-    Q_UNUSED(socket)
-    Q_UNUSED(error)
-    //    sendMsg(errorString);
-}
-
-void CSocketMng::sendMessage(const QString &address, const QString &msg)
-{
-    if (!m_sockets.contains(address))
-        return;
-    if (m_sockets[address] == nullptr)
+    if (!m_sockets.values().contains(socket))
         return;
 
-    //    stCellMessage cellMsg(stCellMessage::Msg, msg);
-    //    m_sockets[address]->sendMessage(cellMsg);
+    m_sockets.remove(m_sockets.key(socket));
+    socket->deleteLater();
 }
 
-void CSocketMng::sendCommand(const QString &address, const QString &cmd)
+void CSocketMng::onNetReceiveData(const QString &data, const int &dataType)
 {
-    if (!m_sockets.contains(address))
+    CSocket *socket = qobject_cast<CSocket*>(sender());
+    if (socket == nullptr)
         return;
-    if (m_sockets[address] == nullptr)
+    if (!m_sockets.values().contains(socket))
         return;
 
-    //    stCellMessage cellMsg(stCellMessage::Cmd, cmd);
-    //    m_sockets[address]->sendMessage(cellMsg);
-}
-
-void CSocketMng::connectToHost(const QString &addressPort)
-{
-    if (m_sockets.contains(addressPort)) {
-        //        sendMsg(tr("Connection [%1] already established").arg(addressPort));
+    QString addressPort = m_sockets.key(socket, QString());
+    if (addressPort.isEmpty())
         return;
-    }
 
-    CSocket *socket = new CSocket(this);
-    connect(socket, SIGNAL(connected(CSocket*)),
-            this, SLOT(onSocketConnected(CSocket*)));
-    connect(socket, SIGNAL(disconnected(CSocket*)),
-            this, SLOT(onSocketDisconnected(CSocket*)));
-    connect(socket, SIGNAL(error(CSocket*,QString,QAbstractSocket::SocketError)),
-            this, SLOT(onSocketError(CSocket*,QString,QAbstractSocket::SocketError)));
-
-    socket->connectToHost(addressPort);
+    emit netReceiveData(addressPort, data, dataType);
 }
 
 void CSocketMng::addConnection(const qintptr &socketDescriptor)
@@ -111,24 +56,25 @@ void CSocketMng::addConnection(const qintptr &socketDescriptor)
     socket->setSocketDescriptor(socketDescriptor);
     connect(socket, SIGNAL(disconnected(CSocket*)),
             this, SLOT(onSocketDisconnected(CSocket*)));
-    connect(socket, SIGNAL(error(CSocket*,QString,QAbstractSocket::SocketError)),
-            this, SLOT(onSocketError(CSocket*,QString,QAbstractSocket::SocketError)));
-
+    connect(socket, SIGNAL(netReceiveData(QString,int)), this, SLOT(onNetReceiveData(QString,int)));
     QString addressPort = socket->hostAddress() + ":" + QString("%1").arg(socket->hostPort());
-    if (!addSocket(socket, addressPort)) {
-    }
+    if (!addSocket(socket, addressPort))
+        socket->deleteLater();
 }
 
 void CSocketMng::disconnectFromHost(const QString &addressPort)
 {
-    if (!m_sockets.contains(addressPort)) {
-        QString address;
-        quint16 port = 0;
-        CSocket::splitAddressPort(addressPort, address, port);
-        //        sendMsg(tr("Connection [IP: %1; Port: %2] not established").arg(address).arg(port));
+    if (!m_sockets.contains(addressPort))
         return;
-    }
 
     if (m_sockets[addressPort] != nullptr)
         m_sockets[addressPort]->disconnectFromHost();
+}
+
+void CSocketMng::netSendData(const QString &addressPort, const QString &data, const int dataType)
+{
+    if (!m_sockets.contains(addressPort))
+        return;
+    if (m_sockets[addressPort] != nullptr)
+        m_sockets[addressPort]->netSendData(data, dataType);
 }

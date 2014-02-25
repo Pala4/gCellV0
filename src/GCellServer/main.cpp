@@ -1,19 +1,13 @@
 #include <QCoreApplication>
 
-#include "network/cserver.h"
+#include "cserverapp.h"
 
-#include <QDebug>
+using namespace gcserver;
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication app(argc, argv);
+    CServerApp serverApp(argc, argv);
+    serverApp.start();
 
-    CServer tcpServer;
-    qDebug() << tcpServer.start("127.0.0.1", 33538);
-
-    int ret = app.exec();
-
-    qDebug() << tcpServer.stop();
-
-    return ret;
+    return serverApp.exec();
 }

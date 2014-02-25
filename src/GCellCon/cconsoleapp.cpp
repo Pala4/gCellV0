@@ -1,65 +1,111 @@
 #include "cconsoleapp.h"
 
-#include "iosystem/ciosystem.h"
 #include "cconio.h"
+#include "command/ccommanddsp.h"
 #include "network/csocket.h"
+
+using namespace gcconclient;
 
 CConsoleApp::CConsoleApp(int &argc, char **argv) : QCoreApplication(argc, argv)
 {
     setObjectName(QStringLiteral("CConsoleApp"));
+    connect(this, SIGNAL(aboutToQuit()), this, SLOT(onAboutToQuit()));
+
+    m_commandDsp = new gccore::CCommandDsp(this);
+    m_commandDsp->setObjectName(QStringLiteral("commandDsp"));
 
     m_conIO = new CConIO(this);
     m_conIO->setObjectName(QStringLiteral("conIO"));
+    m_conIO->setConsoleInfo(tr("Console io subsystem v0.0.0"));
+    connect(m_conIO, SIGNAL(sendCmdString(QString)), this, SLOT(onReceiveCmdString(QString)));
+    connect(m_conIO, SIGNAL(halted()), this, SLOT(quit()));
 
-    m_ioSystem = new CIOSystem(this);
-    m_ioSystem->setObjectName(QStringLiteral("ioSystem"));
+    m_socket = new gccore::CSocket(this);
+    m_socket->setObjectName(QStringLiteral("socket"));
+    connect(m_socket, SIGNAL(sendMessage(QString)), this, SLOT(setMessage(QString)));
+    connect(m_socket, SIGNAL(netReceiveData(QString,int)),
+            this, SLOT(onNetReceiveData(QString,int)));
 
-    m_socket = new CSocket(this);
+    m_commandDsp->registerCommand(m_conIO, SLOT(cmdGetConInfo(gccore::CCommand*)),
+                                  QStringLiteral("getConInfo"));
+    m_commandDsp->registerCommand(m_socket, SLOT(cmdConnectToHost(CCommand*,QString)),
+                                  QStringLiteral("connect"));
+    m_commandDsp->registerCommand(m_socket, SLOT(cmdDisconnectFromHost(CCommand*)),
+                                  QStringLiteral("disconnect"));
+    m_commandDsp->registerCommand(this, SLOT(cmdNetSendMessage(gccore::CCommand*,QString)),
+                                  QStringLiteral("netSendMsg"));
+    m_commandDsp->registerCommand(this, SLOT(cmdNetSendCommand(gccore::CCommand*,QString)),
+                                  QStringLiteral("netSendCmd"));
 
-    m_conIO->connectForwardObject(m_ioSystem);
+    m_conIO->setCmdString(QStringLiteral("getConInfo"), false);
+    m_conIO->start();
+}
 
-    connect(m_conIO, SIGNAL(halted()), this, SLOT(quit()), Qt::DirectConnection);
+void CConsoleApp::onReceiveCmdString(const QString &cmdString)
+{
+    Q_ASSERT(m_commandDsp != nullptr);
 
-    connect(m_conIO, SIGNAL(transmitBackwardRespons(QString)),
-            m_conIO, SLOT(receiveBackwardRespons(QString)));
-    connect(m_ioSystem, SIGNAL(transmitBackwardRespons(QString)),
-            m_conIO, SLOT(receiveBackwardRespons(QString)));
-    connect(m_socket, SIGNAL(transmitBackwardRespons(QString)),
-            m_conIO, SLOT(receiveBackwardRespons(QString)));
+    QString respons;
+    int errcode = ERR_NOT_ERROR;
+    QString errdesc = ERR_NOT_ERROR_STR;
+    QString cmdResultString;
+    if (!m_commandDsp->execute(QString(), cmdString, respons, errcode, errdesc))
+        cmdResultString = QString("Error #%1 [%2]").arg(errcode).arg(errdesc);
+    else
+        cmdResultString = respons;
 
-    m_ioSystem->registerTransaction(m_conIO, m_conIO, QStringLiteral("get_con_info"),
-                                    static_cast<int>(CConIO::GetInfo));
-    m_ioSystem->registerTransaction(m_conIO, m_conIO, QStringLiteral("halt"),
-                                    static_cast<int>(CConIO::Halt));
-    m_ioSystem->registerTransaction(m_socket, m_conIO, QStringLiteral("connect"),
-                                    static_cast<int>(CSocket::Connect));
-    m_ioSystem->registerTransaction(m_socket, m_conIO, QStringLiteral("disconnect"),
-                                    static_cast<int>(CSocket::Disconnect));
+    if (!cmdResultString.isEmpty())
+        setMessage(cmdResultString);
+}
 
-    connect(this, SIGNAL(aboutToQuit()), this, SLOT(onAboutToQuit()));
+void CConsoleApp::setMessage(const QString &msg)
+{
+    if (m_conIO == nullptr)
+        return;
+
+    m_conIO->setMessage(msg);
 }
 
 void CConsoleApp::onAboutToQuit()
 {
-    if (m_socket != nullptr) {
-        if (m_socket->state() == QAbstractSocket::ConnectedState) {
-            m_socket->disconnectFromHost();
-            //wait
-            //close
-        }
+    if ((m_socket != nullptr) && (m_socket->state() == QAbstractSocket::ConnectedState)) {
+        m_socket->disconnectFromHost();
+        //wait
+        //close
     }
-    if (m_conIO != nullptr) {
-        m_conIO->receiveBackwardRespons(tr("System halted"));
-        m_conIO->receiveBackwardRespons(tr("Power down"));
+
+    setMessage(tr("System halted"));
+    setMessage(tr("Power down"));
+}
+
+void CConsoleApp::onNetReceiveData(const QString &data, const int &dataType)
+{
+    switch (dataType) {
+        case 0:
+            setMessage(data);
+        break;
+        case 1:
+            onReceiveCmdString(data);
+        break;
+        default:
+        break;
     }
 }
 
-void CConsoleApp::start()
+bool CConsoleApp::cmdNetSendMessage(gccore::CCommand *cmd, const QString &msg)
 {
-    if (m_conIO != nullptr) {
-        m_conIO->start();
-        m_conIO->receiveBackwardQuery(QStringLiteral("get_con_info"));
-    }
+    Q_UNUSED(cmd)
+    if (m_socket == nullptr)
+        return false;
+    m_socket->netSendData(msg, 0);
+    return true;
+}
 
-    m_socket->connectToHost("127.0.0.1:33538");
+bool CConsoleApp::cmdNetSendCommand(gccore::CCommand *cmd, const QString &cmdString)
+{
+    Q_UNUSED(cmd)
+    if (m_socket == nullptr)
+        return false;
+    m_socket->netSendData(cmdString, 1);
+    return true;
 }

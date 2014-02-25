@@ -1,5 +1,7 @@
 #include "cserver.h"
 
+using namespace gccore;
+
 /*!
  * \class CServer
  */

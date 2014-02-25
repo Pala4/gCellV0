@@ -7,55 +7,16 @@
 #include <QWriteLocker>
 #include <QReadLocker>
 
-#include "ctransaction.h"
+using namespace gccore;
 
 /*!
  * \class CSocket
  */
-void CSocket::processTransactionQuery(CTransaction *transaction)
-{
-    if (transaction == nullptr)
-        return;
-
-    switch (transaction->cmdID()) {
-        case CSocket::Connect:
-            connectToHost(transaction->argList().at(0));
-        break;
-        case CSocket::Disconnect:
-            disconnectFromHost();
-        break;
-        default:
-        break;
-    }
-}
-
-bool CSocket::processForwardQuery(const QString &forwardQuery)
-{
-    if (m_tcpSocket == nullptr)
-        return true;
-    if (m_tcpSocket->state() != QAbstractSocket::ConnectedState) {
-        receiveBackwardRespons(tr("Query [%1] not sending because connection not established").
-                               arg(forwardQuery));
-        return true;
-    }
-
-    QByteArray block;
-    QDataStream out(&block, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_5_2);
-    out << (quint16)0;
-    out << (int)0;//query type
-    out << forwardQuery;
-    out.device()->seek(0);
-    out << (quint16)(block.size() - sizeof(quint16));
-
-    m_tcpSocket->write(block);
-
-    return true;
-}
-
-CSocket::CSocket(QObject *parent) : CObject(parent)
+CSocket::CSocket(QObject *parent) : QObject(parent)
 {
     setObjectName(QStringLiteral("CSocket"));
+
+    m_blockSize = 0;
 
     m_tcpSocket = new QTcpSocket(this);
     m_tcpSocket->setObjectName(QStringLiteral("tcpSocket"));
@@ -67,6 +28,8 @@ CSocket::CSocket(QObject *parent) : CObject(parent)
             this, SLOT(onSocketStateChanged(QAbstractSocket::SocketState)), Qt::DirectConnection);
     connect(m_tcpSocket, SIGNAL(disconnected()),
             this, SLOT(onSocketDisconnected()), Qt::DirectConnection);
+    connect(m_tcpSocket, SIGNAL(readyRead()),
+            this, SLOT(onSocketReadyRead()), Qt::DirectConnection);
 
     qRegisterMetaType<QAbstractSocket::SocketState>("SocketState");
 }
@@ -133,8 +96,8 @@ void CSocket::onSocketConnected()
         hostName = m_tcpSocket->peerName();
     }
 
-    receiveBackwardRespons(tr("Connection established to host [%1:%2 (%3)]").arg(hostAddress).
-                           arg(hostPort).arg(hostName));
+    setMessage(tr("Connection established to host [%1:%2 (%3)]").arg(hostAddress).
+               arg(hostPort).arg(hostName));
     emit connected(this);
 }
 
@@ -148,22 +111,22 @@ void CSocket::onSocketStateChanged(const QAbstractSocket::SocketState &state)
 {
     switch (state) {
         case QAbstractSocket::UnconnectedState:
-            receiveBackwardRespons(tr("Unconnected"));
+            setMessage(tr("Unconnected"));
         break;
         case QAbstractSocket::HostLookupState:
-            receiveBackwardRespons(tr("Performed a host name lookup..."));
+            setMessage(tr("Performed a host name lookup..."));
         break;
         case QAbstractSocket::ConnectingState:
-            receiveBackwardRespons(tr("Begins to establish a connection..."));
+            setMessage(tr("Begins to establish a connection..."));
         break;
         case QAbstractSocket::ConnectedState:
-            receiveBackwardRespons(tr("Connected"));
+            setMessage(tr("Connected"));
         break;
         case QAbstractSocket::BoundState:
-            receiveBackwardRespons(tr("Bound state"));
+            setMessage(tr("Bound state"));
         break;
         case QAbstractSocket::ClosingState:
-            receiveBackwardRespons(tr("Connection closing..."));
+            setMessage(tr("Connection closing..."));
         break;
         default:
         break;
@@ -181,9 +144,39 @@ void CSocket::onSocketDisconnected()
         hostName = m_tcpSocket->peerName();
     }
 
-    receiveBackwardRespons(tr("Disconnected from host [%1:%2 (%3)]").arg(hostAddress).
-                           arg(hostPort).arg(hostName));
+    setMessage(tr("Disconnected from host [%1:%2 (%3)]").arg(hostAddress).
+               arg(hostPort).arg(hostName));
     emit disconnected(this);
+}
+
+void CSocket::onSocketReadyRead()
+{
+    if (m_tcpSocket == nullptr)
+        return;
+
+    QDataStream in(m_tcpSocket);
+    in.setVersion(QDataStream::Qt_5_2);
+
+    if (m_blockSize == 0) {
+        if (m_tcpSocket->bytesAvailable() < (int)sizeof(quint16))
+            return;
+        in >> m_blockSize;
+    }
+    if (m_tcpSocket->bytesAvailable() < m_blockSize)
+        return;
+    m_blockSize = 0;
+
+    int dataType;
+    QString data;
+    in >> dataType;
+    in >> data;
+
+    emit netReceiveData(data, dataType);
+}
+
+void CSocket::setMessage(const QString &msg)
+{
+    emit sendMessage(msg);
 }
 
 void CSocket::connectToHost(const QString &addressPort)
@@ -219,4 +212,37 @@ void CSocket::disconnectFromHost()
         m_tcpSocket->disconnectFromHost();
         locker.unlock();
     }
+}
+
+void CSocket::netSendData(const QString &data, const int &dataType)
+{
+    if (m_tcpSocket == nullptr)
+        return;
+    if (m_tcpSocket->state() != QAbstractSocket::ConnectedState)
+        return;
+
+    QByteArray block;
+    QDataStream out(&block, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_2);
+    out << (quint16)0;
+    out << (int)dataType;
+    out << data;
+    out.device()->seek(0);
+    out << (quint16)(block.size() - sizeof(quint16));
+
+    m_tcpSocket->write(block);
+}
+
+bool CSocket::cmdConnectToHost(CCommand *cmd, const QString &addressPort)
+{
+    Q_UNUSED(cmd)
+    connectToHost(addressPort);
+    return true;
+}
+
+bool CSocket::cmdDisconnectFromHost(CCommand *cmd)
+{
+    Q_UNUSED(cmd)
+    disconnectFromHost();
+    return true;
 }

@@ -19,9 +19,9 @@ INCLUDEPATH += $${PWD}/../GCellCoreLib
 LIBS += -L $$DEST_API_DIR -l$$join(PRJ_TARGET,,, _lib)
 
 SOURCES += main.cpp \
-    cconio.cpp \
-    cconsoleapp.cpp
+    cconsoleapp.cpp \
+    cconio.cpp
 
 HEADERS += \
-    cconio.h \
-    cconsoleapp.h
+    cconsoleapp.h \
+    cconio.h

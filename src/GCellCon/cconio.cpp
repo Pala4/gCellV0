@@ -4,31 +4,33 @@
 #include <QtCore/QReadLocker>
 #include <QtCore/QWriteLocker>
 
-#include "transaction/ctransaction.h"
+#include "command/ccommand.h"
+
+using namespace gcconclient;
 
 /*!
  * \class CStdInWorker
  */
+bool CStdInWorker::processInternalCommands(const QString &cmdString)
+{
+   if (cmdString.simplified().toLower() == QStringLiteral("halt")) {
+       m_stopWork = true;
+       return true;
+   }
+
+   return false;
+}
+
 void CStdInWorker::ioLoop()
 {
     QTextStream cin(stdin);
-    QString query;
-    while ((QString(query).simplified().toLower() != QStringLiteral("halt")) && !isStopWork()) {
-        query = cin.readLine();
-        emit sendQuery(query);
+    QString cmdString;
+    while (!m_stopWork) {
+        cmdString = cin.readLine();
+
+        if (!processInternalCommands(cmdString))
+            emit sendCmdString(cmdString);
     }
-}
-
-const bool& CStdInWorker::isStopWork() const
-{
-    QWriteLocker writeLock(&m_lock);
-    return m_stopWork;
-}
-
-void CStdInWorker::stopWork()
-{
-    QReadLocker readLock(&m_lock);
-    m_stopWork = true;
 }
 
 /*!
@@ -38,9 +40,8 @@ void CStdInTread::run()
 {
     if (m_stdInWorker == nullptr) {
         m_stdInWorker = new CStdInWorker();
-        connect(m_stdInWorker, SIGNAL(sendQuery(QString)),
-                this, SIGNAL(sendQuery(QString)));
-        connect(this, SIGNAL(stopWork()), m_stdInWorker, SLOT(stopWork()));
+        connect(m_stdInWorker, SIGNAL(sendCmdString(QString)),
+                this, SIGNAL(sendCmdString(QString)));
     }
 
     m_stdInWorker->ioLoop();
@@ -51,64 +52,19 @@ void CStdInTread::run()
 
 CStdInTread::~CStdInTread()
 {
-    stop();
     if (m_stdInWorker != nullptr)
         delete m_stdInWorker;
-}
-
-void CStdInTread::stop()
-{
-    emit stopWork();
 }
 
 /*!
  * \class CClientOut
  */
-void CConIO::processTransactionQuery(CTransaction *transaction)
-{
-    if (transaction == nullptr)
-        return;
-
-    switch (transaction->cmdID()) {
-        case CConIO::GetInfo:
-            transaction->sendRespons(tr("Console IO system v0.0.1"));
-        break;
-        case CConIO::Halt:
-            stop();
-        break;
-        default:
-        break;
-    }
-}
-
-void CConIO::processTransactionRespons(CTransaction *transaction)
-{
-    if (transaction == nullptr)
-        return;
-
-    receiveBackwardRespons(transaction->respons());
-}
-
-bool CConIO::processBackwardQuery(const QString &backwardQuery)
-{
-    receiveBackwardRespons("Cmd# " + backwardQuery);
-    receiveForwardQuery(backwardQuery);
-    return true;
-}
-
-bool CConIO::processBackwardRespons(const QString &backwardRespons)
-{
-    QTextStream cout(stdout);
-    cout << backwardRespons << endl;
-
-    return true;
-}
-
-CConIO::CConIO(QObject *parent) : CObject(parent)
+CConIO::CConIO(QObject *parent) : QObject(parent)
 {
     setObjectName(QStringLiteral("CConIO"));
 
     m_stdInThread = nullptr;
+    m_consoleInfo = tr("Console");
 }
 
 CConIO::~CConIO(void)
@@ -117,24 +73,56 @@ CConIO::~CConIO(void)
         m_stdInThread->terminate();
 }
 
+void CConIO::onStdInThreadFinished()
+{
+    if (m_stdInThread != nullptr) {
+        m_stdInThread->deleteLater();
+        m_stdInThread = nullptr;
+    }
+
+    emit halted();
+}
+
+void CConIO::setCmdEcho(const QString &cmdString)
+{
+    QString cmdEchoPrefix = QStringLiteral("cmd_>");
+    setMessage(cmdEchoPrefix + " " + cmdString);
+}
+
+void CConIO::setMessage(const QString &msg)
+{
+    QString msgPrefix = msg.startsWith(QStringLiteral("cmd_>")) ? QString()
+                                                                : QStringLiteral("msg_> ");
+    QTextStream cout(stdout);
+    cout << msgPrefix << msg << endl;
+}
+
+void CConIO::setCmdString(const QString &cmdString, const bool &echo)
+{
+    if (echo)
+        setCmdEcho(cmdString);
+
+    emit sendCmdString(cmdString);
+}
+
 void CConIO::start(void)
-{   
+{
     if (m_stdInThread == nullptr) {
         m_stdInThread = new CStdInTread(this);
-        connect(m_stdInThread, SIGNAL(sendQuery(QString)),
-                this, SLOT(receiveForwardQuery(QString)), Qt::DirectConnection);
-        connect(m_stdInThread, SIGNAL(finished()), this, SIGNAL(halted()),
+        connect(m_stdInThread, SIGNAL(sendCmdString(QString)),
+                this, SIGNAL(sendCmdString(QString)), Qt::DirectConnection);
+        connect(m_stdInThread, SIGNAL(finished()), this, SLOT(onStdInThreadFinished()),
                 Qt::DirectConnection);
     }
 
     if (!m_stdInThread->isRunning())
         m_stdInThread->start(QThread::IdlePriority);
-
-    receiveBackwardRespons(tr("Client console i/o subsystem v0.0.1 is initialized"));
 }
 
-void CConIO::stop()
+bool CConIO::cmdGetConInfo(gccore::CCommand *cmd)
 {
-    if (m_stdInThread != nullptr)
-        m_stdInThread->stopWork();
+    if (cmd != nullptr)
+        cmd->setRespons(consoleInfo());
+
+    return true;
 }

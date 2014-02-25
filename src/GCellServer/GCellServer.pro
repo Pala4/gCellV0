@@ -18,4 +18,8 @@ TARGET = $$join(TARGET,,, _srv)
 INCLUDEPATH += $${PWD}/../GCellCoreLib
 LIBS += -L $$DEST_API_DIR -l$$join(PRJ_TARGET,,, _lib)
 
-SOURCES += main.cpp
+SOURCES += main.cpp \
+    cserverapp.cpp
+
+HEADERS += \
+    cserverapp.h

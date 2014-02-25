@@ -16,33 +16,40 @@ TARGET = $$join(TARGET,,, _lib)
 DEFINES += GCELLCORELIB_LIBRARY
 
 INCLUDEPATH += \
-    iosystem \
-    threads \
-    transaction \
+    command \
+    engine \
     network
 
 SOURCES += \
-    iosystem/ciosystem.cpp \
-    threads/cthreadmng.cpp \
-    transaction/ctransaction.cpp \
-    transaction/ctransactionevent.cpp \
     network/cserver.cpp \
     network/csocket.cpp \
     network/csocketmng.cpp \
-    cobject.cpp \
-    iosystem/cqueryparser.cpp
+    command/ccommand.cpp \
+    command/ccommanddsp.cpp \
+    engine/cengine.cpp \
+    engine/scheme/calg.cpp \
+    engine/scheme/calgdescmng.cpp \
+    engine/scheme/cportal.cpp \
+    engine/scheme/cscheme.cpp \
+    engine/scheme/cschememng.cpp \
+    command/ccmdparser.cpp
 
 HEADERS +=\
-    gcellcorelib_global.h \
-    iosystem/ciosystem.h \
-    threads/cthreadmng.h \
-    transaction/ctransaction.h \
-    transaction/ctransactionevent.h \
     network/cserver.h \
     network/csocket.h \
     network/csocketmng.h \
-    cobject.h \
-    iosystem/cqueryparser.h
+    command/ccommand.h \
+    command/ccommanddsp.h \
+    engine/cengine.h \
+    engine/scheme/algdesc.h \
+    engine/scheme/calg.h \
+    engine/scheme/calgdescmng.h \
+    engine/scheme/cportal.h \
+    engine/scheme/cscheme.h \
+    engine/scheme/cschememng.h \
+    engine/scheme/listutil.h \
+    engine/scheme/portaldesc.h \
+    command/ccmdparser.h
 
 unix {
     target.path = /usr/lib

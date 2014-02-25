@@ -5,6 +5,8 @@
 
 #include <QtNetwork/QTcpServer>
 
+namespace gccore {
+
 class CTcpServer : public QTcpServer
 {
     Q_OBJECT
@@ -31,5 +33,7 @@ private slots:
 signals:
 	void newConnection(qintptr socketDescriptor);
 };
+
+}
 
 #endif // CSERVER_H
